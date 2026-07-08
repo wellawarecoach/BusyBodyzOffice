@@ -1,8 +1,36 @@
+const pageMeta = {
+    dashboard: {
+        title: "Dashboard",
+        subtitle: "Your BusyBodyz command centre."
+    },
+    clients: {
+        title: "Clients",
+        subtitle: "Manage client profiles, notes, goals, assessments, and progress."
+    },
+    services: {
+        title: "Services",
+        subtitle: "Manage services, pricing, packages, and categories."
+    },
+    invoices: {
+        title: "Invoices",
+        subtitle: "Create invoices, track payments, and monitor outstanding balances."
+    },
+    marketing: {
+        title: "Marketing",
+        subtitle: "Track campaigns, physician outreach, leads, and results."
+    },
+    reports: {
+        title: "Reports",
+        subtitle: "Review revenue, growth, referrals, and business performance."
+    },
+    settings: {
+        title: "Settings",
+        subtitle: "Manage business details, branding, invoice settings, and preferences."
+    }
+};
+
 const pages = {
     dashboard: `
-    <h2>Dashboard</h2>
-    <p>Your offline command centre for BusyBodyz Energy & Performance Solutions.</p>
-
     <div class="cards">
       <div class="card"><h3>Clients</h3><p>Track client profiles, notes, goals, assessments, and progress.</p></div>
       <div class="card"><h3>Invoices</h3><p>Create, save, print, and track invoice payments.</p></div>
@@ -12,43 +40,56 @@ const pages = {
   `,
 
     clients: `
-    <h2>Clients</h2>
-    <p>Manage client profiles, goals, notes, assessments, and progress.</p>
-    <button class="primary-btn">+ Add Client</button>
+    <div class="page-card">
+      <h3>Client Management</h3>
+      <p>This will become the central CRM for BusyBodyzOffice.</p>
+      <button class="primary-btn">+ Add Client</button>
+    </div>
   `,
 
     services: `
-    <h2>Services</h2>
-    <p>Manage training services, coaching packages, pricing, and categories.</p>
-    <button class="primary-btn">+ Add Service</button>
+    <div class="page-card">
+      <h3>Services</h3>
+      <p>Manage coaching services, reset sessions, packages, and pricing.</p>
+      <button class="primary-btn">+ Add Service</button>
+    </div>
   `,
 
     invoices: `
-    <h2>Invoices</h2>
-    <p>Create invoices, track payments, and manage outstanding balances.</p>
-    <button class="primary-btn">+ New Invoice</button>
+    <div class="page-card">
+      <h3>Invoices</h3>
+      <p>Create invoices, track payments, and manage outstanding balances.</p>
+      <button class="primary-btn">+ New Invoice</button>
+    </div>
   `,
 
     marketing: `
-    <h2>Marketing</h2>
-    <p>Track campaigns, physician outreach, leads, referrals, and campaign results.</p>
-    <button class="primary-btn">+ New Campaign</button>
+    <div class="page-card">
+      <h3>Marketing Campaigns</h3>
+      <p>Track physician outreach, QR campaigns, referrals, and campaign results.</p>
+      <button class="primary-btn">+ New Campaign</button>
+    </div>
   `,
 
     reports: `
-    <h2>Reports</h2>
-    <p>View revenue, client growth, services, referrals, and marketing performance.</p>
+    <div class="page-card">
+      <h3>Reports</h3>
+      <p>View revenue, client growth, services, referrals, and marketing performance.</p>
+    </div>
   `,
 
     settings: `
-    <h2>Settings</h2>
-    <p>Manage business details, branding, invoice settings, and app preferences.</p>
+    <div class="page-card">
+      <h3>Settings</h3>
+      <p>Manage BusyBodyzOffice preferences and business information.</p>
+    </div>
   `
 };
 
 function loadPage(pageName) {
-    const workspace = document.getElementById("workspace");
-    workspace.innerHTML = pages[pageName];
+    document.getElementById("workspace").innerHTML = pages[pageName];
+    document.getElementById("page-title").textContent = pageMeta[pageName].title;
+    document.getElementById("page-subtitle").textContent = pageMeta[pageName].subtitle;
 
     document.querySelectorAll(".sidebar button").forEach(button => {
         button.classList.remove("active");

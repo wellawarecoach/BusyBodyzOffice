@@ -9,21 +9,48 @@
 
 <body>
     <div class="app">
-        <aside class="sidebar">
-            <h1>BusyBodyzOffice</h1>
 
-            <button data-page="dashboard">Dashboard</button>
-            <button data-page="clients">Clients</button>
-            <button data-page="services">Services</button>
-            <button data-page="invoices">Invoices</button>
-            <button data-page="marketing">Marketing</button>
-            <button data-page="reports">Reports</button>
-            <button data-page="settings">Settings</button>
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-mark">B</div>
+                <div>
+                    <h1>BusyBodyzOffice</h1>
+                    <p>Energy & Performance</p>
+                </div>
+            </div>
+
+            <nav>
+                <button data-page="dashboard">Dashboard</button>
+                <button data-page="clients">Clients</button>
+                <button data-page="services">Services</button>
+                <button data-page="invoices">Invoices</button>
+                <button data-page="marketing">Marketing</button>
+                <button data-page="reports">Reports</button>
+                <button data-page="settings">Settings</button>
+            </nav>
         </aside>
 
-        <main class="main">
-            <section class="hero" id="workspace"></section>
-        </main>
+        <div class="content">
+            <header class="topbar">
+                <div>
+                    <h2 id="page-title">Dashboard</h2>
+                    <p id="page-subtitle">Your BusyBodyz command centre.</p>
+                </div>
+
+                <input class="search" placeholder="Search BusyBodyzOffice..." />
+            </header>
+
+            <main class="main">
+                <section id="workspace"></section>
+            </main>
+
+            <footer class="statusbar">
+                <span>BusyBodyzOffice v0.3</span>
+                <span>Offline Mode</span>
+                <span>Ready</span>
+            </footer>
+        </div>
+
     </div>
 
     <script src="renderer.js"></script>
