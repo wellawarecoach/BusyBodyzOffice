@@ -79,3 +79,22 @@ body {
     margin-top: 0;
     color: #10251c;
 }
+
+.sidebar button.active {
+    background: #4f7c5f;
+}
+
+.primary-btn {
+    margin-top: 20px;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    background: #10251c;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.primary-btn:hover {
+    background: #2f5a45;
+}
