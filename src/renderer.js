@@ -1,10 +1,10 @@
-import { dashboardPage } from "./src/pages/dashboard.js";
-import { clientsPage } from "./src/pages/clients.js";
-import { servicesPage } from "./src/pages/services.js";
-import { invoicesPage } from "./src/pages/invoices.js";
-import { marketingPage } from "./src/pages/marketing.js";
-import { reportsPage } from "./src/pages/reports.js";
-import { settingsPage } from "./src/pages/settings.js";
+import { dashboardPage } from "./pages/dashboard.js";
+import { clientsPage } from "./pages/clients.js";
+import { servicesPage } from "./pages/services.js";
+import { invoicesPage } from "./pages/invoices.js";
+import { marketingPage } from "./pages/marketing.js";
+import { reportsPage } from "./pages/reports.js";
+import { settingsPage } from "./pages/settings.js";
 
 const pageMeta = {
     dashboard: ["Dashboard", "Your BusyBodyz command centre."],
@@ -32,14 +32,16 @@ function loadPage(pageName) {
     document.getElementById("page-title").textContent = pageMeta[pageName][0];
     document.getElementById("page-subtitle").textContent = pageMeta[pageName][1];
 
-    document.querySelectorAll(".sidebar button").forEach(button => {
+    document.querySelectorAll(".sidebar button").forEach((button) => {
         button.classList.remove("active");
     });
 
-    document.querySelector(`[data-page="${pageName}"]`).classList.add("active");
+    document
+        .querySelector(`[data-page="${pageName}"]`)
+        .classList.add("active");
 }
 
-document.querySelectorAll(".sidebar button").forEach(button => {
+document.querySelectorAll(".sidebar button").forEach((button) => {
     button.addEventListener("click", () => {
         loadPage(button.dataset.page);
     });
