@@ -49,6 +49,51 @@ function writeSettings(settings) {
         return false;
     }
 }
+function getClientsFilePath() {
+    return path.join(
+        app.getPath("userData"),
+        "busybodyz-clients.json"
+    );
+}
+
+function readClients() {
+    const clientsPath = getClientsFilePath();
+
+    try {
+        if (!fs.existsSync(clientsPath)) {
+            return [];
+        }
+
+        const savedClients = fs.readFileSync(
+            clientsPath,
+            "utf8"
+        );
+
+        const clients = JSON.parse(savedClients);
+
+        return Array.isArray(clients) ? clients : [];
+    } catch (error) {
+        console.error("Unable to read clients:", error);
+        return [];
+    }
+}
+
+function writeClients(clients) {
+    const clientsPath = getClientsFilePath();
+
+    try {
+        fs.writeFileSync(
+            clientsPath,
+            JSON.stringify(clients, null, 2),
+            "utf8"
+        );
+
+        return true;
+    } catch (error) {
+        console.error("Unable to save clients:", error);
+        return false;
+    }
+}
 function createWindow() {
     const win = new BrowserWindow({
         width: 1200,
@@ -150,6 +195,76 @@ ipcMain.handle(
         }
     }
 );
+ipcMain.handle("get-clients", () => {
+    try {
+        const clients = readClients();
+
+        return {
+            success: true,
+            clients
+        };
+    } catch (error) {
+        console.error("Unable to retrieve clients:", error);
+
+        return {
+            success: false,
+            clients: [],
+            message: "Unable to retrieve clients."
+        };
+    }
+});
+
+ipcMain.handle("save-client", (event, clientData) => {
+    const firstName = String(
+        clientData?.firstName || ""
+    ).trim();
+
+    const lastName = String(
+        clientData?.lastName || ""
+    ).trim();
+
+    const email = String(
+        clientData?.email || ""
+    ).trim();
+
+    const phone = String(
+        clientData?.phone || ""
+    ).trim();
+
+    if (!firstName || !lastName) {
+        return {
+            success: false,
+            message: "First and last name are required."
+        };
+    }
+
+    const clients = readClients();
+
+    const client = {
+        id: `client-${Date.now()}`,
+        firstName,
+        lastName,
+        email,
+        phone,
+        createdAt: new Date().toISOString()
+    };
+
+    clients.push(client);
+
+    const saved = writeClients(clients);
+
+    if (!saved) {
+        return {
+            success: false,
+            message: "Unable to save the client."
+        };
+    }
+
+    return {
+        success: true,
+        client
+    };
+});
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {

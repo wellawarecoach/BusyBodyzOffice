@@ -46,6 +46,152 @@ function loadPage(pageName) {
     if (pageName === "invoices") {
         initializeInvoicePage();
     }
+    if (pageName === "clients") {
+        initializeClientsPage();
+    }
+}
+async function initializeClientsPage() {
+    const addClientButton = document.getElementById(
+        "add-client-button"
+    );
+
+    const cancelClientButton = document.getElementById(
+        "cancel-client-button"
+    );
+
+    const clientFormPanel = document.getElementById(
+        "client-form-panel"
+    );
+
+    const firstNameInput = document.getElementById(
+        "client-first-name"
+    );
+
+    const clientForm = document.getElementById(
+        "client-form"
+    );
+
+    const clientEmptyState = document.getElementById(
+        "client-list-empty-state"
+    );
+
+    const clientList = document.getElementById(
+        "client-list"
+    );
+
+    if (
+        !addClientButton ||
+        !cancelClientButton ||
+        !clientFormPanel ||
+        !clientForm ||
+        !clientEmptyState ||
+        !clientList
+    ) {
+        return;
+    }
+    function renderClientCard(client) {
+        const clientCard = document.createElement("div");
+
+        clientCard.className = "client-card";
+
+        clientCard.innerHTML = `
+        <div>
+            <h4>
+                ${client.firstName} ${client.lastName}
+            </h4>
+
+            <p>
+                ${client.email || "No email provided"}
+            </p>
+
+            <p>
+                ${client.phone || "No phone provided"}
+            </p>
+        </div>
+    `;
+
+        clientList.appendChild(clientCard);
+    }
+    try {
+        const result = await window.busyBodyz.getClients();
+
+        if (result.success && result.clients.length > 0) {
+            result.clients.forEach((client) => {
+                renderClientCard(client);
+            });
+
+            clientEmptyState.hidden = true;
+            clientList.hidden = false;
+        }
+    } catch (error) {
+        console.error("Unable to load clients:", error);
+    }
+    addClientButton.addEventListener("click", () => {
+        clientFormPanel.hidden = false;
+
+        if (firstNameInput) {
+            firstNameInput.focus();
+        }
+    });
+
+    cancelClientButton.addEventListener("click", () => {
+        clientForm.reset();
+        clientFormPanel.hidden = true;
+    });
+
+    clientForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const firstName = document
+            .getElementById("client-first-name")
+            .value
+            .trim();
+
+        const lastName = document
+            .getElementById("client-last-name")
+            .value
+            .trim();
+
+        const email = document
+            .getElementById("client-email")
+            .value
+            .trim();
+
+        const phone = document
+            .getElementById("client-phone")
+            .value
+            .trim();
+
+        try {
+            const result = await window.busyBodyz.saveClient({
+                firstName,
+                lastName,
+                email,
+                phone
+            });
+
+            if (!result.success) {
+                console.error(
+                    "Unable to save client:",
+                    result.message
+                );
+
+                return;
+            }
+
+            const client = result.client;
+
+            renderClientCard(client);
+
+            clientEmptyState.hidden = true;
+            clientList.hidden = false;
+
+            clientForm.reset();
+            clientFormPanel.hidden = true;
+        } catch (error) {
+            console.error("Unable to save client:", error);
+        }
+    });
 }
 async function initializeInvoicePage() {
     const chooseFolderButton = document.getElementById(

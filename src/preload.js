@@ -12,9 +12,19 @@ contextBridge.exposeInMainWorld("busyBodyz", {
 
     getInvoiceFolder: () =>
         ipcRenderer.invoke("get-invoice-folder"),
+
     createClientInvoiceFolder: (clientName) =>
         ipcRenderer.invoke(
             "create-client-invoice-folder",
             clientName
+        ),
+
+    getClients: () =>
+        ipcRenderer.invoke("get-clients"),
+
+    saveClient: (clientData) =>
+        ipcRenderer.invoke(
+            "save-client",
+            clientData
         )
 });
