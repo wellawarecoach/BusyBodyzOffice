@@ -171,9 +171,9 @@ async function initializeClientsPage() {
             });
 
             if (!result.success) {
-                console.error(
-                    "Unable to save client:",
-                    result.message
+                alert(
+                    result.message ||
+                    "Unable to save the client."
                 );
 
                 return;

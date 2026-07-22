@@ -240,6 +240,24 @@ ipcMain.handle("save-client", (event, clientData) => {
 
     const clients = readClients();
 
+    const duplicateClient = clients.find((client) => {
+        return (
+            client.firstName.toLowerCase() ===
+            firstName.toLowerCase() &&
+            client.lastName.toLowerCase() ===
+            lastName.toLowerCase() &&
+            client.email.toLowerCase() ===
+            email.toLowerCase()
+        );
+    });
+
+    if (duplicateClient) {
+        return {
+            success: false,
+            message: "This client already exists."
+        };
+    }
+
     const client = {
         id: `client-${Date.now()}`,
         firstName,
