@@ -34,8 +34,11 @@ export function getClientProfilePage(client) {
             </div>
 
             <div class="client-profile-grid">
-                <button class="profile-module-card" type="button">
-                    <span class="profile-module-title">
+<button
+    id="personal-information-button"
+    class="profile-module-card"
+    type="button"
+>                    <span class="profile-module-title">
                         Personal Information
                     </span>
 

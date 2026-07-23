@@ -6,6 +6,7 @@ import { marketingPage } from "./pages/marketing.js";
 import { reportsPage } from "./pages/reports.js";
 import { settingsPage } from "./pages/settings.js";
 import { getClientProfilePage } from "./pages/client-profile.js";
+import { getClientPersonalInformationPage } from "./pages/client-personal-information.js";
 console.log(
     "Electron bridge:",
     window.busyBodyz?.appName,
@@ -41,9 +42,13 @@ function loadPage(pageName) {
         button.classList.remove("active");
     });
 
-    document
-        .querySelector(`[data-page="${pageName}"]`)
-        .classList.add("active");
+    const activeSidebarButton = document.querySelector(
+        `[data-page="${pageName}"]`
+    );
+
+    if (activeSidebarButton) {
+        activeSidebarButton.classList.add("active");
+    }
     if (pageName === "invoices") {
         initializeInvoicePage();
     }
@@ -137,7 +142,7 @@ async function initializeClientsPage() {
 
             workspace.innerHTML = getClientProfilePage(client);
 
-            initializeClientProfilePage();
+            initializeClientProfilePage(client);
         });
 
         return clientCard;
@@ -335,11 +340,13 @@ async function initializeInvoicePage() {
         );
     }
 }
-function initializeClientProfilePage() {
+function initializeClientProfilePage(client) {
     const backButton = document.getElementById(
         "back-to-clients-button"
     );
-
+    const personalInformationButton = document.getElementById(
+        "personal-information-button"
+    );
     if (!backButton) {
         return;
     }
@@ -347,7 +354,68 @@ function initializeClientProfilePage() {
     backButton.addEventListener("click", () => {
         loadPage("clients");
     });
+    function initializeClientPersonalInformationPage(client) {
+        const backButton = document.getElementById(
+            "back-to-client-profile-button"
+        );
+        const editButton = document.getElementById(
+            "edit-client-information-button"
+        );
+
+        const cancelButton = document.getElementById(
+            "cancel-client-information-button"
+        );
+
+        const informationDisplay = document.getElementById(
+            "client-information-display"
+        );
+
+        const informationForm = document.getElementById(
+            "client-information-form"
+        );
+        if (!backButton) {
+            return;
+        }
+
+        backButton.addEventListener("click", () => {
+            const workspace = document.getElementById("workspace");
+
+            workspace.innerHTML = getClientProfilePage(client);
+
+            initializeClientProfilePage(client);
+        });
+        if (
+            editButton &&
+            cancelButton &&
+            informationDisplay &&
+            informationForm
+        ) {
+            editButton.addEventListener("click", () => {
+                informationDisplay.classList.add("hidden");
+                informationForm.classList.remove("hidden");
+                editButton.classList.add("hidden");
+                cancelButton.classList.remove("hidden");
+            });
+
+            cancelButton.addEventListener("click", () => {
+                informationDisplay.classList.remove("hidden");
+                informationForm.classList.add("hidden");
+                editButton.classList.remove("hidden");
+                cancelButton.classList.add("hidden");
+            });
+        }
+    }
+    if (personalInformationButton) {
+        personalInformationButton.addEventListener("click", () => {
+            const workspace = document.getElementById("workspace");
+
+            workspace.innerHTML =
+                getClientPersonalInformationPage(client);
+            initializeClientPersonalInformationPage(client);
+        });
+    }
 }
+
 document.querySelectorAll(".sidebar button").forEach((button) => {
     button.addEventListener("click", () => {
         loadPage(button.dataset.page);
