@@ -5,6 +5,7 @@ import { invoicesPage } from "./pages/invoices.js";
 import { marketingPage } from "./pages/marketing.js";
 import { reportsPage } from "./pages/reports.js";
 import { settingsPage } from "./pages/settings.js";
+import { getClientProfilePage } from "./pages/client-profile.js";
 console.log(
     "Electron bridge:",
     window.busyBodyz?.appName,
@@ -89,35 +90,65 @@ async function initializeClientsPage() {
     ) {
         return;
     }
+
     function renderClientCard(client) {
         const clientCard = document.createElement("div");
 
         clientCard.className = "client-card";
+        clientCard.dataset.clientId = client.id;
 
         clientCard.innerHTML = `
-        <div>
-            <h4>
-                ${client.firstName} ${client.lastName}
-            </h4>
+      
+    <div class="client-card-header">
+        <h3>
+            ${client.firstName} ${client.lastName}
+        </h3>
 
-            <p>
-                ${client.email || "No email provided"}
-            </p>
+        <span class="client-status">
+            Active
+        </span>
+    </div>
 
-            <p>
-                ${client.phone || "No phone provided"}
-            </p>
-        </div>
-    `;
+    <div class="client-card-body">
 
-        clientList.appendChild(clientCard);
+        <p><strong>Email:</strong>
+        ${client.email || "—"}</p>
+
+        <p><strong>Phone:</strong>
+        ${client.phone || "—"}</p>
+
+    </div>
+
+    <div class="client-card-footer">
+
+        <button
+            class="secondary-btn client-view-button"
+            data-client-id="${client.id}"
+        >
+            View Profile
+        </button>
+
+    </div>
+`;
+        const viewButton = clientCard.querySelector(".client-view-button");
+
+        viewButton.addEventListener("click", () => {
+            const workspace = document.getElementById("workspace");
+
+            workspace.innerHTML = getClientProfilePage(client);
+
+            initializeClientProfilePage();
+        });
+
+        return clientCard;
     }
     try {
         const result = await window.busyBodyz.getClients();
 
         if (result.success && result.clients.length > 0) {
             result.clients.forEach((client) => {
-                renderClientCard(client);
+                const clientCard = renderClientCard(client);
+                clientList.appendChild(clientCard);
             });
 
             clientEmptyState.hidden = true;
@@ -303,6 +334,19 @@ async function initializeInvoicePage() {
             }
         );
     }
+}
+function initializeClientProfilePage() {
+    const backButton = document.getElementById(
+        "back-to-clients-button"
+    );
+
+    if (!backButton) {
+        return;
+    }
+
+    backButton.addEventListener("click", () => {
+        loadPage("clients");
+    });
 }
 document.querySelectorAll(".sidebar button").forEach((button) => {
     button.addEventListener("click", () => {
