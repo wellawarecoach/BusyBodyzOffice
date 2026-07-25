@@ -181,12 +181,13 @@ export function getClientPersonalInformationPage(client) {
     </div>
 
     <div class="client-information-actions">
-        <button
-            class="primary-btn"
-            type="submit"
-        >
-            Save Changes
-        </button>
+       <button
+    id="save-client-information-button"
+    class="primary-btn"
+    type="button"
+>
+    Save Changes
+</button>
     </div>
 </form>
 </div>

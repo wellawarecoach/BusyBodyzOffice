@@ -373,6 +373,28 @@ function initializeClientProfilePage(client) {
         const informationForm = document.getElementById(
             "client-information-form"
         );
+        const firstNameInput = document.getElementById(
+            "client-first-name-input"
+        );
+
+        const lastNameInput = document.getElementById(
+            "client-last-name-input"
+        );
+
+        const emailInput = document.getElementById(
+            "client-email-input"
+        );
+
+        const phoneInput = document.getElementById(
+            "client-phone-input"
+        );
+
+        const addressInput = document.getElementById(
+            "client-address-input"
+        );
+        const saveButton = document.getElementById(
+            "save-client-information-button"
+        );
         if (!backButton) {
             return;
         }
@@ -402,6 +424,40 @@ function initializeClientProfilePage(client) {
                 informationForm.classList.add("hidden");
                 editButton.classList.remove("hidden");
                 cancelButton.classList.add("hidden");
+            });
+        }
+        console.log("Personal information elements:", {
+            informationForm,
+            firstNameInput,
+            lastNameInput,
+            emailInput,
+            phoneInput,
+            addressInput
+        });
+        if (
+            saveButton &&
+            firstNameInput &&
+            lastNameInput &&
+            emailInput &&
+            phoneInput &&
+            addressInput
+        ) {
+            saveButton.addEventListener("click", () => {
+                const updatedClient = {
+                    ...client,
+                    firstName: firstNameInput.value.trim(),
+                    lastName: lastNameInput.value.trim(),
+                    email: emailInput.value.trim(),
+                    phone: phoneInput.value.trim(),
+                    address: addressInput.value.trim()
+                };
+
+                const workspace = document.getElementById("workspace");
+
+                workspace.innerHTML =
+                    getClientPersonalInformationPage(updatedClient);
+
+                initializeClientPersonalInformationPage(updatedClient);
             });
         }
     }

@@ -26,5 +26,11 @@ contextBridge.exposeInMainWorld("busyBodyz", {
         ipcRenderer.invoke(
             "save-client",
             clientData
+        ),
+
+    updateClient: (clientData) =>
+        ipcRenderer.invoke(
+            "update-client",
+            clientData
         )
 });

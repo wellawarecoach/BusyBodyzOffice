@@ -341,3 +341,70 @@ body {
 .hidden {
     display: none !important;
 }
+
+.client-information-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.client-information-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+.client-information-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.client-information-field-wide {
+    grid-column: 1 / -1;
+}
+
+.client-information-field-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #66736d;
+}
+
+.client-information-field-value {
+    font-size: 1rem;
+    color: #102d23;
+}
+
+.client-information-form input,
+.client-information-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #cbd5d0;
+    border-radius: 10px;
+    padding: 0.8rem 0.9rem;
+    font: inherit;
+    background: #ffffff;
+    color: #102d23;
+}
+
+.client-information-form input:focus,
+.client-information-form textarea:focus {
+    outline: none;
+    border-color: #2e6b55;
+    box-shadow: 0 0 0 3px rgba(46, 107, 85, 0.12);
+}
+
+.client-information-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.client-information-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
