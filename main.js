@@ -283,6 +283,72 @@ ipcMain.handle("save-client", (event, clientData) => {
         client
     };
 });
+ipcMain.handle("update-client", async (event, clientData) => {
+    try {
+        if (!clientData || !clientData.id) {
+            return {
+                success: false,
+                error: "A valid client ID is required.",
+            };
+        }
+
+        const clients = readClients();
+
+        const clientIndex = clients.findIndex(
+            (client) => client.id === clientData.id
+        );
+
+        if (clientIndex === -1) {
+            return {
+                success: false,
+                error: "Client not found.",
+            };
+        }
+
+        const existingClient = clients[clientIndex];
+
+        const updatedClient = {
+            ...existingClient,
+
+            firstName: String(clientData.firstName || "").trim(),
+            lastName: String(clientData.lastName || "").trim(),
+            email: String(clientData.email || "").trim(),
+            phone: String(clientData.phone || "").trim(),
+
+            updatedAt: new Date().toISOString(),
+        };
+
+        if (!updatedClient.firstName || !updatedClient.lastName) {
+            return {
+                success: false,
+                error: "First name and last name are required.",
+            };
+        }
+
+        clients[clientIndex] = updatedClient;
+
+        const saved = writeClients(clients);
+
+        if (!saved) {
+            return {
+                success: false,
+                error: "Unable to save client changes.",
+            };
+        }
+
+        return {
+            success: true,
+            client: updatedClient,
+        };
+    } catch (error) {
+        console.error("Failed to update client:", error);
+
+        return {
+            success: false,
+            error: "An unexpected error occurred while updating the client.",
+        };
+    }
+});
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {

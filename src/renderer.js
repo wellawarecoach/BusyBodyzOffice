@@ -442,7 +442,7 @@ function initializeClientProfilePage(client) {
             phoneInput &&
             addressInput
         ) {
-            saveButton.addEventListener("click", () => {
+            saveButton.addEventListener("click", async () => {
                 const updatedClient = {
                     ...client,
                     firstName: firstNameInput.value.trim(),
@@ -452,12 +452,39 @@ function initializeClientProfilePage(client) {
                     address: addressInput.value.trim()
                 };
 
-                const workspace = document.getElementById("workspace");
+                try {
+                    const result =
+                        await window.busyBodyz.updateClient(updatedClient);
 
-                workspace.innerHTML =
-                    getClientPersonalInformationPage(updatedClient);
+                    if (!result.success) {
+                        alert(
+                            result.message ||
+                            result.error ||
+                            "Unable to update the client."
+                        );
 
-                initializeClientPersonalInformationPage(updatedClient);
+                        return;
+                    }
+
+                    const savedClient = result.client;
+
+                    const workspace =
+                        document.getElementById("workspace");
+
+                    workspace.innerHTML =
+                        getClientPersonalInformationPage(savedClient);
+
+                    initializeClientPersonalInformationPage(savedClient);
+                } catch (error) {
+                    console.error(
+                        "Unable to update client information:",
+                        error
+                    );
+
+                    alert(
+                        "An unexpected error occurred while updating the client."
+                    );
+                }
             });
         }
     }
