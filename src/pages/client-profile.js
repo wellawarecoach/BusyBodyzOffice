@@ -1,4 +1,16 @@
 export function getClientProfilePage(client) {
+    const firstName = client?.firstName || "";
+    const lastName = client?.lastName || "";
+
+    const fullName =
+        `${firstName} ${lastName}`.trim() || "Unnamed Client";
+
+    const email =
+        client?.email || "No email provided";
+
+    const phone =
+        client?.phone || "No phone provided";
+
     return `
         <section class="client-profile-page">
             <div class="client-profile-topbar">
@@ -18,13 +30,13 @@ export function getClientProfilePage(client) {
                     </p>
 
                     <h2>
-                        ${client.firstName} ${client.lastName}
+                        ${fullName}
                     </h2>
 
                     <p class="client-profile-contact">
-                        ${client.email || "No email provided"}
+                        ${email}
                         <span>•</span>
-                        ${client.phone || "No phone provided"}
+                        ${phone}
                     </p>
                 </div>
 
@@ -34,11 +46,11 @@ export function getClientProfilePage(client) {
             </div>
 
             <div class="client-profile-grid">
-<button
-    id="personal-information-button"
-    class="profile-module-card"
-    type="button"
->
+                <button
+                    id="personal-information-button"
+                    class="profile-module-card"
+                    type="button"
+                >
                     <span class="profile-module-title">
                         Personal Information
                     </span>
@@ -48,7 +60,11 @@ export function getClientProfilePage(client) {
                     </span>
                 </button>
 
-                <button class="profile-module-card" type="button">
+                <button
+                    id="programs-button"
+                    class="profile-module-card"
+                    type="button"
+                >
                     <span class="profile-module-title">
                         Programs
                     </span>
@@ -58,7 +74,11 @@ export function getClientProfilePage(client) {
                     </span>
                 </button>
 
-                <button class="profile-module-card" type="button">
+                <button
+                    id="assessments-button"
+                    class="profile-module-card"
+                    type="button"
+                >
                     <span class="profile-module-title">
                         Assessments
                     </span>
@@ -68,7 +88,11 @@ export function getClientProfilePage(client) {
                     </span>
                 </button>
 
-                <button class="profile-module-card" type="button">
+                <button
+                    id="goals-button"
+                    class="profile-module-card"
+                    type="button"
+                >
                     <span class="profile-module-title">
                         Goals
                     </span>
@@ -78,7 +102,11 @@ export function getClientProfilePage(client) {
                     </span>
                 </button>
 
-                <button class="profile-module-card" type="button">
+                <button
+                    id="progress-button"
+                    class="profile-module-card"
+                    type="button"
+                >
                     <span class="profile-module-title">
                         Progress
                     </span>
@@ -88,7 +116,11 @@ export function getClientProfilePage(client) {
                     </span>
                 </button>
 
-                <button class="profile-module-card" type="button">
+                <button
+                    id="invoices-button"
+                    class="profile-module-card"
+                    type="button"
+                >
                     <span class="profile-module-title">
                         Invoices
                     </span>
@@ -98,7 +130,11 @@ export function getClientProfilePage(client) {
                     </span>
                 </button>
 
-                <button class="profile-module-card" type="button">
+                <button
+                    id="notes-button"
+                    class="profile-module-card"
+                    type="button"
+                >
                     <span class="profile-module-title">
                         Notes
                     </span>
@@ -108,7 +144,11 @@ export function getClientProfilePage(client) {
                     </span>
                 </button>
 
-                <button class="profile-module-card" type="button">
+                <button
+                    id="documents-button"
+                    class="profile-module-card"
+                    type="button"
+                >
                     <span class="profile-module-title">
                         Documents
                     </span>
@@ -118,7 +158,11 @@ export function getClientProfilePage(client) {
                     </span>
                 </button>
 
-                <button class="profile-module-card" type="button">
+                <button
+                    id="appointments-button"
+                    class="profile-module-card"
+                    type="button"
+                >
                     <span class="profile-module-title">
                         Appointments
                     </span>

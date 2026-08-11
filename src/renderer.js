@@ -7,7 +7,7 @@ import { reportsPage } from "./pages/reports.js";
 import { settingsPage } from "./pages/settings.js";
 import { getClientProfilePage } from "./pages/client-profile.js";
 import { getClientPersonalInformationPage } from "./pages/client-personal-information.js";
-console.log(
+import { getClientProgramsPage } from "./pages/client-programs.js"; console.log(
     "Electron bridge:",
     window.busyBodyz?.appName,
     window.busyBodyz?.version
@@ -344,6 +344,9 @@ function initializeClientProfilePage(client) {
     const backButton = document.getElementById(
         "back-to-clients-button"
     );
+    const programsButton = document.getElementById(
+        "programs-button"
+    );
     const personalInformationButton = document.getElementById(
         "personal-information-button"
     );
@@ -488,6 +491,24 @@ function initializeClientProfilePage(client) {
             });
         }
     }
+    function initializeClientProgramsPage(client) {
+        const backButton = document.getElementById(
+            "back-to-client-profile-button"
+        );
+
+        if (!backButton) {
+            return;
+        }
+
+        backButton.addEventListener("click", () => {
+            const workspace = document.getElementById("workspace");
+
+            workspace.innerHTML =
+                getClientProfilePage(client);
+
+            initializeClientProfilePage(client);
+        });
+    }
     if (personalInformationButton) {
         personalInformationButton.addEventListener("click", () => {
             const workspace = document.getElementById("workspace");
@@ -495,6 +516,16 @@ function initializeClientProfilePage(client) {
             workspace.innerHTML =
                 getClientPersonalInformationPage(client);
             initializeClientPersonalInformationPage(client);
+        });
+    }
+    if (programsButton) {
+        programsButton.addEventListener("click", () => {
+            const workspace = document.getElementById("workspace");
+
+            workspace.innerHTML =
+                getClientProgramsPage(client);
+
+            initializeClientProgramsPage(client);
         });
     }
 }
