@@ -496,17 +496,367 @@ function initializeClientProfilePage(client) {
             "back-to-client-profile-button"
         );
 
+        const addProgramButton = document.getElementById(
+            "add-client-program-button"
+        );
+
+        const cancelProgramButton = document.getElementById(
+            "cancel-client-program-button"
+        );
+
+        const programFormPanel = document.getElementById(
+            "client-program-form-panel"
+        );
+
+        const programForm = document.getElementById(
+            "client-program-form"
+        );
+
+        const programNameInput = document.getElementById(
+            "client-program-name"
+        );
+        const programFormHeading = document.querySelector(
+            "#client-program-form .form-section-heading h3"
+        );
+
+        const saveProgramButton = document.getElementById(
+            "save-client-program-button"
+        );
         if (!backButton) {
             return;
         }
 
         backButton.addEventListener("click", () => {
-            const workspace = document.getElementById("workspace");
+            const workspace =
+                document.getElementById("workspace");
 
             workspace.innerHTML =
                 getClientProfilePage(client);
 
             initializeClientProfilePage(client);
+        });
+
+        if (
+            addProgramButton &&
+            programFormPanel &&
+            programForm
+        ) {
+            addProgramButton.addEventListener("click", () => {
+                programForm.reset();
+
+                delete programForm.dataset.editingProgramId;
+
+                if (programFormHeading) {
+                    programFormHeading.textContent =
+                        "Add Program";
+                }
+
+                if (saveProgramButton) {
+                    saveProgramButton.textContent =
+                        "Save Program";
+                }
+
+                programFormPanel.classList.remove("hidden");
+
+                if (programNameInput) {
+                    programNameInput.focus();
+                }
+            });
+        }
+
+        if (
+            cancelProgramButton &&
+            programFormPanel &&
+            programForm
+        ) {
+            cancelProgramButton.addEventListener("click", () => {
+                programForm.reset();
+
+                delete programForm.dataset.editingProgramId;
+
+                if (programFormHeading) {
+                    programFormHeading.textContent =
+                        "Add Program";
+                }
+
+                if (saveProgramButton) {
+                    saveProgramButton.textContent =
+                        "Save Program";
+                }
+
+                programFormPanel.classList.add("hidden");
+            });
+        }
+        if (programForm) {
+            programForm.addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const programName = document
+                    .getElementById("client-program-name")
+                    .value
+                    .trim();
+
+                const programType = document
+                    .getElementById("client-program-type")
+                    .value
+                    .trim();
+
+                const startDate = document
+                    .getElementById("client-program-start-date")
+                    .value
+                    .trim();
+
+                const endDate = document
+                    .getElementById("client-program-end-date")
+                    .value
+                    .trim();
+
+                const status = document
+                    .getElementById("client-program-status")
+                    .value
+                    .trim();
+
+                const notes = document
+                    .getElementById("client-program-notes")
+                    .value
+                    .trim();
+
+                const editingProgramId =
+                    programForm.dataset.editingProgramId || "";
+
+                try {
+                    let result;
+
+                    if (editingProgramId) {
+                        result =
+                            await window.busyBodyz.updateClientProgram({
+                                clientId: client.id,
+                                programId: editingProgramId,
+                                program: {
+                                    programName,
+                                    programType,
+                                    startDate,
+                                    endDate,
+                                    status,
+                                    notes
+                                }
+                            });
+                    } else {
+                        result =
+                            await window.busyBodyz.addClientProgram({
+                                clientId: client.id,
+                                program: {
+                                    programName,
+                                    programType,
+                                    startDate,
+                                    endDate,
+                                    status,
+                                    notes
+                                }
+                            });
+                    }
+
+                    if (!result.success) {
+                        alert(
+                            result.error ||
+                            "Unable to save the program."
+                        );
+
+                        return;
+                    }
+
+                    const updatedClient =
+                        result.client;
+
+                    const workspace =
+                        document.getElementById("workspace");
+
+                    workspace.innerHTML =
+                        getClientProgramsPage(updatedClient);
+
+                    initializeClientProgramsPage(
+                        updatedClient
+                    );
+                } catch (error) {
+                    console.error(
+                        "Unable to save client program:",
+                        error
+                    );
+
+                    alert(
+                        "An unexpected error occurred while saving the program."
+                    );
+                }
+            });
+        }
+        const editProgramButtons =
+            document.querySelectorAll(
+                ".edit-client-program-button"
+            );
+
+        editProgramButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                const programId =
+                    button.dataset.programId;
+
+                if (!programId) {
+                    return;
+                }
+
+                const programs =
+                    Array.isArray(client.programs)
+                        ? client.programs
+                        : [];
+
+                const program = programs.find(
+                    (item) => item.id === programId
+                );
+
+                if (!program) {
+                    alert("Program not found.");
+                    return;
+                }
+
+                const programNameInput =
+                    document.getElementById(
+                        "client-program-name"
+                    );
+
+                const programTypeInput =
+                    document.getElementById(
+                        "client-program-type"
+                    );
+
+                const startDateInput =
+                    document.getElementById(
+                        "client-program-start-date"
+                    );
+
+                const endDateInput =
+                    document.getElementById(
+                        "client-program-end-date"
+                    );
+
+                const statusInput =
+                    document.getElementById(
+                        "client-program-status"
+                    );
+
+                const notesInput =
+                    document.getElementById(
+                        "client-program-notes"
+                    );
+
+                if (
+                    !programFormPanel ||
+                    !programForm ||
+                    !programNameInput ||
+                    !programTypeInput ||
+                    !startDateInput ||
+                    !endDateInput ||
+                    !statusInput ||
+                    !notesInput
+                ) {
+                    return;
+                }
+
+                programForm.dataset.editingProgramId =
+                    program.id;
+                if (programFormHeading) {
+                    programFormHeading.textContent =
+                        "Edit Program";
+                }
+
+                if (saveProgramButton) {
+                    saveProgramButton.textContent =
+                        "Update Program";
+                }
+                programNameInput.value =
+                    program.programName || "";
+
+                programTypeInput.value =
+                    program.programType || "";
+
+                startDateInput.value =
+                    program.startDate || "";
+
+                endDateInput.value =
+                    program.endDate || "";
+
+                statusInput.value =
+                    program.status || "Active";
+
+                notesInput.value =
+                    program.notes || "";
+
+                programFormPanel.classList.remove(
+                    "hidden"
+                );
+
+                programNameInput.focus();
+            });
+        });
+        const deleteProgramButtons =
+            document.querySelectorAll(
+                ".delete-client-program-button"
+            );
+
+        deleteProgramButtons.forEach((button) => {
+            button.addEventListener("click", async () => {
+                const programId =
+                    button.dataset.programId;
+
+                if (!programId) {
+                    return;
+                }
+
+                const confirmed = confirm(
+                    "Delete this program?"
+                );
+
+                if (!confirmed) {
+                    return;
+                }
+
+                try {
+                    const result =
+                        await window.busyBodyz.deleteClientProgram({
+                            clientId: client.id,
+                            programId
+                        });
+
+                    if (!result.success) {
+                        alert(
+                            result.error ||
+                            "Unable to delete the program."
+                        );
+
+                        return;
+                    }
+
+                    const updatedClient =
+                        result.client;
+
+                    const workspace =
+                        document.getElementById("workspace");
+
+                    workspace.innerHTML =
+                        getClientProgramsPage(updatedClient);
+
+                    initializeClientProgramsPage(
+                        updatedClient
+                    );
+                } catch (error) {
+                    console.error(
+                        "Unable to delete client program:",
+                        error
+                    );
+
+                    alert(
+                        "An unexpected error occurred while deleting the program."
+                    );
+                }
+            });
         });
     }
     if (personalInformationButton) {

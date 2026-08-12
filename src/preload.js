@@ -32,5 +32,12 @@ contextBridge.exposeInMainWorld("busyBodyz", {
         ipcRenderer.invoke(
             "update-client",
             clientData
-        )
+        ),
+    addClientProgram: (payload) =>
+        ipcRenderer.invoke("add-client-program", payload),
+
+    deleteClientProgram: (payload) =>
+        ipcRenderer.invoke("delete-client-program", payload),
+    updateClientProgram: (payload) =>
+        ipcRenderer.invoke("update-client-program", payload)
 });

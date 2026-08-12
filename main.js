@@ -349,6 +349,351 @@ ipcMain.handle("update-client", async (event, clientData) => {
         };
     }
 });
+ipcMain.handle("add-client-program", async (event, payload) => {
+    try {
+        const clientId = String(
+            payload?.clientId || ""
+        ).trim();
+
+        const programData = payload?.program;
+
+        if (!clientId) {
+            return {
+                success: false,
+                error: "A valid client ID is required."
+            };
+        }
+
+        if (!programData) {
+            return {
+                success: false,
+                error: "Program information is required."
+            };
+        }
+
+        const programName = String(
+            programData.programName || ""
+        ).trim();
+
+        if (!programName) {
+            return {
+                success: false,
+                error: "Program name is required."
+            };
+        }
+
+        const clients = readClients();
+
+        const clientIndex = clients.findIndex(
+            (client) => client.id === clientId
+        );
+
+        if (clientIndex === -1) {
+            return {
+                success: false,
+                error: "Client not found."
+            };
+        }
+
+        const client = clients[clientIndex];
+
+        const existingPrograms =
+            Array.isArray(client.programs)
+                ? client.programs
+                : [];
+
+        const program = {
+            id: `program-${Date.now()}`,
+            programName,
+            programType: String(
+                programData.programType || ""
+            ).trim(),
+            startDate: String(
+                programData.startDate || ""
+            ).trim(),
+            endDate: String(
+                programData.endDate || ""
+            ).trim(),
+            status: String(
+                programData.status || "Active"
+            ).trim(),
+            notes: String(
+                programData.notes || ""
+            ).trim(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        const updatedClient = {
+            ...client,
+            programs: [
+                ...existingPrograms,
+                program
+            ],
+            updatedAt: new Date().toISOString()
+        };
+
+        clients[clientIndex] = updatedClient;
+
+        const saved = writeClients(clients);
+
+        if (!saved) {
+            return {
+                success: false,
+                error: "Unable to save the program."
+            };
+        }
+
+        return {
+            success: true,
+            client: updatedClient,
+            program
+        };
+    } catch (error) {
+        console.error(
+            "Failed to add client program:",
+            error
+        );
+
+        return {
+            success: false,
+            error: "An unexpected error occurred while saving the program."
+        };
+    }
+});
+ipcMain.handle("delete-client-program", async (event, payload) => {
+    try {
+        const clientId = String(
+            payload?.clientId || ""
+        ).trim();
+
+        const programId = String(
+            payload?.programId || ""
+        ).trim();
+
+        if (!clientId) {
+            return {
+                success: false,
+                error: "A valid client ID is required."
+            };
+        }
+
+        if (!programId) {
+            return {
+                success: false,
+                error: "A valid program ID is required."
+            };
+        }
+
+        const clients = readClients();
+
+        const clientIndex = clients.findIndex(
+            (client) => client.id === clientId
+        );
+
+        if (clientIndex === -1) {
+            return {
+                success: false,
+                error: "Client not found."
+            };
+        }
+
+        const client = clients[clientIndex];
+
+        const existingPrograms =
+            Array.isArray(client.programs)
+                ? client.programs
+                : [];
+
+        const programExists =
+            existingPrograms.some(
+                (program) => program.id === programId
+            );
+
+        if (!programExists) {
+            return {
+                success: false,
+                error: "Program not found."
+            };
+        }
+
+        const updatedClient = {
+            ...client,
+            programs: existingPrograms.filter(
+                (program) => program.id !== programId
+            ),
+            updatedAt: new Date().toISOString()
+        };
+
+        clients[clientIndex] = updatedClient;
+
+        const saved = writeClients(clients);
+
+        if (!saved) {
+            return {
+                success: false,
+                error: "Unable to delete the program."
+            };
+        }
+
+        return {
+            success: true,
+            client: updatedClient
+        };
+    } catch (error) {
+        console.error(
+            "Failed to delete client program:",
+            error
+        );
+
+        return {
+            success: false,
+            error: "An unexpected error occurred while deleting the program."
+        };
+    }
+});
+ipcMain.handle("update-client-program", async (event, payload) => {
+    try {
+        const clientId = String(
+            payload?.clientId || ""
+        ).trim();
+
+        const programId = String(
+            payload?.programId || ""
+        ).trim();
+
+        const programData = payload?.program;
+
+        if (!clientId) {
+            return {
+                success: false,
+                error: "A valid client ID is required."
+            };
+        }
+
+        if (!programId) {
+            return {
+                success: false,
+                error: "A valid program ID is required."
+            };
+        }
+
+        if (!programData) {
+            return {
+                success: false,
+                error: "Program information is required."
+            };
+        }
+
+        const programName = String(
+            programData.programName || ""
+        ).trim();
+
+        if (!programName) {
+            return {
+                success: false,
+                error: "Program name is required."
+            };
+        }
+
+        const clients = readClients();
+
+        const clientIndex = clients.findIndex(
+            (client) => client.id === clientId
+        );
+
+        if (clientIndex === -1) {
+            return {
+                success: false,
+                error: "Client not found."
+            };
+        }
+
+        const client = clients[clientIndex];
+
+        const programs =
+            Array.isArray(client.programs)
+                ? client.programs
+                : [];
+
+        const programIndex = programs.findIndex(
+            (program) => program.id === programId
+        );
+
+        if (programIndex === -1) {
+            return {
+                success: false,
+                error: "Program not found."
+            };
+        }
+
+        const existingProgram =
+            programs[programIndex];
+
+        const updatedProgram = {
+            ...existingProgram,
+            programName,
+            programType: String(
+                programData.programType || ""
+            ).trim(),
+            startDate: String(
+                programData.startDate || ""
+            ).trim(),
+            endDate: String(
+                programData.endDate || ""
+            ).trim(),
+            status: String(
+                programData.status || "Active"
+            ).trim(),
+            notes: String(
+                programData.notes || ""
+            ).trim(),
+            updatedAt: new Date().toISOString()
+        };
+
+        const updatedPrograms = [
+            ...programs
+        ];
+
+        updatedPrograms[programIndex] =
+            updatedProgram;
+
+        const updatedClient = {
+            ...client,
+            programs: updatedPrograms,
+            updatedAt: new Date().toISOString()
+        };
+
+        clients[clientIndex] =
+            updatedClient;
+
+        const saved =
+            writeClients(clients);
+
+        if (!saved) {
+            return {
+                success: false,
+                error: "Unable to update the program."
+            };
+        }
+
+        return {
+            success: true,
+            client: updatedClient,
+            program: updatedProgram
+        };
+    } catch (error) {
+        console.error(
+            "Failed to update client program:",
+            error
+        );
+
+        return {
+            success: false,
+            error: "An unexpected error occurred while updating the program."
+        };
+    }
+});
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
