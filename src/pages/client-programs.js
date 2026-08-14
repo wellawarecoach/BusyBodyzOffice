@@ -16,7 +16,10 @@ function renderProgramCard(program) {
 
     const status =
         escapeHtml(program?.status || "Active");
-
+    const statusClass =
+        String(program?.status || "Active")
+            .toLowerCase()
+            .replaceAll(" ", "-");
     const startDate =
         escapeHtml(program?.startDate || "Not specified");
 
@@ -45,9 +48,11 @@ function renderProgramCard(program) {
                     </h3>
                 </div>
 
-                <span class="client-status">
-                    ${status}
-                </span>
+               <span
+    class="client-status program-status program-status-${statusClass}"
+>
+    ${status}
+</span>
             </div>
 
             <div class="client-program-card-details">

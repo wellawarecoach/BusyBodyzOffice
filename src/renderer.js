@@ -610,7 +610,17 @@ function initializeClientProfilePage(client) {
                     .getElementById("client-program-end-date")
                     .value
                     .trim();
+                if (
+                    startDate &&
+                    endDate &&
+                    endDate < startDate
+                ) {
+                    alert(
+                        "End Date cannot be earlier than Start Date."
+                    );
 
+                    return;
+                }
                 const status = document
                     .getElementById("client-program-status")
                     .value
