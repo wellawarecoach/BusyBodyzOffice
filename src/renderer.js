@@ -7,7 +7,10 @@ import { reportsPage } from "./pages/reports.js";
 import { settingsPage } from "./pages/settings.js";
 import { getClientProfilePage } from "./pages/client-profile.js";
 import { getClientPersonalInformationPage } from "./pages/client-personal-information.js";
-import { getClientProgramsPage } from "./pages/client-programs.js"; console.log(
+import { getClientProgramsPage } from "./pages/client-programs.js";
+import { getClientAssessmentsPage } from "./pages/client-assessments.js";
+
+console.log(
     "Electron bridge:",
     window.busyBodyz?.appName,
     window.busyBodyz?.version
@@ -346,6 +349,9 @@ function initializeClientProfilePage(client) {
     );
     const programsButton = document.getElementById(
         "programs-button"
+    );
+    const assessmentsButton = document.getElementById(
+        "assessments-button"
     );
     const personalInformationButton = document.getElementById(
         "personal-information-button"
@@ -869,6 +875,25 @@ function initializeClientProfilePage(client) {
             });
         });
     }
+    function initializeClientAssessmentsPage(client) {
+        const backButton = document.getElementById(
+            "back-to-client-profile-button"
+        );
+
+        if (!backButton) {
+            return;
+        }
+
+        backButton.addEventListener("click", () => {
+            const workspace =
+                document.getElementById("workspace");
+
+            workspace.innerHTML =
+                getClientProfilePage(client);
+
+            initializeClientProfilePage(client);
+        });
+    }
     if (personalInformationButton) {
         personalInformationButton.addEventListener("click", () => {
             const workspace = document.getElementById("workspace");
@@ -886,6 +911,17 @@ function initializeClientProfilePage(client) {
                 getClientProgramsPage(client);
 
             initializeClientProgramsPage(client);
+        });
+    }
+    if (assessmentsButton) {
+        assessmentsButton.addEventListener("click", () => {
+            const workspace =
+                document.getElementById("workspace");
+
+            workspace.innerHTML =
+                getClientAssessmentsPage(client);
+
+            initializeClientAssessmentsPage(client);
         });
     }
 }
