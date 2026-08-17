@@ -33,11 +33,32 @@ contextBridge.exposeInMainWorld("busyBodyz", {
             "update-client",
             clientData
         ),
+
     addClientProgram: (payload) =>
-        ipcRenderer.invoke("add-client-program", payload),
+        ipcRenderer.invoke(
+            "add-client-program",
+            payload
+        ),
 
     deleteClientProgram: (payload) =>
-        ipcRenderer.invoke("delete-client-program", payload),
+        ipcRenderer.invoke(
+            "delete-client-program",
+            payload
+        ),
+
     updateClientProgram: (payload) =>
-        ipcRenderer.invoke("update-client-program", payload)
+        ipcRenderer.invoke(
+            "update-client-program",
+            payload
+        ),
+
+    saveAssessmentTemplate: (templateData) =>
+        ipcRenderer.invoke(
+            "save-assessment-template",
+            templateData
+        ),
+    getAssessmentTemplates: () =>
+        ipcRenderer.invoke(
+            "get-assessment-templates"
+        )
 });

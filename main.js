@@ -694,6 +694,137 @@ ipcMain.handle("update-client-program", async (event, payload) => {
         };
     }
 });
+ipcMain.handle("save-assessment-template", async (event, templateData) => {
+    try {
+        const templateName = String(
+            templateData?.templateName || ""
+        ).trim();
+
+        if (!templateName) {
+            return {
+                success: false,
+                error: "Template name is required."
+            };
+        }
+
+        const templatesFilePath = path.join(
+            app.getPath("userData"),
+            "busybodyz-assessment-templates.json"
+        );
+
+        let templates = [];
+
+        if (fs.existsSync(templatesFilePath)) {
+            try {
+                const fileContents = fs.readFileSync(
+                    templatesFilePath,
+                    "utf8"
+                );
+
+                templates = JSON.parse(fileContents);
+
+                if (!Array.isArray(templates)) {
+                    templates = [];
+                }
+            } catch (error) {
+                console.error(
+                    "Unable to read assessment templates:",
+                    error
+                );
+
+                templates = [];
+            }
+        }
+
+        const template = {
+            id: `assessment-template-${Date.now()}`,
+            templateName,
+            category: String(
+                templateData?.category || ""
+            ).trim(),
+            version: String(
+                templateData?.version || "1.0"
+            ).trim(),
+            status: String(
+                templateData?.status || "Active"
+            ).trim(),
+            description: String(
+                templateData?.description || ""
+            ).trim(),
+            questions: [],
+            protocol: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        templates.push(template);
+
+        fs.writeFileSync(
+            templatesFilePath,
+            JSON.stringify(templates, null, 2),
+            "utf8"
+        );
+
+        return {
+            success: true,
+            template
+        };
+    } catch (error) {
+        console.error(
+            "Failed to save assessment template:",
+            error
+        );
+
+        return {
+            success: false,
+            error: "An unexpected error occurred while saving the assessment template."
+        };
+    }
+});
+ipcMain.handle("get-assessment-templates", async () => {
+    try {
+        const templatesFilePath = path.join(
+            app.getPath("userData"),
+            "busybodyz-assessment-templates.json"
+        );
+
+        if (!fs.existsSync(templatesFilePath)) {
+            return {
+                success: true,
+                templates: []
+            };
+        }
+
+        const fileContents = fs.readFileSync(
+            templatesFilePath,
+            "utf8"
+        );
+
+        const templates = JSON.parse(fileContents);
+
+        if (!Array.isArray(templates)) {
+            return {
+                success: false,
+                error: "Assessment template data is invalid."
+            };
+        }
+
+        return {
+            success: true,
+            templates
+        };
+    } catch (error) {
+        console.error(
+            "Failed to load assessment templates:",
+            error
+        );
+
+        return {
+            success: false,
+            error: "Unable to load assessment templates."
+        };
+    }
+});
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {

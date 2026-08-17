@@ -47,13 +47,23 @@ export function getClientAssessmentsPage(client) {
                         </p>
                     </div>
 
-                    <button
-                        id="add-client-assessment-button"
-                        class="primary-btn"
-                        type="button"
-                    >
-                        + New Assessment
-                    </button>
+                  <div class="client-assessments-actions">
+    <button
+        id="manage-assessment-templates-button"
+        class="secondary-btn"
+        type="button"
+    >
+        Manage Templates
+    </button>
+
+    <button
+        id="add-client-assessment-button"
+        class="primary-btn"
+        type="button"
+    >
+        + New Assessment
+    </button>
+</div>
                 </div>
 
                 <div

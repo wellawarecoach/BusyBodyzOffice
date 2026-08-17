@@ -9,7 +9,7 @@ import { getClientProfilePage } from "./pages/client-profile.js";
 import { getClientPersonalInformationPage } from "./pages/client-personal-information.js";
 import { getClientProgramsPage } from "./pages/client-programs.js";
 import { getClientAssessmentsPage } from "./pages/client-assessments.js";
-
+import { getAssessmentTemplatesPage } from "./pages/assessment-templates.js";
 console.log(
     "Electron bridge:",
     window.busyBodyz?.appName,
@@ -880,6 +880,10 @@ function initializeClientProfilePage(client) {
             "back-to-client-profile-button"
         );
 
+        const manageTemplatesButton = document.getElementById(
+            "manage-assessment-templates-button"
+        );
+
         if (!backButton) {
             return;
         }
@@ -893,19 +897,357 @@ function initializeClientProfilePage(client) {
 
             initializeClientProfilePage(client);
         });
+
+        if (manageTemplatesButton) {
+            manageTemplatesButton.addEventListener("click", () => {
+                const workspace =
+                    document.getElementById("workspace");
+
+                workspace.innerHTML =
+                    getAssessmentTemplatesPage(client);
+
+                initializeAssessmentTemplatesPage(client);
+            });
+        }
+    }
+    async function initializeAssessmentTemplatesPage(client) {
+        const backButton = document.getElementById(
+            "back-to-client-assessments-button"
+        );
+
+        const addTemplateButton = document.getElementById(
+            "add-assessment-template-button"
+        );
+
+        const cancelTemplateButton = document.getElementById(
+            "cancel-assessment-template-button"
+        );
+
+        const templateFormPanel = document.getElementById(
+            "assessment-template-form-panel"
+        );
+
+        const templateForm = document.getElementById(
+            "assessment-template-form"
+        );
+
+        const templateNameInput = document.getElementById(
+            "assessment-template-name"
+        );
+
+        const templatesList = document.getElementById(
+            "assessment-templates-list"
+        );
+
+        if (!backButton) {
+            return;
+        }
+
+        async function renderAssessmentTemplates() {
+            if (!templatesList) {
+                return;
+            }
+
+            try {
+                const result =
+                    await window.busyBodyz.getAssessmentTemplates();
+
+                if (!result.success) {
+                    templatesList.innerHTML = "";
+
+                    const errorState =
+                        document.createElement("div");
+
+                    errorState.className = "empty-state";
+
+                    const heading =
+                        document.createElement("h3");
+
+                    heading.textContent =
+                        "Unable to load assessment templates";
+
+                    const message =
+                        document.createElement("p");
+
+                    message.textContent =
+                        result.error ||
+                        "Assessment templates could not be loaded.";
+
+                    errorState.appendChild(heading);
+                    errorState.appendChild(message);
+
+                    templatesList.appendChild(errorState);
+
+                    return;
+                }
+
+                const templates = result.templates || [];
+
+                templatesList.innerHTML = "";
+
+                if (templates.length === 0) {
+                    const emptyState =
+                        document.createElement("div");
+
+                    emptyState.className = "empty-state";
+
+                    const heading =
+                        document.createElement("h3");
+
+                    heading.textContent =
+                        "No assessment templates yet";
+
+                    const message =
+                        document.createElement("p");
+
+                    message.textContent =
+                        "Create your first assessment template to begin building editable questions and testing protocols.";
+
+                    emptyState.appendChild(heading);
+                    emptyState.appendChild(message);
+
+                    templatesList.appendChild(emptyState);
+
+                    return;
+                }
+
+                templates.forEach((template) => {
+                    const card =
+                        document.createElement("div");
+
+                    card.className =
+                        "assessment-template-card";
+
+                    const header =
+                        document.createElement("div");
+
+                    header.className =
+                        "assessment-template-card-header";
+
+                    const titleArea =
+                        document.createElement("div");
+
+                    const title =
+                        document.createElement("h3");
+
+                    title.textContent =
+                        template.templateName ||
+                        "Unnamed Template";
+
+                    const meta =
+                        document.createElement("p");
+
+                    const category =
+                        template.category ||
+                        "Uncategorized";
+
+                    const version =
+                        template.version ||
+                        "1.0";
+
+                    meta.textContent =
+                        `${category} • Version ${version}`;
+
+                    titleArea.appendChild(title);
+                    titleArea.appendChild(meta);
+
+                    const status =
+                        document.createElement("span");
+
+                    status.className =
+                        "assessment-template-status";
+
+                    status.textContent =
+                        template.status ||
+                        "Active";
+
+                    header.appendChild(titleArea);
+                    header.appendChild(status);
+
+                    card.appendChild(header);
+
+                    if (template.description) {
+                        const description =
+                            document.createElement("p");
+
+                        description.className =
+                            "assessment-template-description";
+
+                        description.textContent =
+                            template.description;
+
+                        card.appendChild(description);
+                    }
+
+                    templatesList.appendChild(card);
+                });
+            } catch (error) {
+                console.error(
+                    "Unable to load assessment templates:",
+                    error
+                );
+
+                templatesList.innerHTML = "";
+
+                const errorState =
+                    document.createElement("div");
+
+                errorState.className = "empty-state";
+
+                const heading =
+                    document.createElement("h3");
+
+                heading.textContent =
+                    "Unable to load assessment templates";
+
+                const message =
+                    document.createElement("p");
+
+                message.textContent =
+                    "An unexpected error occurred while loading assessment templates.";
+
+                errorState.appendChild(heading);
+                errorState.appendChild(message);
+
+                templatesList.appendChild(errorState);
+            }
+        }
+
+        backButton.addEventListener("click", () => {
+            const workspace =
+                document.getElementById("workspace");
+
+            workspace.innerHTML =
+                getClientAssessmentsPage(client);
+
+            initializeClientAssessmentsPage(client);
+        });
+
+        if (
+            addTemplateButton &&
+            templateFormPanel &&
+            templateForm
+        ) {
+            addTemplateButton.addEventListener("click", () => {
+                templateForm.reset();
+
+                templateFormPanel.classList.remove(
+                    "hidden"
+                );
+
+                if (templateNameInput) {
+                    templateNameInput.focus();
+                }
+            });
+        }
+
+        if (
+            cancelTemplateButton &&
+            templateFormPanel &&
+            templateForm
+        ) {
+            cancelTemplateButton.addEventListener("click", () => {
+                templateForm.reset();
+
+                templateFormPanel.classList.add(
+                    "hidden"
+                );
+            });
+        }
+
+        if (templateForm) {
+            templateForm.addEventListener(
+                "submit",
+                async (event) => {
+                    event.preventDefault();
+
+                    const templateName = document
+                        .getElementById("assessment-template-name")
+                        .value
+                        .trim();
+
+                    const category = document
+                        .getElementById("assessment-template-category")
+                        .value
+                        .trim();
+
+                    const version = document
+                        .getElementById("assessment-template-version")
+                        .value
+                        .trim();
+
+                    const status = document
+                        .getElementById("assessment-template-status")
+                        .value
+                        .trim();
+
+                    const description = document
+                        .getElementById("assessment-template-description")
+                        .value
+                        .trim();
+
+                    try {
+                        const result =
+                            await window.busyBodyz.saveAssessmentTemplate({
+                                templateName,
+                                category,
+                                version,
+                                status,
+                                description
+                            });
+
+                        if (!result.success) {
+                            alert(
+                                result.error ||
+                                "Unable to save the assessment template."
+                            );
+
+                            return;
+                        }
+
+                        templateForm.reset();
+
+                        templateFormPanel.classList.add(
+                            "hidden"
+                        );
+
+                        await renderAssessmentTemplates();
+
+                        alert(
+                            "Assessment template saved."
+                        );
+                    } catch (error) {
+                        console.error(
+                            "Unable to save assessment template:",
+                            error
+                        );
+
+                        alert(
+                            "An unexpected error occurred while saving the assessment template."
+                        );
+                    }
+                }
+            );
+        }
+
+        await renderAssessmentTemplates();
     }
     if (personalInformationButton) {
         personalInformationButton.addEventListener("click", () => {
-            const workspace = document.getElementById("workspace");
+            const workspace =
+                document.getElementById("workspace");
 
             workspace.innerHTML =
                 getClientPersonalInformationPage(client);
+
             initializeClientPersonalInformationPage(client);
         });
     }
+
     if (programsButton) {
         programsButton.addEventListener("click", () => {
-            const workspace = document.getElementById("workspace");
+            const workspace =
+                document.getElementById("workspace");
 
             workspace.innerHTML =
                 getClientProgramsPage(client);
@@ -913,6 +1255,7 @@ function initializeClientProfilePage(client) {
             initializeClientProgramsPage(client);
         });
     }
+
     if (assessmentsButton) {
         assessmentsButton.addEventListener("click", () => {
             const workspace =
