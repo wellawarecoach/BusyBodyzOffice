@@ -825,6 +825,118 @@ ipcMain.handle("get-assessment-templates", async () => {
         };
     }
 });
+ipcMain.handle(
+    "update-assessment-template",
+    async (event, templateData) => {
+        try {
+            const templateId = String(
+                templateData?.id || ""
+            ).trim();
+
+            const templateName = String(
+                templateData?.templateName || ""
+            ).trim();
+
+            if (!templateId) {
+                return {
+                    success: false,
+                    error: "Template ID is required."
+                };
+            }
+
+            if (!templateName) {
+                return {
+                    success: false,
+                    error: "Template name is required."
+                };
+            }
+
+            const templatesFilePath = path.join(
+                app.getPath("userData"),
+                "busybodyz-assessment-templates.json"
+            );
+
+            if (!fs.existsSync(templatesFilePath)) {
+                return {
+                    success: false,
+                    error: "Assessment template file was not found."
+                };
+            }
+
+            const fileContents = fs.readFileSync(
+                templatesFilePath,
+                "utf8"
+            );
+
+            const templates = JSON.parse(fileContents);
+
+            if (!Array.isArray(templates)) {
+                return {
+                    success: false,
+                    error: "Assessment template data is invalid."
+                };
+            }
+
+            const templateIndex =
+                templates.findIndex(
+                    (template) =>
+                        template.id === templateId
+                );
+
+            if (templateIndex === -1) {
+                return {
+                    success: false,
+                    error: "Assessment template was not found."
+                };
+            }
+
+            const existingTemplate =
+                templates[templateIndex];
+
+            const updatedTemplate = {
+                ...existingTemplate,
+                templateName,
+                category: String(
+                    templateData?.category || ""
+                ).trim(),
+                version: String(
+                    templateData?.version || "1.0"
+                ).trim(),
+                status: String(
+                    templateData?.status || "Active"
+                ).trim(),
+                description: String(
+                    templateData?.description || ""
+                ).trim(),
+                updatedAt: new Date().toISOString()
+            };
+
+            templates[templateIndex] =
+                updatedTemplate;
+
+            fs.writeFileSync(
+                templatesFilePath,
+                JSON.stringify(templates, null, 2),
+                "utf8"
+            );
+
+            return {
+                success: true,
+                template: updatedTemplate
+            };
+        } catch (error) {
+            console.error(
+                "Failed to update assessment template:",
+                error
+            );
+
+            return {
+                success: false,
+                error: "An unexpected error occurred while updating the assessment template."
+            };
+        }
+    }
+);
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {

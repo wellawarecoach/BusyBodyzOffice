@@ -60,5 +60,10 @@ contextBridge.exposeInMainWorld("busyBodyz", {
     getAssessmentTemplates: () =>
         ipcRenderer.invoke(
             "get-assessment-templates"
+        ),
+    updateAssessmentTemplate: (templateData) =>
+        ipcRenderer.invoke(
+            "update-assessment-template",
+            templateData
         )
 });

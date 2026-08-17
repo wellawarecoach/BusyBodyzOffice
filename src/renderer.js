@@ -1079,6 +1079,111 @@ function initializeClientProfilePage(client) {
                         card.appendChild(description);
                     }
 
+                    const actions =
+                        document.createElement("div");
+
+                    actions.className =
+                        "assessment-template-card-actions";
+
+                    const editButton =
+                        document.createElement("button");
+
+                    editButton.type = "button";
+                    editButton.className = "secondary-btn";
+                    editButton.textContent = "Edit";
+
+                    editButton.addEventListener("click", () => {
+                        const categoryInput =
+                            document.getElementById(
+                                "assessment-template-category"
+                            );
+
+                        const versionInput =
+                            document.getElementById(
+                                "assessment-template-version"
+                            );
+
+                        const statusInput =
+                            document.getElementById(
+                                "assessment-template-status"
+                            );
+
+                        const descriptionInput =
+                            document.getElementById(
+                                "assessment-template-description"
+                            );
+
+                        const saveButton =
+                            document.getElementById(
+                                "save-assessment-template-button"
+                            );
+
+                        const formHeading =
+                            templateFormPanel?.querySelector(
+                                ".form-section-heading h3"
+                            );
+
+                        if (
+                            !templateForm ||
+                            !templateFormPanel ||
+                            !templateNameInput
+                        ) {
+                            return;
+                        }
+
+                        templateForm.dataset.editingTemplateId =
+                            template.id;
+
+                        templateNameInput.value =
+                            template.templateName || "";
+
+                        if (categoryInput) {
+                            categoryInput.value =
+                                template.category || "";
+                        }
+
+                        if (versionInput) {
+                            versionInput.value =
+                                template.version || "1.0";
+                        }
+
+                        if (statusInput) {
+                            statusInput.value =
+                                template.status || "Active";
+                        }
+
+                        if (descriptionInput) {
+                            descriptionInput.value =
+                                template.description || "";
+                        }
+
+                        if (formHeading) {
+                            formHeading.textContent =
+                                "Edit Assessment Template";
+                        }
+
+                        if (saveButton) {
+                            saveButton.textContent =
+                                "Update Template";
+
+                            saveButton.disabled = false;
+                        }
+
+                        templateFormPanel.classList.remove(
+                            "hidden"
+                        );
+
+                        templateNameInput.focus();
+
+                        templateFormPanel.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start"
+                        });
+                    });
+
+                    actions.appendChild(editButton);
+                    card.appendChild(actions);
+
                     templatesList.appendChild(card);
                 });
             } catch (error) {
@@ -1112,7 +1217,6 @@ function initializeClientProfilePage(client) {
                 templatesList.appendChild(errorState);
             }
         }
-
         backButton.addEventListener("click", () => {
             const workspace =
                 document.getElementById("workspace");
@@ -1130,6 +1234,30 @@ function initializeClientProfilePage(client) {
         ) {
             addTemplateButton.addEventListener("click", () => {
                 templateForm.reset();
+
+                delete templateForm.dataset.editingTemplateId;
+
+                const saveButton =
+                    document.getElementById(
+                        "save-assessment-template-button"
+                    );
+
+                const formHeading =
+                    templateFormPanel.querySelector(
+                        ".form-section-heading h3"
+                    );
+
+                if (formHeading) {
+                    formHeading.textContent =
+                        "New Assessment Template";
+                }
+
+                if (saveButton) {
+                    saveButton.textContent =
+                        "Save Template";
+
+                    saveButton.disabled = false;
+                }
 
                 templateFormPanel.classList.remove(
                     "hidden"
@@ -1186,26 +1314,71 @@ function initializeClientProfilePage(client) {
                         .value
                         .trim();
 
+                    const editingTemplateId =
+                        templateForm.dataset.editingTemplateId || "";
+
                     try {
-                        const result =
-                            await window.busyBodyz.saveAssessmentTemplate({
-                                templateName,
-                                category,
-                                version,
-                                status,
-                                description
-                            });
+                        let result;
+
+                        if (editingTemplateId) {
+                            result =
+                                await window.busyBodyz.updateAssessmentTemplate({
+                                    id: editingTemplateId,
+                                    templateName,
+                                    category,
+                                    version,
+                                    status,
+                                    description
+                                });
+                        } else {
+                            result =
+                                await window.busyBodyz.saveAssessmentTemplate({
+                                    templateName,
+                                    category,
+                                    version,
+                                    status,
+                                    description
+                                });
+                        }
 
                         if (!result.success) {
                             alert(
                                 result.error ||
-                                "Unable to save the assessment template."
+                                (
+                                    editingTemplateId
+                                        ? "Unable to update the assessment template."
+                                        : "Unable to save the assessment template."
+                                )
                             );
 
                             return;
                         }
 
                         templateForm.reset();
+
+                        delete templateForm.dataset.editingTemplateId;
+
+                        const saveButton =
+                            document.getElementById(
+                                "save-assessment-template-button"
+                            );
+
+                        const formHeading =
+                            templateFormPanel?.querySelector(
+                                ".form-section-heading h3"
+                            );
+
+                        if (formHeading) {
+                            formHeading.textContent =
+                                "New Assessment Template";
+                        }
+
+                        if (saveButton) {
+                            saveButton.textContent =
+                                "Save Template";
+
+                            saveButton.disabled = false;
+                        }
 
                         templateFormPanel.classList.add(
                             "hidden"
@@ -1214,22 +1387,27 @@ function initializeClientProfilePage(client) {
                         await renderAssessmentTemplates();
 
                         alert(
-                            "Assessment template saved."
+                            editingTemplateId
+                                ? "Assessment template updated."
+                                : "Assessment template saved."
                         );
                     } catch (error) {
                         console.error(
-                            "Unable to save assessment template:",
+                            editingTemplateId
+                                ? "Unable to update assessment template:"
+                                : "Unable to save assessment template:",
                             error
                         );
 
                         alert(
-                            "An unexpected error occurred while saving the assessment template."
+                            editingTemplateId
+                                ? "An unexpected error occurred while updating the assessment template."
+                                : "An unexpected error occurred while saving the assessment template."
                         );
                     }
                 }
             );
         }
-
         await renderAssessmentTemplates();
     }
     if (personalInformationButton) {
