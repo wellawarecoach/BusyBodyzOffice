@@ -1181,7 +1181,95 @@ function initializeClientProfilePage(client) {
                         });
                     });
 
+                    const deleteButton =
+                        document.createElement("button");
+
+                    deleteButton.type = "button";
+                    deleteButton.className = "secondary-btn";
+                    deleteButton.textContent = "Delete";
+
+                    deleteButton.addEventListener(
+                        "click",
+                        async () => {
+                            const confirmed = window.confirm(
+                                `Delete "${template.templateName}"?`
+                            );
+
+                            if (!confirmed) {
+                                return;
+                            }
+
+                            try {
+                                const result =
+                                    await window.busyBodyz.deleteAssessmentTemplate(
+                                        template.id
+                                    );
+
+                                if (!result.success) {
+                                    alert(
+                                        result.error ||
+                                        "Unable to delete the assessment template."
+                                    );
+
+                                    return;
+                                }
+
+                                if (
+                                    templateForm?.dataset.editingTemplateId ===
+                                    template.id
+                                ) {
+                                    templateForm.reset();
+
+                                    delete templateForm.dataset.editingTemplateId;
+
+                                    const saveButton =
+                                        document.getElementById(
+                                            "save-assessment-template-button"
+                                        );
+
+                                    const formHeading =
+                                        templateFormPanel?.querySelector(
+                                            ".form-section-heading h3"
+                                        );
+
+                                    if (formHeading) {
+                                        formHeading.textContent =
+                                            "New Assessment Template";
+                                    }
+
+                                    if (saveButton) {
+                                        saveButton.textContent =
+                                            "Save Template";
+
+                                        saveButton.disabled = false;
+                                    }
+
+                                    templateFormPanel.classList.add(
+                                        "hidden"
+                                    );
+                                }
+
+                                await renderAssessmentTemplates();
+
+                                alert(
+                                    "Assessment template deleted."
+                                );
+                            } catch (error) {
+                                console.error(
+                                    "Unable to delete assessment template:",
+                                    error
+                                );
+
+                                alert(
+                                    "An unexpected error occurred while deleting the assessment template."
+                                );
+                            }
+                        }
+                    );
+
                     actions.appendChild(editButton);
+                    actions.appendChild(deleteButton);
+
                     card.appendChild(actions);
 
                     templatesList.appendChild(card);

@@ -937,6 +937,88 @@ ipcMain.handle(
         }
     }
 );
+ipcMain.handle(
+    "delete-assessment-template",
+    async (event, templateId) => {
+        try {
+            const normalizedTemplateId = String(
+                templateId || ""
+            ).trim();
+
+            if (!normalizedTemplateId) {
+                return {
+                    success: false,
+                    error: "Template ID is required."
+                };
+            }
+
+            const templatesFilePath = path.join(
+                app.getPath("userData"),
+                "busybodyz-assessment-templates.json"
+            );
+
+            if (!fs.existsSync(templatesFilePath)) {
+                return {
+                    success: false,
+                    error: "Assessment template file was not found."
+                };
+            }
+
+            const fileContents = fs.readFileSync(
+                templatesFilePath,
+                "utf8"
+            );
+
+            const templates = JSON.parse(fileContents);
+
+            if (!Array.isArray(templates)) {
+                return {
+                    success: false,
+                    error: "Assessment template data is invalid."
+                };
+            }
+
+            const templateExists =
+                templates.some(
+                    (template) =>
+                        template.id === normalizedTemplateId
+                );
+
+            if (!templateExists) {
+                return {
+                    success: false,
+                    error: "Assessment template was not found."
+                };
+            }
+
+            const updatedTemplates =
+                templates.filter(
+                    (template) =>
+                        template.id !== normalizedTemplateId
+                );
+
+            fs.writeFileSync(
+                templatesFilePath,
+                JSON.stringify(updatedTemplates, null, 2),
+                "utf8"
+            );
+
+            return {
+                success: true
+            };
+        } catch (error) {
+            console.error(
+                "Failed to delete assessment template:",
+                error
+            );
+
+            return {
+                success: false,
+                error: "An unexpected error occurred while deleting the assessment template."
+            };
+        }
+    }
+);
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
