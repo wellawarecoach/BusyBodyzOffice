@@ -1217,6 +1217,34 @@ function initializeClientProfilePage(client) {
                                 questionRow.appendChild(
                                     questionLabel
                                 );
+
+                                const requiredLabel =
+                                    document.createElement("label");
+
+                                const requiredCheckbox =
+                                    document.createElement("input");
+
+                                requiredCheckbox.type = "checkbox";
+                                requiredCheckbox.className =
+                                    "assessment-template-question-required";
+
+                                requiredCheckbox.checked =
+                                    typeof question === "object"
+                                        ? Boolean(question?.required)
+                                        : false;
+
+                                requiredLabel.appendChild(
+                                    requiredCheckbox
+                                );
+
+                                requiredLabel.appendChild(
+                                    document.createTextNode(" Required")
+                                );
+
+                                questionRow.appendChild(
+                                    requiredLabel
+                                );
+
                                 const responseTypeLabel =
                                     document.createElement("label");
 
@@ -1275,6 +1303,7 @@ function initializeClientProfilePage(client) {
                                 questionRow.appendChild(
                                     responseTypeLabel
                                 );
+
                                 questionsList.appendChild(
                                     questionRow
                                 );
@@ -1585,10 +1614,34 @@ function initializeClientProfilePage(client) {
                 responseTypeLabel.appendChild(
                     responseTypeSelect
                 );
-
                 questionRow.appendChild(
                     responseTypeLabel
                 );
+
+                const requiredLabel =
+                    document.createElement("label");
+
+                const requiredCheckbox =
+                    document.createElement("input");
+
+                requiredCheckbox.type = "checkbox";
+                requiredCheckbox.className =
+                    "assessment-template-question-required";
+
+                requiredCheckbox.checked = false;
+
+                requiredLabel.appendChild(
+                    requiredCheckbox
+                );
+
+                requiredLabel.appendChild(
+                    document.createTextNode(" Required")
+                );
+
+                questionRow.appendChild(
+                    requiredLabel
+                );
+
                 questionsList.appendChild(
                     questionRow
                 );
@@ -1648,7 +1701,10 @@ function initializeClientProfilePage(client) {
                                 row.querySelector(
                                     ".assessment-template-question-response-type"
                                 );
-
+                            const requiredCheckbox =
+                                row.querySelector(
+                                    ".assessment-template-question-required"
+                                );
                             return {
                                 id:
                                     row.dataset.questionId ||
@@ -1656,7 +1712,8 @@ function initializeClientProfilePage(client) {
                                 text,
                                 responseType:
                                     responseTypeSelect?.value || "text",
-                                required: false,
+                                required:
+                                    requiredCheckbox?.checked || false,
                                 order: index
                             };
                         })
