@@ -1177,6 +1177,13 @@ function initializeClientProfilePage(client) {
                                 questionRow.className =
                                     "assessment-template-question-row";
 
+                                if (
+                                    typeof question === "object" &&
+                                    question?.id
+                                ) {
+                                    questionRow.dataset.questionId =
+                                        String(question.id);
+                                }
                                 const questionLabel =
                                     document.createElement("label");
 
@@ -1193,8 +1200,15 @@ function initializeClientProfilePage(client) {
                                 questionInput.placeholder =
                                     "Enter assessment question";
 
+                                const questionText =
+                                    typeof question === "string"
+                                        ? question
+                                        : String(
+                                            question?.text || ""
+                                        );
+
                                 questionInput.value =
-                                    String(question || "");
+                                    questionText;
 
                                 questionLabel.appendChild(
                                     questionInput
@@ -1203,7 +1217,64 @@ function initializeClientProfilePage(client) {
                                 questionRow.appendChild(
                                     questionLabel
                                 );
+                                const responseTypeLabel =
+                                    document.createElement("label");
 
+                                responseTypeLabel.textContent =
+                                    "Response Type";
+
+                                const responseTypeSelect =
+                                    document.createElement("select");
+
+                                responseTypeSelect.className =
+                                    "assessment-template-question-response-type";
+
+                                const responseTypes = [
+                                    {
+                                        value: "text",
+                                        label: "Text"
+                                    },
+                                    {
+                                        value: "number",
+                                        label: "Number"
+                                    },
+                                    {
+                                        value: "yes-no",
+                                        label: "Yes / No"
+                                    },
+                                    {
+                                        value: "multiple-choice",
+                                        label: "Multiple Choice"
+                                    }
+                                ];
+
+                                responseTypes.forEach((responseType) => {
+                                    const option =
+                                        document.createElement("option");
+
+                                    option.value =
+                                        responseType.value;
+
+                                    option.textContent =
+                                        responseType.label;
+
+                                    responseTypeSelect.appendChild(
+                                        option
+                                    );
+                                });
+
+                                responseTypeSelect.value =
+                                    typeof question === "object"
+                                        ? question?.responseType || "text"
+                                        : "text";
+
+                                responseTypeLabel.appendChild(
+                                    responseTypeSelect
+                                );
+
+                                questionRow.appendChild(
+                                    responseTypeLabel
+                                );
                                 questionsList.appendChild(
                                     questionRow
                                 );
@@ -1438,7 +1509,8 @@ function initializeClientProfilePage(client) {
 
                 questionRow.className =
                     "assessment-template-question-row";
-
+                questionRow.dataset.questionId =
+                    `assessment-question-${Date.now()}`;
                 const questionLabel =
                     document.createElement("label");
 
@@ -1462,7 +1534,61 @@ function initializeClientProfilePage(client) {
                 questionRow.appendChild(
                     questionLabel
                 );
+                const responseTypeLabel =
+                    document.createElement("label");
 
+                responseTypeLabel.textContent =
+                    "Response Type";
+
+                const responseTypeSelect =
+                    document.createElement("select");
+
+                responseTypeSelect.className =
+                    "assessment-template-question-response-type";
+
+                const responseTypes = [
+                    {
+                        value: "text",
+                        label: "Text"
+                    },
+                    {
+                        value: "number",
+                        label: "Number"
+                    },
+                    {
+                        value: "yes-no",
+                        label: "Yes / No"
+                    },
+                    {
+                        value: "multiple-choice",
+                        label: "Multiple Choice"
+                    }
+                ];
+
+                responseTypes.forEach((responseType) => {
+                    const option =
+                        document.createElement("option");
+
+                    option.value =
+                        responseType.value;
+
+                    option.textContent =
+                        responseType.label;
+
+                    responseTypeSelect.appendChild(
+                        option
+                    );
+                });
+
+                responseTypeSelect.value = "text";
+
+                responseTypeLabel.appendChild(
+                    responseTypeSelect
+                );
+
+                questionRow.appendChild(
+                    responseTypeLabel
+                );
                 questionsList.appendChild(
                     questionRow
                 );
@@ -1502,10 +1628,38 @@ function initializeClientProfilePage(client) {
                         .trim();
                     const questions = Array.from(
                         document.querySelectorAll(
-                            ".assessment-template-question-input"
+                            ".assessment-template-question-row"
                         )
                     )
-                        .map((input) => input.value.trim())
+                        .map((row, index) => {
+                            const input =
+                                row.querySelector(
+                                    ".assessment-template-question-input"
+                                );
+
+                            const text =
+                                input?.value.trim() || "";
+
+                            if (!text) {
+                                return null;
+                            }
+
+                            const responseTypeSelect =
+                                row.querySelector(
+                                    ".assessment-template-question-response-type"
+                                );
+
+                            return {
+                                id:
+                                    row.dataset.questionId ||
+                                    `assessment-question-${Date.now()}-${index}`,
+                                text,
+                                responseType:
+                                    responseTypeSelect?.value || "text",
+                                required: false,
+                                order: index
+                            };
+                        })
                         .filter(Boolean);
                     const editingTemplateId =
                         templateForm.dataset.editingTemplateId || "";

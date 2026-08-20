@@ -753,9 +753,41 @@ ipcMain.handle("save-assessment-template", async (event, templateData) => {
             ).trim(),
             questions: Array.isArray(templateData?.questions)
                 ? templateData.questions
-                    .map((question) =>
-                        String(question || "").trim()
-                    )
+                    .map((question, index) => {
+                        const questionText =
+                            typeof question === "string"
+                                ? question.trim()
+                                : String(
+                                    question?.text || ""
+                                ).trim();
+
+                        if (!questionText) {
+                            return null;
+                        }
+
+                        return {
+                            id:
+                                (
+                                    typeof question === "object" &&
+                                    question?.id
+                                )
+                                    ? String(question.id)
+                                    : `assessment-question-${Date.now()}-${index}`,
+                            text: questionText,
+                            responseType:
+                                (
+                                    typeof question === "object" &&
+                                    question?.responseType
+                                )
+                                    ? String(question.responseType)
+                                    : "text",
+                            required:
+                                typeof question === "object"
+                                    ? Boolean(question?.required)
+                                    : false,
+                            order: index
+                        };
+                    })
                     .filter(Boolean)
                 : [],
             protocol: null,
@@ -916,9 +948,41 @@ ipcMain.handle(
                 ).trim(),
                 questions: Array.isArray(templateData?.questions)
                     ? templateData.questions
-                        .map((question) =>
-                            String(question || "").trim()
-                        )
+                        .map((question, index) => {
+                            const questionText =
+                                typeof question === "string"
+                                    ? question.trim()
+                                    : String(
+                                        question?.text || ""
+                                    ).trim();
+
+                            if (!questionText) {
+                                return null;
+                            }
+
+                            return {
+                                id:
+                                    (
+                                        typeof question === "object" &&
+                                        question?.id
+                                    )
+                                        ? String(question.id)
+                                        : `assessment-question-${Date.now()}-${index}`,
+                                text: questionText,
+                                responseType:
+                                    (
+                                        typeof question === "object" &&
+                                        question?.responseType
+                                    )
+                                        ? String(question.responseType)
+                                        : "text",
+                                required:
+                                    typeof question === "object"
+                                        ? Boolean(question?.required)
+                                        : false,
+                                order: index
+                            };
+                        })
                         .filter(Boolean)
                     : Array.isArray(existingTemplate.questions)
                         ? existingTemplate.questions
