@@ -200,10 +200,13 @@ export function getAssessmentTemplatesPage(client) {
                                 id="add-assessment-question-button"
                                 class="secondary-btn"
                                 type="button"
-                                disabled
                             >
                                 + Add Question
                             </button>
+                            <div
+    id="assessment-template-questions-list"
+    class="assessment-template-questions-list"
+></div>
                         </div>
 
                         <div class="assessment-template-builder-section">

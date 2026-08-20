@@ -751,7 +751,13 @@ ipcMain.handle("save-assessment-template", async (event, templateData) => {
             description: String(
                 templateData?.description || ""
             ).trim(),
-            questions: [],
+            questions: Array.isArray(templateData?.questions)
+                ? templateData.questions
+                    .map((question) =>
+                        String(question || "").trim()
+                    )
+                    .filter(Boolean)
+                : [],
             protocol: null,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -908,6 +914,15 @@ ipcMain.handle(
                 description: String(
                     templateData?.description || ""
                 ).trim(),
+                questions: Array.isArray(templateData?.questions)
+                    ? templateData.questions
+                        .map((question) =>
+                            String(question || "").trim()
+                        )
+                        .filter(Boolean)
+                    : Array.isArray(existingTemplate.questions)
+                        ? existingTemplate.questions
+                        : [],
                 updatedAt: new Date().toISOString()
             };
 

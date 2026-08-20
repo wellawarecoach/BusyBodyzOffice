@@ -938,7 +938,13 @@ function initializeClientProfilePage(client) {
         const templatesList = document.getElementById(
             "assessment-templates-list"
         );
+        const addQuestionButton = document.getElementById(
+            "add-assessment-question-button"
+        );
 
+        const questionsList = document.getElementById(
+            "assessment-template-questions-list"
+        );
         if (!backButton) {
             return;
         }
@@ -1156,7 +1162,53 @@ function initializeClientProfilePage(client) {
                             descriptionInput.value =
                                 template.description || "";
                         }
+                        if (questionsList) {
+                            questionsList.innerHTML = "";
 
+                            const savedQuestions =
+                                Array.isArray(template.questions)
+                                    ? template.questions
+                                    : [];
+
+                            savedQuestions.forEach((question) => {
+                                const questionRow =
+                                    document.createElement("div");
+
+                                questionRow.className =
+                                    "assessment-template-question-row";
+
+                                const questionLabel =
+                                    document.createElement("label");
+
+                                questionLabel.textContent =
+                                    "Question";
+
+                                const questionInput =
+                                    document.createElement("input");
+
+                                questionInput.type = "text";
+                                questionInput.className =
+                                    "assessment-template-question-input";
+
+                                questionInput.placeholder =
+                                    "Enter assessment question";
+
+                                questionInput.value =
+                                    String(question || "");
+
+                                questionLabel.appendChild(
+                                    questionInput
+                                );
+
+                                questionRow.appendChild(
+                                    questionLabel
+                                );
+
+                                questionsList.appendChild(
+                                    questionRow
+                                );
+                            });
+                        }
                         if (formHeading) {
                             formHeading.textContent =
                                 "Edit Assessment Template";
@@ -1219,7 +1271,9 @@ function initializeClientProfilePage(client) {
                                     template.id
                                 ) {
                                     templateForm.reset();
-
+                                    if (questionsList) {
+                                        questionsList.innerHTML = "";
+                                    }
                                     delete templateForm.dataset.editingTemplateId;
 
                                     const saveButton =
@@ -1322,7 +1376,9 @@ function initializeClientProfilePage(client) {
         ) {
             addTemplateButton.addEventListener("click", () => {
                 templateForm.reset();
-
+                if (questionsList) {
+                    questionsList.innerHTML = "";
+                }
                 delete templateForm.dataset.editingTemplateId;
 
                 const saveButton =
@@ -1364,13 +1420,56 @@ function initializeClientProfilePage(client) {
         ) {
             cancelTemplateButton.addEventListener("click", () => {
                 templateForm.reset();
-
+                if (questionsList) {
+                    questionsList.innerHTML = "";
+                }
                 templateFormPanel.classList.add(
                     "hidden"
                 );
             });
         }
+        if (
+            addQuestionButton &&
+            questionsList
+        ) {
+            addQuestionButton.addEventListener("click", () => {
+                const questionRow =
+                    document.createElement("div");
 
+                questionRow.className =
+                    "assessment-template-question-row";
+
+                const questionLabel =
+                    document.createElement("label");
+
+                questionLabel.textContent =
+                    "Question";
+
+                const questionInput =
+                    document.createElement("input");
+
+                questionInput.type = "text";
+                questionInput.className =
+                    "assessment-template-question-input";
+
+                questionInput.placeholder =
+                    "Enter assessment question";
+
+                questionLabel.appendChild(
+                    questionInput
+                );
+
+                questionRow.appendChild(
+                    questionLabel
+                );
+
+                questionsList.appendChild(
+                    questionRow
+                );
+
+                questionInput.focus();
+            });
+        }
         if (templateForm) {
             templateForm.addEventListener(
                 "submit",
@@ -1401,7 +1500,13 @@ function initializeClientProfilePage(client) {
                         .getElementById("assessment-template-description")
                         .value
                         .trim();
-
+                    const questions = Array.from(
+                        document.querySelectorAll(
+                            ".assessment-template-question-input"
+                        )
+                    )
+                        .map((input) => input.value.trim())
+                        .filter(Boolean);
                     const editingTemplateId =
                         templateForm.dataset.editingTemplateId || "";
 
@@ -1416,7 +1521,8 @@ function initializeClientProfilePage(client) {
                                     category,
                                     version,
                                     status,
-                                    description
+                                    description,
+                                    questions
                                 });
                         } else {
                             result =
@@ -1425,7 +1531,8 @@ function initializeClientProfilePage(client) {
                                     category,
                                     version,
                                     status,
-                                    description
+                                    description,
+                                    questions
                                 });
                         }
 
@@ -1443,7 +1550,9 @@ function initializeClientProfilePage(client) {
                         }
 
                         templateForm.reset();
-
+                        if (questionsList) {
+                            questionsList.innerHTML = "";
+                        }
                         delete templateForm.dataset.editingTemplateId;
 
                         const saveButton =
