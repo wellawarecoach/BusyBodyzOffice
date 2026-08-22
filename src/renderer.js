@@ -1303,7 +1303,47 @@ function initializeClientProfilePage(client) {
                                 questionRow.appendChild(
                                     responseTypeLabel
                                 );
+                                const savedOptions =
+                                    typeof question === "object" &&
+                                        Array.isArray(question?.options)
+                                        ? question.options
+                                        : [];
 
+                                const {
+                                    optionsContainer,
+                                    addOption
+                                } = createMultipleChoiceOptionsEditor(
+                                    questionRow,
+                                    savedOptions
+                                );
+
+                                const updateMultipleChoiceOptionsVisibility =
+                                    () => {
+                                        const isMultipleChoice =
+                                            responseTypeSelect.value ===
+                                            "multiple-choice";
+
+                                        optionsContainer.classList.toggle(
+                                            "hidden",
+                                            !isMultipleChoice
+                                        );
+
+                                        if (
+                                            isMultipleChoice &&
+                                            !optionsContainer.querySelector(
+                                                ".assessment-template-multiple-choice-option-input"
+                                            )
+                                        ) {
+                                            addOption();
+                                        }
+                                    };
+
+                                responseTypeSelect.addEventListener(
+                                    "change",
+                                    updateMultipleChoiceOptionsVisibility
+                                );
+
+                                updateMultipleChoiceOptionsVisibility();
                                 questionsList.appendChild(
                                     questionRow
                                 );
@@ -1325,16 +1365,15 @@ function initializeClientProfilePage(client) {
                             "hidden"
                         );
 
-                        templateNameInput.focus();
-
                         templateFormPanel.scrollIntoView({
-                            behavior: "smooth",
                             block: "start"
                         });
                     });
 
                     const deleteButton =
                         document.createElement("button");
+
+
 
                     deleteButton.type = "button";
                     deleteButton.className = "secondary-btn";
@@ -1528,6 +1567,97 @@ function initializeClientProfilePage(client) {
                 );
             });
         }
+        function createMultipleChoiceOptionsEditor(
+            questionRow,
+            initialOptions = []
+        ) {
+            const optionsContainer =
+                document.createElement("div");
+
+            optionsContainer.className =
+                "assessment-template-multiple-choice-options";
+
+            const optionsList =
+                document.createElement("div");
+
+            optionsList.className =
+                "assessment-template-multiple-choice-options-list";
+
+            function addOption(optionText = "") {
+                const optionRow =
+                    document.createElement("div");
+
+                optionRow.className =
+                    "assessment-template-multiple-choice-option-row";
+
+                const optionInput =
+                    document.createElement("input");
+
+                optionInput.type = "text";
+                optionInput.className =
+                    "assessment-template-multiple-choice-option-input";
+
+                optionInput.placeholder =
+                    "Enter option";
+
+                optionInput.value =
+                    String(optionText || "");
+
+                const removeOptionButton =
+                    document.createElement("button");
+
+                removeOptionButton.type = "button";
+                removeOptionButton.className =
+                    "secondary-btn";
+
+                removeOptionButton.textContent =
+                    "Remove";
+
+                removeOptionButton.addEventListener(
+                    "click",
+                    () => {
+                        optionRow.remove();
+                    }
+                );
+
+                optionRow.appendChild(optionInput);
+                optionRow.appendChild(removeOptionButton);
+
+                optionsList.appendChild(optionRow);
+            }
+
+            const addOptionButton =
+                document.createElement("button");
+
+            addOptionButton.type = "button";
+            addOptionButton.className =
+                "secondary-btn";
+
+            addOptionButton.textContent =
+                "+ Add Option";
+
+            addOptionButton.addEventListener(
+                "click",
+                () => {
+                    addOption();
+                }
+            );
+
+            initialOptions.forEach((option) => {
+                addOption(option);
+            });
+
+            optionsContainer.appendChild(optionsList);
+            optionsContainer.appendChild(addOptionButton);
+
+            questionRow.appendChild(optionsContainer);
+
+            return {
+                optionsContainer,
+                addOption
+            };
+        }
+
         if (
             addQuestionButton &&
             questionsList
@@ -1538,8 +1668,10 @@ function initializeClientProfilePage(client) {
 
                 questionRow.className =
                     "assessment-template-question-row";
+
                 questionRow.dataset.questionId =
                     `assessment-question-${Date.now()}`;
+
                 const questionLabel =
                     document.createElement("label");
 
@@ -1563,6 +1695,7 @@ function initializeClientProfilePage(client) {
                 questionRow.appendChild(
                     questionLabel
                 );
+
                 const responseTypeLabel =
                     document.createElement("label");
 
@@ -1614,6 +1747,7 @@ function initializeClientProfilePage(client) {
                 responseTypeLabel.appendChild(
                     responseTypeSelect
                 );
+
                 questionRow.appendChild(
                     responseTypeLabel
                 );
@@ -1640,6 +1774,38 @@ function initializeClientProfilePage(client) {
 
                 questionRow.appendChild(
                     requiredLabel
+                );
+
+                const {
+                    optionsContainer,
+                    addOption
+                } = createMultipleChoiceOptionsEditor(
+                    questionRow
+                );
+
+                optionsContainer.classList.add("hidden");
+
+                responseTypeSelect.addEventListener(
+                    "change",
+                    () => {
+                        const isMultipleChoice =
+                            responseTypeSelect.value ===
+                            "multiple-choice";
+
+                        optionsContainer.classList.toggle(
+                            "hidden",
+                            !isMultipleChoice
+                        );
+
+                        if (
+                            isMultipleChoice &&
+                            !optionsContainer.querySelector(
+                                ".assessment-template-multiple-choice-option-input"
+                            )
+                        ) {
+                            addOption();
+                        }
+                    }
                 );
 
                 questionsList.appendChild(
@@ -1705,15 +1871,32 @@ function initializeClientProfilePage(client) {
                                 row.querySelector(
                                     ".assessment-template-question-required"
                                 );
+
+                            const responseType =
+                                responseTypeSelect?.value || "text";
+
+                            const options =
+                                responseType === "multiple-choice"
+                                    ? Array.from(
+                                        row.querySelectorAll(
+                                            ".assessment-template-multiple-choice-option-input"
+                                        )
+                                    )
+                                        .map((optionInput) =>
+                                            optionInput.value.trim()
+                                        )
+                                        .filter(Boolean)
+                                    : [];
+
                             return {
                                 id:
                                     row.dataset.questionId ||
                                     `assessment-question-${Date.now()}-${index}`,
                                 text,
-                                responseType:
-                                    responseTypeSelect?.value || "text",
+                                responseType,
                                 required:
                                     requiredCheckbox?.checked || false,
+                                options,
                                 order: index
                             };
                         })

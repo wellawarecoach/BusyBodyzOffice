@@ -107,7 +107,6 @@ function createWindow() {
     });
 
     win.loadFile(path.join(__dirname, "index.html"));
-    win.webContents.openDevTools();
 }
 ipcMain.handle("choose-invoice-folder", async () => {
     const result = await dialog.showOpenDialog({
@@ -781,10 +780,24 @@ ipcMain.handle("save-assessment-template", async (event, templateData) => {
                                 )
                                     ? String(question.responseType)
                                     : "text",
+
                             required:
                                 typeof question === "object"
                                     ? Boolean(question?.required)
                                     : false,
+
+                            options:
+                                (
+                                    typeof question === "object" &&
+                                    Array.isArray(question?.options)
+                                )
+                                    ? question.options
+                                        .map((option) =>
+                                            String(option).trim()
+                                        )
+                                        .filter(Boolean)
+                                    : [],
+
                             order: index
                         };
                     })
@@ -976,10 +989,24 @@ ipcMain.handle(
                                     )
                                         ? String(question.responseType)
                                         : "text",
+
                                 required:
                                     typeof question === "object"
                                         ? Boolean(question?.required)
                                         : false,
+
+                                options:
+                                    (
+                                        typeof question === "object" &&
+                                        Array.isArray(question?.options)
+                                    )
+                                        ? question.options
+                                            .map((option) =>
+                                                String(option).trim()
+                                            )
+                                            .filter(Boolean)
+                                        : [],
+
                                 order: index
                             };
                         })
