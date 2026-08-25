@@ -1977,7 +1977,7 @@ function initializeClientProfilePage(client) {
 
                         await renderAssessmentTemplates();
 
-                        alert(
+                        console.log(
                             editingTemplateId
                                 ? "Assessment template updated."
                                 : "Assessment template saved."
