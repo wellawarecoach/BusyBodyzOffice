@@ -1245,6 +1245,27 @@ function initializeClientProfilePage(client) {
                                     requiredLabel
                                 );
 
+                                const removeQuestionButton =
+                                    document.createElement("button");
+
+                                removeQuestionButton.type = "button";
+                                removeQuestionButton.className =
+                                    "secondary-btn";
+
+                                removeQuestionButton.textContent =
+                                    "Remove Question";
+
+                                removeQuestionButton.addEventListener(
+                                    "click",
+                                    () => {
+                                        questionRow.remove();
+                                    }
+                                );
+
+                                questionRow.appendChild(
+                                    removeQuestionButton
+                                );
+
                                 const responseTypeLabel =
                                     document.createElement("label");
 
@@ -1774,6 +1795,27 @@ function initializeClientProfilePage(client) {
 
                 questionRow.appendChild(
                     requiredLabel
+                );
+
+                const removeQuestionButton =
+                    document.createElement("button");
+
+                removeQuestionButton.type = "button";
+                removeQuestionButton.className =
+                    "secondary-btn";
+
+                removeQuestionButton.textContent =
+                    "Remove Question";
+
+                removeQuestionButton.addEventListener(
+                    "click",
+                    () => {
+                        questionRow.remove();
+                    }
+                );
+
+                questionRow.appendChild(
+                    removeQuestionButton
                 );
 
                 const {
