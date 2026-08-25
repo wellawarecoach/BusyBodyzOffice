@@ -1245,6 +1245,56 @@ function initializeClientProfilePage(client) {
                                     requiredLabel
                                 );
 
+                                const moveUpButton =
+                                    document.createElement("button");
+
+                                moveUpButton.type = "button";
+                                moveUpButton.className =
+                                    "secondary-btn";
+
+                                moveUpButton.textContent =
+                                    "Move Up";
+
+                                moveUpButton.addEventListener(
+                                    "click",
+                                    () => {
+                                        const previousRow =
+                                            questionRow.previousElementSibling;
+
+                                        if (previousRow) {
+                                            questionsList.insertBefore(
+                                                questionRow,
+                                                previousRow
+                                            );
+                                        }
+                                    }
+                                );
+
+                                const moveDownButton =
+                                    document.createElement("button");
+
+                                moveDownButton.type = "button";
+                                moveDownButton.className =
+                                    "secondary-btn";
+
+                                moveDownButton.textContent =
+                                    "Move Down";
+
+                                moveDownButton.addEventListener(
+                                    "click",
+                                    () => {
+                                        const nextRow =
+                                            questionRow.nextElementSibling;
+
+                                        if (nextRow) {
+                                            questionsList.insertBefore(
+                                                nextRow,
+                                                questionRow
+                                            );
+                                        }
+                                    }
+                                );
+
                                 const removeQuestionButton =
                                     document.createElement("button");
 
@@ -1260,6 +1310,14 @@ function initializeClientProfilePage(client) {
                                     () => {
                                         questionRow.remove();
                                     }
+                                );
+
+                                questionRow.appendChild(
+                                    moveUpButton
+                                );
+
+                                questionRow.appendChild(
+                                    moveDownButton
                                 );
 
                                 questionRow.appendChild(
@@ -1796,6 +1854,55 @@ function initializeClientProfilePage(client) {
                 questionRow.appendChild(
                     requiredLabel
                 );
+                const moveUpButton =
+                    document.createElement("button");
+
+                moveUpButton.type = "button";
+                moveUpButton.className =
+                    "secondary-btn";
+
+                moveUpButton.textContent =
+                    "Move Up";
+
+                moveUpButton.addEventListener(
+                    "click",
+                    () => {
+                        const previousRow =
+                            questionRow.previousElementSibling;
+
+                        if (previousRow) {
+                            questionsList.insertBefore(
+                                questionRow,
+                                previousRow
+                            );
+                        }
+                    }
+                );
+
+                const moveDownButton =
+                    document.createElement("button");
+
+                moveDownButton.type = "button";
+                moveDownButton.className =
+                    "secondary-btn";
+
+                moveDownButton.textContent =
+                    "Move Down";
+
+                moveDownButton.addEventListener(
+                    "click",
+                    () => {
+                        const nextRow =
+                            questionRow.nextElementSibling;
+
+                        if (nextRow) {
+                            questionsList.insertBefore(
+                                nextRow,
+                                questionRow
+                            );
+                        }
+                    }
+                );
 
                 const removeQuestionButton =
                     document.createElement("button");
@@ -1812,6 +1919,14 @@ function initializeClientProfilePage(client) {
                     () => {
                         questionRow.remove();
                     }
+                );
+
+                questionRow.appendChild(
+                    moveUpButton
+                );
+
+                questionRow.appendChild(
+                    moveDownButton
                 );
 
                 questionRow.appendChild(
