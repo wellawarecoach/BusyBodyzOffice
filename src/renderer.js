@@ -2289,6 +2289,15 @@ function initializeClientProfilePage(client) {
                         .getElementById("assessment-template-description")
                         .value
                         .trim();
+                    document
+                        .querySelectorAll(
+                            ".assessment-template-question-validation"
+                        )
+                        .forEach((message) => {
+                            message.remove();
+                        });
+
+                    let hasInvalidMultipleChoiceQuestion = false;
                     const questions = Array.from(
                         document.querySelectorAll(
                             ".assessment-template-question-row"
@@ -2331,6 +2340,27 @@ function initializeClientProfilePage(client) {
                                         )
                                         .filter(Boolean)
                                     : [];
+                            if (
+                                responseType === "multiple-choice" &&
+                                options.length === 0
+                            ) {
+                                hasInvalidMultipleChoiceQuestion = true;
+
+                                const validationMessage =
+                                    document.createElement("p");
+
+                                validationMessage.className =
+                                    "assessment-template-question-validation";
+
+                                validationMessage.textContent =
+                                    "Add at least one Multiple Choice option.";
+
+                                row.appendChild(
+                                    validationMessage
+                                );
+
+                                return null;
+                            }
 
                             return {
                                 id:
@@ -2345,6 +2375,18 @@ function initializeClientProfilePage(client) {
                             };
                         })
                         .filter(Boolean);
+                    if (hasInvalidMultipleChoiceQuestion) {
+                        const validationMessage =
+                            document.querySelector(
+                                ".assessment-template-question-validation"
+                            );
+
+                        validationMessage?.scrollIntoView({
+                            block: "center"
+                        });
+
+                        return;
+                    }
                     const editingTemplateId =
                         templateForm.dataset.editingTemplateId || "";
 
