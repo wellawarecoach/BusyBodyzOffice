@@ -1294,7 +1294,147 @@ function initializeClientProfilePage(client) {
                                         }
                                     }
                                 );
+                                const duplicateQuestionButton =
+                                    document.createElement("button");
 
+                                duplicateQuestionButton.type = "button";
+                                duplicateQuestionButton.className =
+                                    "secondary-btn";
+
+                                duplicateQuestionButton.textContent =
+                                    "Duplicate Question";
+
+                                duplicateQuestionButton.addEventListener(
+                                    "click",
+                                    () => {
+                                        const questionText =
+                                            questionInput.value;
+
+                                        const responseType =
+                                            responseTypeSelect.value;
+
+                                        const required =
+                                            requiredCheckbox.checked;
+
+                                        const optionValues =
+                                            Array.from(
+                                                questionRow.querySelectorAll(
+                                                    ".assessment-template-multiple-choice-option-input"
+                                                )
+                                            ).map((optionInput) =>
+                                                optionInput.value
+                                            );
+
+                                        const existingRows =
+                                            new Set(
+                                                Array.from(
+                                                    questionsList.children
+                                                )
+                                            );
+
+                                        addQuestionButton.click();
+
+                                        const duplicateRow =
+                                            Array.from(
+                                                questionsList.children
+                                            ).find(
+                                                (row) =>
+                                                    !existingRows.has(row)
+                                            );
+
+                                        if (!duplicateRow) {
+                                            return;
+                                        }
+
+                                        const duplicateQuestionInput =
+                                            duplicateRow.querySelector(
+                                                ".assessment-template-question-input"
+                                            );
+
+                                        const duplicateResponseTypeSelect =
+                                            duplicateRow.querySelector(
+                                                ".assessment-template-question-response-type"
+                                            );
+
+                                        const duplicateRequiredCheckbox =
+                                            duplicateRow.querySelector(
+                                                ".assessment-template-question-required"
+                                            );
+
+                                        if (duplicateQuestionInput) {
+                                            duplicateQuestionInput.value =
+                                                questionText;
+                                        }
+
+                                        if (duplicateRequiredCheckbox) {
+                                            duplicateRequiredCheckbox.checked =
+                                                required;
+                                        }
+
+                                        if (duplicateResponseTypeSelect) {
+                                            duplicateResponseTypeSelect.value =
+                                                responseType;
+
+                                            duplicateResponseTypeSelect.dispatchEvent(
+                                                new Event("change")
+                                            );
+                                        }
+
+                                        if (
+                                            responseType ===
+                                            "multiple-choice"
+                                        ) {
+                                            const getDuplicateOptionInputs =
+                                                () =>
+                                                    Array.from(
+                                                        duplicateRow.querySelectorAll(
+                                                            ".assessment-template-multiple-choice-option-input"
+                                                        )
+                                                    );
+
+                                            const addOptionButton =
+                                                Array.from(
+                                                    duplicateRow.querySelectorAll(
+                                                        ".assessment-template-multiple-choice-options button"
+                                                    )
+                                                ).find(
+                                                    (button) =>
+                                                        button.textContent ===
+                                                        "+ Add Option"
+                                                );
+
+                                            optionValues.forEach(
+                                                (optionValue, index) => {
+                                                    let optionInputs =
+                                                        getDuplicateOptionInputs();
+
+                                                    if (
+                                                        index >=
+                                                        optionInputs.length &&
+                                                        addOptionButton
+                                                    ) {
+                                                        addOptionButton.click();
+
+                                                        optionInputs =
+                                                            getDuplicateOptionInputs();
+                                                    }
+
+                                                    if (optionInputs[index]) {
+                                                        optionInputs[index].value =
+                                                            optionValue;
+                                                    }
+                                                }
+                                            );
+                                        }
+
+                                        questionsList.insertBefore(
+                                            duplicateRow,
+                                            questionRow.nextElementSibling
+                                        );
+
+                                        duplicateQuestionInput?.focus();
+                                    }
+                                );
                                 const removeQuestionButton =
                                     document.createElement("button");
 
@@ -1321,9 +1461,12 @@ function initializeClientProfilePage(client) {
                                 );
 
                                 questionRow.appendChild(
-                                    removeQuestionButton
+                                    duplicateQuestionButton
                                 );
 
+                                questionRow.appendChild(
+                                    removeQuestionButton
+                                );
                                 const responseTypeLabel =
                                     document.createElement("label");
 
@@ -1903,7 +2046,147 @@ function initializeClientProfilePage(client) {
                         }
                     }
                 );
+                const duplicateQuestionButton =
+                    document.createElement("button");
 
+                duplicateQuestionButton.type = "button";
+                duplicateQuestionButton.className =
+                    "secondary-btn";
+
+                duplicateQuestionButton.textContent =
+                    "Duplicate Question";
+
+                duplicateQuestionButton.addEventListener(
+                    "click",
+                    () => {
+                        const questionText =
+                            questionInput.value;
+
+                        const responseType =
+                            responseTypeSelect.value;
+
+                        const required =
+                            requiredCheckbox.checked;
+
+                        const optionValues =
+                            Array.from(
+                                questionRow.querySelectorAll(
+                                    ".assessment-template-multiple-choice-option-input"
+                                )
+                            ).map((optionInput) =>
+                                optionInput.value
+                            );
+
+                        const existingRows =
+                            new Set(
+                                Array.from(
+                                    questionsList.children
+                                )
+                            );
+
+                        addQuestionButton.click();
+
+                        const duplicateRow =
+                            Array.from(
+                                questionsList.children
+                            ).find(
+                                (row) =>
+                                    !existingRows.has(row)
+                            );
+
+                        if (!duplicateRow) {
+                            return;
+                        }
+
+                        const duplicateQuestionInput =
+                            duplicateRow.querySelector(
+                                ".assessment-template-question-input"
+                            );
+
+                        const duplicateResponseTypeSelect =
+                            duplicateRow.querySelector(
+                                ".assessment-template-question-response-type"
+                            );
+
+                        const duplicateRequiredCheckbox =
+                            duplicateRow.querySelector(
+                                ".assessment-template-question-required"
+                            );
+
+                        if (duplicateQuestionInput) {
+                            duplicateQuestionInput.value =
+                                questionText;
+                        }
+
+                        if (duplicateRequiredCheckbox) {
+                            duplicateRequiredCheckbox.checked =
+                                required;
+                        }
+
+                        if (duplicateResponseTypeSelect) {
+                            duplicateResponseTypeSelect.value =
+                                responseType;
+
+                            duplicateResponseTypeSelect.dispatchEvent(
+                                new Event("change")
+                            );
+                        }
+
+                        if (
+                            responseType ===
+                            "multiple-choice"
+                        ) {
+                            const getDuplicateOptionInputs =
+                                () =>
+                                    Array.from(
+                                        duplicateRow.querySelectorAll(
+                                            ".assessment-template-multiple-choice-option-input"
+                                        )
+                                    );
+
+                            const addOptionButton =
+                                Array.from(
+                                    duplicateRow.querySelectorAll(
+                                        ".assessment-template-multiple-choice-options button"
+                                    )
+                                ).find(
+                                    (button) =>
+                                        button.textContent ===
+                                        "+ Add Option"
+                                );
+
+                            optionValues.forEach(
+                                (optionValue, index) => {
+                                    let optionInputs =
+                                        getDuplicateOptionInputs();
+
+                                    if (
+                                        index >=
+                                        optionInputs.length &&
+                                        addOptionButton
+                                    ) {
+                                        addOptionButton.click();
+
+                                        optionInputs =
+                                            getDuplicateOptionInputs();
+                                    }
+
+                                    if (optionInputs[index]) {
+                                        optionInputs[index].value =
+                                            optionValue;
+                                    }
+                                }
+                            );
+                        }
+
+                        questionsList.insertBefore(
+                            duplicateRow,
+                            questionRow.nextElementSibling
+                        );
+
+                        duplicateQuestionInput?.focus();
+                    }
+                );
                 const removeQuestionButton =
                     document.createElement("button");
 
@@ -1927,6 +2210,10 @@ function initializeClientProfilePage(client) {
 
                 questionRow.appendChild(
                     moveDownButton
+                );
+
+                questionRow.appendChild(
+                    duplicateQuestionButton
                 );
 
                 questionRow.appendChild(
