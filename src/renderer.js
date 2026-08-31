@@ -2366,6 +2366,36 @@ function initializeClientProfilePage(client) {
                                 return null;
                             }
 
+                            if (responseType === "multiple-choice") {
+                                const normalizedOptions =
+                                    options.map((option) =>
+                                        option.toLowerCase()
+                                    );
+
+                                const hasDuplicateOptions =
+                                    new Set(normalizedOptions).size !==
+                                    normalizedOptions.length;
+
+                                if (hasDuplicateOptions) {
+                                    hasInvalidMultipleChoiceQuestion = true;
+
+                                    const validationMessage =
+                                        document.createElement("p");
+
+                                    validationMessage.className =
+                                        "assessment-template-question-validation";
+
+                                    validationMessage.textContent =
+                                        "Multiple Choice options must be unique.";
+
+                                    row.appendChild(
+                                        validationMessage
+                                    );
+
+                                    return null;
+                                }
+                            }
+
                             return {
                                 id:
                                     row.dataset.questionId ||
