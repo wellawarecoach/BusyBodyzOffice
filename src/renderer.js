@@ -2298,7 +2298,10 @@ function initializeClientProfilePage(client) {
                             message.remove();
                         });
 
-                    let hasInvalidMultipleChoiceQuestion = false;
+                    let hasInvalidAssessmentQuestion = false;
+
+                    const normalizedQuestionTexts =
+                        new Set();
 
                     const questions = Array.from(
                         document.querySelectorAll(
@@ -2317,6 +2320,36 @@ function initializeClientProfilePage(client) {
                             if (!text) {
                                 return null;
                             }
+
+                            const normalizedQuestionText =
+                                text.toLowerCase();
+
+                            if (
+                                normalizedQuestionTexts.has(
+                                    normalizedQuestionText
+                                )
+                            ) {
+                                hasInvalidAssessmentQuestion = true;
+
+                                const validationMessage =
+                                    document.createElement("p");
+
+                                validationMessage.className =
+                                    "assessment-template-question-validation";
+
+                                validationMessage.textContent =
+                                    "Question text must be unique.";
+
+                                row.appendChild(
+                                    validationMessage
+                                );
+
+                                return null;
+                            }
+
+                            normalizedQuestionTexts.add(
+                                normalizedQuestionText
+                            );
 
                             const responseTypeSelect =
                                 row.querySelector(
@@ -2348,7 +2381,7 @@ function initializeClientProfilePage(client) {
                                 responseType === "multiple-choice" &&
                                 options.length < 2
                             ) {
-                                hasInvalidMultipleChoiceQuestion = true;
+                                hasInvalidAssessmentQuestion = true;
 
                                 const validationMessage =
                                     document.createElement("p");
@@ -2377,7 +2410,7 @@ function initializeClientProfilePage(client) {
                                     normalizedOptions.length;
 
                                 if (hasDuplicateOptions) {
-                                    hasInvalidMultipleChoiceQuestion = true;
+                                    hasInvalidAssessmentQuestion = true;
 
                                     const validationMessage =
                                         document.createElement("p");
@@ -2410,7 +2443,7 @@ function initializeClientProfilePage(client) {
                         })
                         .filter(Boolean);
 
-                    if (hasInvalidMultipleChoiceQuestion) {
+                    if (hasInvalidAssessmentQuestion) {
                         const firstInvalidQuestion =
                             document.querySelector(
                                 ".assessment-template-question-validation"
