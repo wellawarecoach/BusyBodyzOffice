@@ -2289,6 +2289,7 @@ function initializeClientProfilePage(client) {
                         .getElementById("assessment-template-description")
                         .value
                         .trim();
+
                     document
                         .querySelectorAll(
                             ".assessment-template-question-validation"
@@ -2298,6 +2299,7 @@ function initializeClientProfilePage(client) {
                         });
 
                     let hasInvalidMultipleChoiceQuestion = false;
+
                     const questions = Array.from(
                         document.querySelectorAll(
                             ".assessment-template-question-row"
@@ -2320,6 +2322,7 @@ function initializeClientProfilePage(client) {
                                 row.querySelector(
                                     ".assessment-template-question-response-type"
                                 );
+
                             const requiredCheckbox =
                                 row.querySelector(
                                     ".assessment-template-question-required"
@@ -2340,9 +2343,10 @@ function initializeClientProfilePage(client) {
                                         )
                                         .filter(Boolean)
                                     : [];
+
                             if (
                                 responseType === "multiple-choice" &&
-                                options.length === 0
+                                options.length < 2
                             ) {
                                 hasInvalidMultipleChoiceQuestion = true;
 
@@ -2353,7 +2357,7 @@ function initializeClientProfilePage(client) {
                                     "assessment-template-question-validation";
 
                                 validationMessage.textContent =
-                                    "Add at least one Multiple Choice option.";
+                                    "Add at least two Multiple Choice options.";
 
                                 row.appendChild(
                                     validationMessage
@@ -2375,18 +2379,22 @@ function initializeClientProfilePage(client) {
                             };
                         })
                         .filter(Boolean);
+
                     if (hasInvalidMultipleChoiceQuestion) {
-                        const validationMessage =
+                        const firstInvalidQuestion =
                             document.querySelector(
                                 ".assessment-template-question-validation"
+                            )?.closest(
+                                ".assessment-template-question-row"
                             );
 
-                        validationMessage?.scrollIntoView({
+                        firstInvalidQuestion?.scrollIntoView({
                             block: "center"
                         });
 
                         return;
                     }
+
                     const editingTemplateId =
                         templateForm.dataset.editingTemplateId || "";
 
@@ -2430,9 +2438,11 @@ function initializeClientProfilePage(client) {
                         }
 
                         templateForm.reset();
+
                         if (questionsList) {
                             questionsList.innerHTML = "";
                         }
+
                         delete templateForm.dataset.editingTemplateId;
 
                         const saveButton =
