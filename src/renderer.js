@@ -2298,16 +2298,41 @@ function initializeClientProfilePage(client) {
                             message.remove();
                         });
 
+                    const questionRows = Array.from(
+                        document.querySelectorAll(
+                            ".assessment-template-question-row"
+                        )
+                    );
+
+                    if (questionRows.length === 0) {
+                        const validationMessage =
+                            document.createElement("p");
+
+                        validationMessage.className =
+                            "assessment-template-question-validation";
+
+                        validationMessage.textContent =
+                            "Add at least one assessment question before saving the template.";
+
+                        if (questionsList) {
+                            questionsList.appendChild(
+                                validationMessage
+                            );
+
+                            validationMessage.scrollIntoView({
+                                block: "center"
+                            });
+                        }
+
+                        return;
+                    }
+
                     let hasInvalidAssessmentQuestion = false;
 
                     const normalizedQuestionTexts =
                         new Set();
 
-                    const questions = Array.from(
-                        document.querySelectorAll(
-                            ".assessment-template-question-row"
-                        )
-                    )
+                    const questions = questionRows
                         .map((row, index) => {
                             const input =
                                 row.querySelector(
@@ -2318,6 +2343,21 @@ function initializeClientProfilePage(client) {
                                 input?.value.trim() || "";
 
                             if (!text) {
+                                hasInvalidAssessmentQuestion = true;
+
+                                const validationMessage =
+                                    document.createElement("p");
+
+                                validationMessage.className =
+                                    "assessment-template-question-validation";
+
+                                validationMessage.textContent =
+                                    "Question text is required.";
+
+                                row.appendChild(
+                                    validationMessage
+                                );
+
                                 return null;
                             }
 
