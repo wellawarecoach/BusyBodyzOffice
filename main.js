@@ -735,6 +735,27 @@ ipcMain.handle("save-assessment-template", async (event, templateData) => {
             }
         }
 
+        const normalizedTemplateName =
+            templateName.toLowerCase();
+
+        const duplicateTemplate =
+            templates.some((template) =>
+                String(
+                    template?.templateName || ""
+                )
+                    .trim()
+                    .toLowerCase() ===
+                normalizedTemplateName
+            );
+
+        if (duplicateTemplate) {
+            return {
+                success: false,
+                code: "DUPLICATE_TEMPLATE_NAME",
+                error: "An assessment template with this name already exists."
+            };
+        }
+
         const template = {
             id: `assessment-template-${Date.now()}`,
             templateName,
@@ -876,6 +897,7 @@ ipcMain.handle("get-assessment-templates", async () => {
         };
     }
 });
+
 ipcMain.handle(
     "update-assessment-template",
     async (event, templateData) => {
@@ -938,6 +960,29 @@ ipcMain.handle(
                 return {
                     success: false,
                     error: "Assessment template was not found."
+                };
+            }
+
+            const normalizedTemplateName =
+                templateName.toLowerCase();
+
+            const duplicateTemplate =
+                templates.some(
+                    (template, index) =>
+                        index !== templateIndex &&
+                        String(
+                            template?.templateName || ""
+                        )
+                            .trim()
+                            .toLowerCase() ===
+                        normalizedTemplateName
+                );
+
+            if (duplicateTemplate) {
+                return {
+                    success: false,
+                    code: "DUPLICATE_TEMPLATE_NAME",
+                    error: "An assessment template with this name already exists."
                 };
             }
 

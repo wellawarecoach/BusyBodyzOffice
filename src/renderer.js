@@ -2551,6 +2551,31 @@ function initializeClientProfilePage(client) {
                         }
 
                         if (!result.success) {
+                            if (
+                                result.code ===
+                                "DUPLICATE_TEMPLATE_NAME"
+                            ) {
+                                const templateNameContainer =
+                                    templateNameInput?.parentElement ||
+                                    templateForm;
+
+                                const validationMessage =
+                                    addAssessmentTemplateValidationMessage(
+                                        templateNameContainer,
+                                        result.error ||
+                                        "An assessment template with this name already exists."
+                                    );
+
+                                validationMessage?.scrollIntoView({
+                                    block: "center"
+                                });
+
+                                templateNameInput?.focus();
+                                templateNameInput?.select();
+
+                                return;
+                            }
+
                             alert(
                                 result.error ||
                                 (
