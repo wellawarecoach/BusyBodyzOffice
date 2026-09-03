@@ -2261,7 +2261,8 @@ function initializeClientProfilePage(client) {
         }
         function addAssessmentTemplateValidationMessage(
             container,
-            message
+            message,
+            focusTarget = ""
         ) {
             if (!container) {
                 return null;
@@ -2275,6 +2276,11 @@ function initializeClientProfilePage(client) {
 
             validationMessage.textContent =
                 message;
+
+            if (focusTarget) {
+                validationMessage.dataset.focusTarget =
+                    focusTarget;
+            }
 
             container.appendChild(
                 validationMessage
@@ -2339,6 +2345,8 @@ function initializeClientProfilePage(client) {
                             block: "center"
                         });
 
+                        addQuestionButton?.focus();
+
                         return;
                     }
 
@@ -2362,7 +2370,8 @@ function initializeClientProfilePage(client) {
 
                                 addAssessmentTemplateValidationMessage(
                                     row,
-                                    "Question text is required."
+                                    "Question text is required.",
+                                    "question"
                                 );
 
                                 return null;
@@ -2380,7 +2389,8 @@ function initializeClientProfilePage(client) {
 
                                 addAssessmentTemplateValidationMessage(
                                     row,
-                                    "Question text must be unique."
+                                    "Question text must be unique.",
+                                    "question"
                                 );
 
                                 return null;
@@ -2424,7 +2434,8 @@ function initializeClientProfilePage(client) {
 
                                 addAssessmentTemplateValidationMessage(
                                     row,
-                                    "Add at least two Multiple Choice options."
+                                    "Add at least two Multiple Choice options.",
+                                    "option"
                                 );
 
                                 return null;
@@ -2445,7 +2456,8 @@ function initializeClientProfilePage(client) {
 
                                     addAssessmentTemplateValidationMessage(
                                         row,
-                                        "Multiple Choice options must be unique."
+                                        "Multiple Choice options must be unique.",
+                                        "option"
                                     );
 
                                     return null;
@@ -2467,16 +2479,44 @@ function initializeClientProfilePage(client) {
                         .filter(Boolean);
 
                     if (hasInvalidAssessmentQuestion) {
-                        const firstInvalidQuestion =
+                        const firstValidationMessage =
                             document.querySelector(
                                 ".assessment-template-question-validation"
-                            )?.closest(
+                            );
+
+                        const firstInvalidQuestion =
+                            firstValidationMessage?.closest(
                                 ".assessment-template-question-row"
                             );
 
                         firstInvalidQuestion?.scrollIntoView({
                             block: "center"
                         });
+
+                        const focusTarget =
+                            firstValidationMessage?.dataset.focusTarget;
+
+                        if (
+                            focusTarget === "question" &&
+                            firstInvalidQuestion
+                        ) {
+                            firstInvalidQuestion
+                                .querySelector(
+                                    ".assessment-template-question-input"
+                                )
+                                ?.focus();
+                        }
+
+                        if (
+                            focusTarget === "option" &&
+                            firstInvalidQuestion
+                        ) {
+                            firstInvalidQuestion
+                                .querySelector(
+                                    ".assessment-template-multiple-choice-option-input"
+                                )
+                                ?.focus();
+                        }
 
                         return;
                     }
