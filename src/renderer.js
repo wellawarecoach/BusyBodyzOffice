@@ -2259,6 +2259,30 @@ function initializeClientProfilePage(client) {
                 questionInput.focus();
             });
         }
+        function addAssessmentTemplateValidationMessage(
+            container,
+            message
+        ) {
+            if (!container) {
+                return null;
+            }
+
+            const validationMessage =
+                document.createElement("p");
+
+            validationMessage.className =
+                "assessment-template-question-validation";
+
+            validationMessage.textContent =
+                message;
+
+            container.appendChild(
+                validationMessage
+            );
+
+            return validationMessage;
+        }
+
         if (templateForm) {
             templateForm.addEventListener(
                 "submit",
@@ -2306,23 +2330,14 @@ function initializeClientProfilePage(client) {
 
                     if (questionRows.length === 0) {
                         const validationMessage =
-                            document.createElement("p");
-
-                        validationMessage.className =
-                            "assessment-template-question-validation";
-
-                        validationMessage.textContent =
-                            "Add at least one assessment question before saving the template.";
-
-                        if (questionsList) {
-                            questionsList.appendChild(
-                                validationMessage
+                            addAssessmentTemplateValidationMessage(
+                                questionsList,
+                                "Add at least one assessment question before saving the template."
                             );
 
-                            validationMessage.scrollIntoView({
-                                block: "center"
-                            });
-                        }
+                        validationMessage?.scrollIntoView({
+                            block: "center"
+                        });
 
                         return;
                     }
@@ -2345,17 +2360,9 @@ function initializeClientProfilePage(client) {
                             if (!text) {
                                 hasInvalidAssessmentQuestion = true;
 
-                                const validationMessage =
-                                    document.createElement("p");
-
-                                validationMessage.className =
-                                    "assessment-template-question-validation";
-
-                                validationMessage.textContent =
-                                    "Question text is required.";
-
-                                row.appendChild(
-                                    validationMessage
+                                addAssessmentTemplateValidationMessage(
+                                    row,
+                                    "Question text is required."
                                 );
 
                                 return null;
@@ -2371,17 +2378,9 @@ function initializeClientProfilePage(client) {
                             ) {
                                 hasInvalidAssessmentQuestion = true;
 
-                                const validationMessage =
-                                    document.createElement("p");
-
-                                validationMessage.className =
-                                    "assessment-template-question-validation";
-
-                                validationMessage.textContent =
-                                    "Question text must be unique.";
-
-                                row.appendChild(
-                                    validationMessage
+                                addAssessmentTemplateValidationMessage(
+                                    row,
+                                    "Question text must be unique."
                                 );
 
                                 return null;
@@ -2423,17 +2422,9 @@ function initializeClientProfilePage(client) {
                             ) {
                                 hasInvalidAssessmentQuestion = true;
 
-                                const validationMessage =
-                                    document.createElement("p");
-
-                                validationMessage.className =
-                                    "assessment-template-question-validation";
-
-                                validationMessage.textContent =
-                                    "Add at least two Multiple Choice options.";
-
-                                row.appendChild(
-                                    validationMessage
+                                addAssessmentTemplateValidationMessage(
+                                    row,
+                                    "Add at least two Multiple Choice options."
                                 );
 
                                 return null;
@@ -2452,17 +2443,9 @@ function initializeClientProfilePage(client) {
                                 if (hasDuplicateOptions) {
                                     hasInvalidAssessmentQuestion = true;
 
-                                    const validationMessage =
-                                        document.createElement("p");
-
-                                    validationMessage.className =
-                                        "assessment-template-question-validation";
-
-                                    validationMessage.textContent =
-                                        "Multiple Choice options must be unique.";
-
-                                    row.appendChild(
-                                        validationMessage
+                                    addAssessmentTemplateValidationMessage(
+                                        row,
+                                        "Multiple Choice options must be unique."
                                     );
 
                                     return null;
