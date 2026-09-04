@@ -2328,6 +2328,59 @@ function initializeClientProfilePage(client) {
                             message.remove();
                         });
 
+                    const editingTemplateId =
+                        templateForm.dataset.editingTemplateId || "";
+
+                    const templateNameInput =
+                        document.getElementById(
+                            "assessment-template-name"
+                        );
+
+                    const templatesResult =
+                        await window.busyBodyz.getAssessmentTemplates();
+
+                    if (
+                        templatesResult?.success &&
+                        Array.isArray(templatesResult.templates)
+                    ) {
+                        const normalizedTemplateName =
+                            templateName.toLowerCase();
+
+                        const duplicateTemplate =
+                            templatesResult.templates.some(
+                                (template) =>
+                                    template.id !==
+                                    editingTemplateId &&
+                                    String(
+                                        template?.templateName || ""
+                                    )
+                                        .trim()
+                                        .toLowerCase() ===
+                                    normalizedTemplateName
+                            );
+
+                        if (duplicateTemplate) {
+                            const templateNameContainer =
+                                templateNameInput?.parentElement ||
+                                templateForm;
+
+                            const validationMessage =
+                                addAssessmentTemplateValidationMessage(
+                                    templateNameContainer,
+                                    "An assessment template with this name already exists."
+                                );
+
+                            validationMessage?.scrollIntoView({
+                                block: "center"
+                            });
+
+                            templateNameInput?.focus();
+                            templateNameInput?.select();
+
+                            return;
+                        }
+                    }
+
                     const questionRows = Array.from(
                         document.querySelectorAll(
                             ".assessment-template-question-row"
@@ -2521,9 +2574,6 @@ function initializeClientProfilePage(client) {
                         return;
                     }
 
-                    const editingTemplateId =
-                        templateForm.dataset.editingTemplateId || "";
-
                     try {
                         let result;
 
@@ -2555,15 +2605,20 @@ function initializeClientProfilePage(client) {
                                 result.code ===
                                 "DUPLICATE_TEMPLATE_NAME"
                             ) {
-                                const templateNameContainer =
+                                const templateNameInput =
+                                    document.getElementById(
+                                        "assessment-template-name"
+                                    );
+
+                                const validationContainer =
                                     templateNameInput?.parentElement ||
                                     templateForm;
 
                                 const validationMessage =
                                     addAssessmentTemplateValidationMessage(
-                                        templateNameContainer,
+                                        validationContainer,
                                         result.error ||
-                                        "An assessment template with this name already exists."
+                                        "Template name must be unique."
                                     );
 
                                 validationMessage?.scrollIntoView({
@@ -2576,14 +2631,20 @@ function initializeClientProfilePage(client) {
                                 return;
                             }
 
-                            alert(
-                                result.error ||
-                                (
-                                    editingTemplateId
-                                        ? "Unable to update the assessment template."
-                                        : "Unable to save the assessment template."
-                                )
-                            );
+                            const validationMessage =
+                                addAssessmentTemplateValidationMessage(
+                                    templateForm,
+                                    result.error ||
+                                    (
+                                        editingTemplateId
+                                            ? "Unable to update the assessment template."
+                                            : "Unable to save the assessment template."
+                                    )
+                                );
+
+                            validationMessage?.scrollIntoView({
+                                block: "center"
+                            });
 
                             return;
                         }
@@ -2637,11 +2698,17 @@ function initializeClientProfilePage(client) {
                             error
                         );
 
-                        alert(
-                            editingTemplateId
-                                ? "An unexpected error occurred while updating the assessment template."
-                                : "An unexpected error occurred while saving the assessment template."
-                        );
+                        const validationMessage =
+                            addAssessmentTemplateValidationMessage(
+                                templateForm,
+                                editingTemplateId
+                                    ? "An unexpected error occurred while updating the assessment template."
+                                    : "An unexpected error occurred while saving the assessment template."
+                            );
+
+                        validationMessage?.scrollIntoView({
+                            block: "center"
+                        });
                     }
                 }
             );

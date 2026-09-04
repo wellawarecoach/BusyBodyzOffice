@@ -693,6 +693,146 @@ ipcMain.handle("update-client-program", async (event, payload) => {
         };
     }
 });
+function validateAndNormalizeAssessmentTemplateQuestions(questions) {
+    if (!Array.isArray(questions) || questions.length === 0) {
+        return {
+            success: false,
+            code: "ASSESSMENT_TEMPLATE_REQUIRES_QUESTION",
+            error: "Add at least one assessment question before saving the template."
+        };
+    }
+
+    const supportedResponseTypes = new Set([
+        "text",
+        "number",
+        "yes-no",
+        "multiple-choice"
+    ]);
+
+    const normalizedQuestionTexts = new Set();
+    const normalizedQuestions = [];
+
+    for (let index = 0; index < questions.length; index += 1) {
+        const question = questions[index];
+
+        const questionText =
+            typeof question === "string"
+                ? question.trim()
+                : String(
+                    question?.text || ""
+                ).trim();
+
+        if (!questionText) {
+            return {
+                success: false,
+                code: "INVALID_ASSESSMENT_QUESTION",
+                error: "Question text is required."
+            };
+        }
+
+        const normalizedQuestionText =
+            questionText.toLowerCase();
+
+        if (
+            normalizedQuestionTexts.has(
+                normalizedQuestionText
+            )
+        ) {
+            return {
+                success: false,
+                code: "DUPLICATE_ASSESSMENT_QUESTION",
+                error: "Assessment question text must be unique."
+            };
+        }
+
+        normalizedQuestionTexts.add(
+            normalizedQuestionText
+        );
+
+        const responseType =
+            (
+                typeof question === "object" &&
+                question?.responseType
+            )
+                ? String(question.responseType).trim()
+                : "text";
+
+        if (!supportedResponseTypes.has(responseType)) {
+            return {
+                success: false,
+                code: "INVALID_ASSESSMENT_RESPONSE_TYPE",
+                error: "Assessment question response type is invalid."
+            };
+        }
+
+        const options =
+            (
+                responseType === "multiple-choice" &&
+                typeof question === "object" &&
+                Array.isArray(question?.options)
+            )
+                ? question.options
+                    .map((option) =>
+                        String(option).trim()
+                    )
+                    .filter(Boolean)
+                : [];
+
+        if (
+            responseType === "multiple-choice" &&
+            options.length < 2
+        ) {
+            return {
+                success: false,
+                code: "INVALID_MULTIPLE_CHOICE_OPTIONS",
+                error: "Multiple Choice questions require at least two options."
+            };
+        }
+
+        if (responseType === "multiple-choice") {
+            const normalizedOptions =
+                options.map((option) =>
+                    option.toLowerCase()
+                );
+
+            const hasDuplicateOptions =
+                new Set(normalizedOptions).size !==
+                normalizedOptions.length;
+
+            if (hasDuplicateOptions) {
+                return {
+                    success: false,
+                    code: "DUPLICATE_MULTIPLE_CHOICE_OPTION",
+                    error: "Multiple Choice options must be unique."
+                };
+            }
+        }
+
+        normalizedQuestions.push({
+            id:
+                (
+                    typeof question === "object" &&
+                    question?.id
+                )
+                    ? String(question.id)
+                    : `assessment-question-${Date.now()}-${index}`,
+            text: questionText,
+            responseType,
+            required:
+                typeof question === "object"
+                    ? Boolean(question?.required)
+                    : false,
+            options,
+            order: index
+        });
+    }
+
+    return {
+        success: true,
+        questions: normalizedQuestions
+    };
+}
+
 ipcMain.handle("save-assessment-template", async (event, templateData) => {
     try {
         const templateName = String(
@@ -756,6 +896,15 @@ ipcMain.handle("save-assessment-template", async (event, templateData) => {
             };
         }
 
+        const questionValidation =
+            validateAndNormalizeAssessmentTemplateQuestions(
+                templateData?.questions
+            );
+
+        if (!questionValidation.success) {
+            return questionValidation;
+        }
+
         const template = {
             id: `assessment-template-${Date.now()}`,
             templateName,
@@ -771,59 +920,7 @@ ipcMain.handle("save-assessment-template", async (event, templateData) => {
             description: String(
                 templateData?.description || ""
             ).trim(),
-            questions: Array.isArray(templateData?.questions)
-                ? templateData.questions
-                    .map((question, index) => {
-                        const questionText =
-                            typeof question === "string"
-                                ? question.trim()
-                                : String(
-                                    question?.text || ""
-                                ).trim();
-
-                        if (!questionText) {
-                            return null;
-                        }
-
-                        return {
-                            id:
-                                (
-                                    typeof question === "object" &&
-                                    question?.id
-                                )
-                                    ? String(question.id)
-                                    : `assessment-question-${Date.now()}-${index}`,
-                            text: questionText,
-                            responseType:
-                                (
-                                    typeof question === "object" &&
-                                    question?.responseType
-                                )
-                                    ? String(question.responseType)
-                                    : "text",
-
-                            required:
-                                typeof question === "object"
-                                    ? Boolean(question?.required)
-                                    : false,
-
-                            options:
-                                (
-                                    typeof question === "object" &&
-                                    Array.isArray(question?.options)
-                                )
-                                    ? question.options
-                                        .map((option) =>
-                                            String(option).trim()
-                                        )
-                                        .filter(Boolean)
-                                    : [],
-
-                            order: index
-                        };
-                    })
-                    .filter(Boolean)
-                : [],
+            questions: questionValidation.questions,
             protocol: null,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -853,6 +950,7 @@ ipcMain.handle("save-assessment-template", async (event, templateData) => {
         };
     }
 });
+
 ipcMain.handle("get-assessment-templates", async () => {
     try {
         const templatesFilePath = path.join(
@@ -986,6 +1084,15 @@ ipcMain.handle(
                 };
             }
 
+            const questionValidation =
+                validateAndNormalizeAssessmentTemplateQuestions(
+                    templateData?.questions
+                );
+
+            if (!questionValidation.success) {
+                return questionValidation;
+            }
+
             const existingTemplate =
                 templates[templateIndex];
 
@@ -1004,61 +1111,7 @@ ipcMain.handle(
                 description: String(
                     templateData?.description || ""
                 ).trim(),
-                questions: Array.isArray(templateData?.questions)
-                    ? templateData.questions
-                        .map((question, index) => {
-                            const questionText =
-                                typeof question === "string"
-                                    ? question.trim()
-                                    : String(
-                                        question?.text || ""
-                                    ).trim();
-
-                            if (!questionText) {
-                                return null;
-                            }
-
-                            return {
-                                id:
-                                    (
-                                        typeof question === "object" &&
-                                        question?.id
-                                    )
-                                        ? String(question.id)
-                                        : `assessment-question-${Date.now()}-${index}`,
-                                text: questionText,
-                                responseType:
-                                    (
-                                        typeof question === "object" &&
-                                        question?.responseType
-                                    )
-                                        ? String(question.responseType)
-                                        : "text",
-
-                                required:
-                                    typeof question === "object"
-                                        ? Boolean(question?.required)
-                                        : false,
-
-                                options:
-                                    (
-                                        typeof question === "object" &&
-                                        Array.isArray(question?.options)
-                                    )
-                                        ? question.options
-                                            .map((option) =>
-                                                String(option).trim()
-                                            )
-                                            .filter(Boolean)
-                                        : [],
-
-                                order: index
-                            };
-                        })
-                        .filter(Boolean)
-                    : Array.isArray(existingTemplate.questions)
-                        ? existingTemplate.questions
-                        : [],
+                questions: questionValidation.questions,
                 updatedAt: new Date().toISOString()
             };
 
