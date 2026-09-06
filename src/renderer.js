@@ -1592,6 +1592,92 @@ function initializeClientProfilePage(client) {
                         });
                     });
 
+                    const duplicateTemplateButton =
+                        document.createElement("button");
+
+                    duplicateTemplateButton.type = "button";
+                    duplicateTemplateButton.className =
+                        "secondary-btn";
+
+                    duplicateTemplateButton.textContent =
+                        "Duplicate Template";
+
+                    duplicateTemplateButton.addEventListener(
+                        "click",
+                        () => {
+                            /*
+                             * Reuse the existing Edit workflow to populate
+                             * all template fields and question controls.
+                             */
+                            editButton.click();
+
+                            if (
+                                !templateForm ||
+                                !templateFormPanel ||
+                                !templateNameInput
+                            ) {
+                                return;
+                            }
+
+                            /*
+                             * This is a NEW template, not an update to
+                             * the template being copied.
+                             */
+                            delete templateForm.dataset.editingTemplateId;
+
+                            /*
+                             * Do not carry question IDs from the source
+                             * template into the new template.
+                             * New IDs will be generated when it is saved.
+                             */
+                            document
+                                .querySelectorAll(
+                                    ".assessment-template-question-row"
+                                )
+                                .forEach((questionRow) => {
+                                    delete questionRow.dataset.questionId;
+                                });
+
+                            /*
+                             * Require a new template name rather than
+                             * silently creating a similarly named copy.
+                             */
+                            templateNameInput.value = "";
+
+                            const saveButton =
+                                document.getElementById(
+                                    "save-assessment-template-button"
+                                );
+
+                            const formHeading =
+                                templateFormPanel.querySelector(
+                                    ".form-section-heading h3"
+                                );
+
+                            if (formHeading) {
+                                formHeading.textContent =
+                                    "Duplicate Assessment Template";
+                            }
+
+                            if (saveButton) {
+                                saveButton.textContent =
+                                    "Save Template";
+
+                                saveButton.disabled = false;
+                            }
+
+                            templateFormPanel.classList.remove(
+                                "hidden"
+                            );
+
+                            templateFormPanel.scrollIntoView({
+                                block: "start"
+                            });
+
+                            templateNameInput.focus();
+                        }
+                    );
+
                     const deleteButton =
                         document.createElement("button");
 
@@ -1745,6 +1831,7 @@ function initializeClientProfilePage(client) {
                     );
 
                     actions.appendChild(editButton);
+                    actions.appendChild(duplicateTemplateButton);
                     actions.appendChild(deleteButton);
 
                     card.appendChild(actions);
