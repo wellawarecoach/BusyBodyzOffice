@@ -945,6 +945,9 @@ function initializeClientProfilePage(client) {
         const questionsList = document.getElementById(
             "assessment-template-questions-list"
         );
+
+        let assessmentTemplateStatusFilter = "All";
+
         if (!backButton) {
             return;
         }
@@ -1017,7 +1020,89 @@ function initializeClientProfilePage(client) {
                     return;
                 }
 
-                templates.forEach((template) => {
+                const filterBar =
+                    document.createElement("div");
+
+                filterBar.className =
+                    "assessment-template-status-filters";
+
+                const filterStatuses = [
+                    "All",
+                    "Active",
+                    "Inactive"
+                ];
+
+                filterStatuses.forEach((status) => {
+                    const filterButton =
+                        document.createElement("button");
+
+                    filterButton.type = "button";
+
+                    filterButton.className =
+                        status === assessmentTemplateStatusFilter
+                            ? "primary-btn"
+                            : "secondary-btn";
+
+                    filterButton.textContent = status;
+
+                    filterButton.addEventListener(
+                        "click",
+                        async () => {
+                            assessmentTemplateStatusFilter =
+                                status;
+
+                            await renderAssessmentTemplates();
+                        }
+                    );
+
+                    filterBar.appendChild(
+                        filterButton
+                    );
+                });
+
+                templatesList.appendChild(
+                    filterBar
+                );
+
+                const filteredTemplates =
+                    assessmentTemplateStatusFilter === "All"
+                        ? templates
+                        : templates.filter((template) =>
+                            String(
+                                template?.status || "Active"
+                            )
+                                .trim()
+                                .toLowerCase() ===
+                            assessmentTemplateStatusFilter.toLowerCase()
+                        );
+
+                if (filteredTemplates.length === 0) {
+                    const emptyState =
+                        document.createElement("div");
+
+                    emptyState.className = "empty-state";
+
+                    const heading =
+                        document.createElement("h3");
+
+                    heading.textContent =
+                        `No ${assessmentTemplateStatusFilter.toLowerCase()} assessment templates`;
+
+                    const message =
+                        document.createElement("p");
+
+                    message.textContent =
+                        `There are currently no ${assessmentTemplateStatusFilter.toLowerCase()} assessment templates.`;
+
+                    emptyState.appendChild(heading);
+                    emptyState.appendChild(message);
+
+                    templatesList.appendChild(emptyState);
+
+                    return;
+                }
+
+                filteredTemplates.forEach((template) => {
                     const card =
                         document.createElement("div");
 
