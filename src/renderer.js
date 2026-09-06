@@ -1595,22 +1595,66 @@ function initializeClientProfilePage(client) {
                     const deleteButton =
                         document.createElement("button");
 
-
-
                     deleteButton.type = "button";
                     deleteButton.className = "secondary-btn";
                     deleteButton.textContent = "Delete";
 
+                    let deleteConfirmationPending = false;
+                    let cancelDeleteButton = null;
+
+                    const resetDeleteConfirmation = () => {
+                        deleteConfirmationPending = false;
+
+                        deleteButton.textContent = "Delete";
+                        deleteButton.disabled = false;
+
+                        cancelDeleteButton?.remove();
+                        cancelDeleteButton = null;
+                    };
+
                     deleteButton.addEventListener(
                         "click",
                         async () => {
-                            const confirmed = window.confirm(
-                                `Delete "${template.templateName}"?`
-                            );
+                            if (!deleteConfirmationPending) {
+                                deleteConfirmationPending = true;
 
-                            if (!confirmed) {
+                                deleteButton.textContent =
+                                    "Confirm Delete";
+
+                                cancelDeleteButton =
+                                    document.createElement("button");
+
+                                cancelDeleteButton.type = "button";
+                                cancelDeleteButton.className =
+                                    "secondary-btn";
+                                cancelDeleteButton.textContent =
+                                    "Cancel";
+
+                                cancelDeleteButton.addEventListener(
+                                    "click",
+                                    () => {
+                                        resetDeleteConfirmation();
+                                    }
+                                );
+
+                                actions.appendChild(
+                                    cancelDeleteButton
+                                );
+
+                                deleteButton.focus();
+
                                 return;
                             }
+
+                            deleteButton.disabled = true;
+
+                            document
+                                .querySelectorAll(
+                                    ".assessment-template-question-validation"
+                                )
+                                .forEach((message) => {
+                                    message.remove();
+                                });
 
                             try {
                                 const result =
@@ -1619,10 +1663,18 @@ function initializeClientProfilePage(client) {
                                     );
 
                                 if (!result.success) {
-                                    alert(
-                                        result.error ||
-                                        "Unable to delete the assessment template."
-                                    );
+                                    resetDeleteConfirmation();
+
+                                    const validationMessage =
+                                        addAssessmentTemplateValidationMessage(
+                                            templateForm || templatesList,
+                                            result.error ||
+                                            "Unable to delete the assessment template."
+                                        );
+
+                                    validationMessage?.scrollIntoView({
+                                        block: "center"
+                                    });
 
                                     return;
                                 }
@@ -1632,9 +1684,11 @@ function initializeClientProfilePage(client) {
                                     template.id
                                 ) {
                                     templateForm.reset();
+
                                     if (questionsList) {
                                         questionsList.innerHTML = "";
                                     }
+
                                     delete templateForm.dataset.editingTemplateId;
 
                                     const saveButton =
@@ -1666,7 +1720,7 @@ function initializeClientProfilePage(client) {
 
                                 await renderAssessmentTemplates();
 
-                                alert(
+                                console.log(
                                     "Assessment template deleted."
                                 );
                             } catch (error) {
@@ -1675,9 +1729,17 @@ function initializeClientProfilePage(client) {
                                     error
                                 );
 
-                                alert(
-                                    "An unexpected error occurred while deleting the assessment template."
-                                );
+                                resetDeleteConfirmation();
+
+                                const validationMessage =
+                                    addAssessmentTemplateValidationMessage(
+                                        templateForm || templatesList,
+                                        "An unexpected error occurred while deleting the assessment template."
+                                    );
+
+                                validationMessage?.scrollIntoView({
+                                    block: "center"
+                                });
                             }
                         }
                     );
