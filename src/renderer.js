@@ -947,6 +947,7 @@ function initializeClientProfilePage(client) {
         );
 
         let assessmentTemplateStatusFilter = "All";
+        let assessmentTemplateSearchTerm = "";
 
         if (!backButton) {
             return;
@@ -1025,6 +1026,54 @@ function initializeClientProfilePage(client) {
 
                 filterBar.className =
                     "assessment-template-status-filters";
+                const searchInput =
+                    document.createElement("input");
+
+                searchInput.type = "search";
+                searchInput.className =
+                    "assessment-template-search-input";
+
+                searchInput.placeholder =
+                    "Search templates by name or category";
+
+                searchInput.value =
+                    assessmentTemplateSearchTerm;
+
+                searchInput.setAttribute(
+                    "aria-label",
+                    "Search assessment templates by name or category"
+                );
+
+                searchInput.addEventListener(
+                    "input",
+                    async (event) => {
+                        assessmentTemplateSearchTerm =
+                            event.target.value;
+
+                        await renderAssessmentTemplates();
+
+                        const refreshedSearchInput =
+                            document.querySelector(
+                                ".assessment-template-search-input"
+                            );
+
+                        if (refreshedSearchInput) {
+                            refreshedSearchInput.focus();
+
+                            const cursorPosition =
+                                refreshedSearchInput.value.length;
+
+                            refreshedSearchInput.setSelectionRange(
+                                cursorPosition,
+                                cursorPosition
+                            );
+                        }
+                    }
+                );
+
+                filterBar.appendChild(
+                    searchInput
+                );
 
                 const filterStatuses = [
                     "All",
@@ -1064,17 +1113,56 @@ function initializeClientProfilePage(client) {
                     filterBar
                 );
 
+                const normalizedSearchTerm =
+                    assessmentTemplateSearchTerm
+                        .trim()
+                        .toLowerCase();
+
                 const filteredTemplates =
-                    assessmentTemplateStatusFilter === "All"
-                        ? templates
-                        : templates.filter((template) =>
+                    templates.filter((template) => {
+                        const templateStatus =
                             String(
                                 template?.status || "Active"
                             )
                                 .trim()
-                                .toLowerCase() ===
-                            assessmentTemplateStatusFilter.toLowerCase()
+                                .toLowerCase();
+
+                        const matchesStatus =
+                            assessmentTemplateStatusFilter === "All" ||
+                            templateStatus ===
+                            assessmentTemplateStatusFilter.toLowerCase();
+
+                        if (!matchesStatus) {
+                            return false;
+                        }
+
+                        if (!normalizedSearchTerm) {
+                            return true;
+                        }
+
+                        const templateName =
+                            String(
+                                template?.templateName || ""
+                            )
+                                .trim()
+                                .toLowerCase();
+
+                        const category =
+                            String(
+                                template?.category || ""
+                            )
+                                .trim()
+                                .toLowerCase();
+
+                        return (
+                            templateName.includes(
+                                normalizedSearchTerm
+                            ) ||
+                            category.includes(
+                                normalizedSearchTerm
+                            )
                         );
+                    });
 
                 if (filteredTemplates.length === 0) {
                     const emptyState =
@@ -1086,13 +1174,18 @@ function initializeClientProfilePage(client) {
                         document.createElement("h3");
 
                     heading.textContent =
-                        `No ${assessmentTemplateStatusFilter.toLowerCase()} assessment templates`;
+                        "No matching assessment templates";
 
                     const message =
                         document.createElement("p");
 
-                    message.textContent =
-                        `There are currently no ${assessmentTemplateStatusFilter.toLowerCase()} assessment templates.`;
+                    if (normalizedSearchTerm) {
+                        message.textContent =
+                            "No templates match the current search and status filter.";
+                    } else {
+                        message.textContent =
+                            `There are currently no ${assessmentTemplateStatusFilter.toLowerCase()} assessment templates.`;
+                    }
 
                     emptyState.appendChild(heading);
                     emptyState.appendChild(message);
