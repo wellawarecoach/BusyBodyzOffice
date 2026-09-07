@@ -948,6 +948,7 @@ function initializeClientProfilePage(client) {
 
         let assessmentTemplateStatusFilter = "All";
         let assessmentTemplateSearchTerm = "";
+        let assessmentTemplateSortOrder = "updated-desc";
 
         if (!backButton) {
             return;
@@ -1026,6 +1027,7 @@ function initializeClientProfilePage(client) {
 
                 filterBar.className =
                     "assessment-template-status-filters";
+
                 const searchInput =
                     document.createElement("input");
 
@@ -1109,6 +1111,66 @@ function initializeClientProfilePage(client) {
                     );
                 });
 
+                const sortSelect =
+                    document.createElement("select");
+
+                sortSelect.className =
+                    "assessment-template-sort-select";
+
+                sortSelect.setAttribute(
+                    "aria-label",
+                    "Sort assessment templates"
+                );
+
+                const sortOptions = [
+                    {
+                        value: "updated-desc",
+                        label: "Recently Updated"
+                    },
+                    {
+                        value: "name-asc",
+                        label: "Name A–Z"
+                    },
+                    {
+                        value: "name-desc",
+                        label: "Name Z–A"
+                    },
+                    {
+                        value: "category-asc",
+                        label: "Category A–Z"
+                    }
+                ];
+
+                sortOptions.forEach((sortOption) => {
+                    const option =
+                        document.createElement("option");
+
+                    option.value =
+                        sortOption.value;
+
+                    option.textContent =
+                        sortOption.label;
+
+                    sortSelect.appendChild(option);
+                });
+
+                sortSelect.value =
+                    assessmentTemplateSortOrder;
+
+                sortSelect.addEventListener(
+                    "change",
+                    async (event) => {
+                        assessmentTemplateSortOrder =
+                            event.target.value;
+
+                        await renderAssessmentTemplates();
+                    }
+                );
+
+                filterBar.appendChild(
+                    sortSelect
+                );
+
                 templatesList.appendChild(
                     filterBar
                 );
@@ -1164,7 +1226,100 @@ function initializeClientProfilePage(client) {
                         );
                     });
 
-                if (filteredTemplates.length === 0) {
+                const sortedTemplates =
+                    [...filteredTemplates].sort(
+                        (templateA, templateB) => {
+                            const nameA =
+                                String(
+                                    templateA?.templateName || ""
+                                ).trim();
+
+                            const nameB =
+                                String(
+                                    templateB?.templateName || ""
+                                ).trim();
+
+                            const categoryA =
+                                String(
+                                    templateA?.category || ""
+                                ).trim();
+
+                            const categoryB =
+                                String(
+                                    templateB?.category || ""
+                                ).trim();
+
+                            if (
+                                assessmentTemplateSortOrder ===
+                                "name-asc"
+                            ) {
+                                return nameA.localeCompare(
+                                    nameB,
+                                    undefined,
+                                    {
+                                        sensitivity: "base"
+                                    }
+                                );
+                            }
+
+                            if (
+                                assessmentTemplateSortOrder ===
+                                "name-desc"
+                            ) {
+                                return nameB.localeCompare(
+                                    nameA,
+                                    undefined,
+                                    {
+                                        sensitivity: "base"
+                                    }
+                                );
+                            }
+
+                            if (
+                                assessmentTemplateSortOrder ===
+                                "category-asc"
+                            ) {
+                                const categoryComparison =
+                                    categoryA.localeCompare(
+                                        categoryB,
+                                        undefined,
+                                        {
+                                            sensitivity: "base"
+                                        }
+                                    );
+
+                                if (categoryComparison !== 0) {
+                                    return categoryComparison;
+                                }
+
+                                return nameA.localeCompare(
+                                    nameB,
+                                    undefined,
+                                    {
+                                        sensitivity: "base"
+                                    }
+                                );
+                            }
+
+                            const updatedTimeA =
+                                Date.parse(
+                                    templateA?.updatedAt ||
+                                    templateA?.createdAt ||
+                                    ""
+                                ) || 0;
+
+                            const updatedTimeB =
+                                Date.parse(
+                                    templateB?.updatedAt ||
+                                    templateB?.createdAt ||
+                                    ""
+                                ) || 0;
+
+                            return updatedTimeB - updatedTimeA;
+                        }
+                    );
+
+                if (sortedTemplates.length === 0) {
                     const emptyState =
                         document.createElement("div");
 
@@ -1195,7 +1350,7 @@ function initializeClientProfilePage(client) {
                     return;
                 }
 
-                filteredTemplates.forEach((template) => {
+                sortedTemplates.forEach((template) => {
                     const card =
                         document.createElement("div");
 
