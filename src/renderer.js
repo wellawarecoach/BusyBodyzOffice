@@ -1628,6 +1628,9 @@ function initializeClientProfilePage(client) {
                                 const questionLabel =
                                     document.createElement("label");
 
+                                questionLabel.className =
+                                    "assessment-template-question-label";
+
                                 questionLabel.textContent =
                                     "Question";
 
@@ -1707,6 +1710,7 @@ function initializeClientProfilePage(client) {
                                                 questionRow,
                                                 previousRow
                                             );
+                                            updateAssessmentQuestionNumbers();
                                         }
                                     }
                                 );
@@ -1873,6 +1877,8 @@ function initializeClientProfilePage(client) {
                                             questionRow.nextElementSibling
                                         );
 
+                                        updateAssessmentQuestionNumbers();
+
                                         duplicateQuestionInput?.focus();
                                     }
                                 );
@@ -1890,6 +1896,8 @@ function initializeClientProfilePage(client) {
                                     "click",
                                     () => {
                                         questionRow.remove();
+
+                                        updateAssessmentQuestionNumbers();
                                     }
                                 );
 
@@ -2011,6 +2019,8 @@ function initializeClientProfilePage(client) {
                                     questionRow
                                 );
                             });
+
+                            updateAssessmentQuestionNumbers();
                         }
                         if (formHeading) {
                             formHeading.textContent =
@@ -2469,7 +2479,54 @@ function initializeClientProfilePage(client) {
                 addOption
             };
         }
+        function updateAssessmentQuestionNumbers() {
+            if (!questionsList) {
+                return;
+            }
 
+            const questionRows =
+                Array.from(
+                    questionsList.querySelectorAll(
+                        ".assessment-template-question-row"
+                    )
+                );
+
+            questionRows.forEach(
+                (questionRow, index) => {
+                    const questionLabel =
+                        questionRow.querySelector(
+                            ".assessment-template-question-label"
+                        );
+
+                    if (!questionLabel) {
+                        return;
+                    }
+
+                    const labelTextNode =
+                        Array.from(
+                            questionLabel.childNodes
+                        ).find(
+                            (node) =>
+                                node.nodeType === 3
+                        );
+
+                    const labelText =
+                        `Question ${index + 1} `;
+
+                    if (labelTextNode) {
+                        labelTextNode.nodeValue =
+                            labelText;
+                    } else {
+                        questionLabel.insertBefore(
+                            document.createTextNode(
+                                labelText
+                            ),
+                            questionLabel.firstChild
+                        );
+                    }
+                }
+            );
+        }
         if (
             addQuestionButton &&
             questionsList
@@ -2486,6 +2543,9 @@ function initializeClientProfilePage(client) {
 
                 const questionLabel =
                     document.createElement("label");
+
+                questionLabel.className =
+                    "assessment-template-question-label";
 
                 questionLabel.textContent =
                     "Question";
@@ -2608,6 +2668,8 @@ function initializeClientProfilePage(client) {
                                 questionRow,
                                 previousRow
                             );
+
+                            updateAssessmentQuestionNumbers();
                         }
                     }
                 );
@@ -2633,6 +2695,8 @@ function initializeClientProfilePage(client) {
                                 nextRow,
                                 questionRow
                             );
+
+                            updateAssessmentQuestionNumbers();
                         }
                     }
                 );
@@ -2774,6 +2838,8 @@ function initializeClientProfilePage(client) {
                             questionRow.nextElementSibling
                         );
 
+                        updateAssessmentQuestionNumbers();
+
                         duplicateQuestionInput?.focus();
                     }
                 );
@@ -2791,6 +2857,8 @@ function initializeClientProfilePage(client) {
                     "click",
                     () => {
                         questionRow.remove();
+
+                        updateAssessmentQuestionNumbers();
                     }
                 );
 
@@ -2845,6 +2913,8 @@ function initializeClientProfilePage(client) {
                 questionsList.appendChild(
                     questionRow
                 );
+
+                updateAssessmentQuestionNumbers();
 
                 questionInput.focus();
             });
