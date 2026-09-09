@@ -1405,6 +1405,38 @@ function initializeClientProfilePage(client) {
 
                     card.appendChild(header);
 
+                    const templateDetails =
+                        document.createElement("p");
+
+                    templateDetails.className =
+                        "assessment-template-meta";
+
+                    const questionCount =
+                        Array.isArray(template.questions)
+                            ? template.questions.length
+                            : 0;
+
+                    const questionLabel =
+                        questionCount === 1
+                            ? "question"
+                            : "questions";
+
+                    const updatedDate =
+                        template.updatedAt
+                            ? new Date(
+                                template.updatedAt
+                            ).toLocaleDateString()
+                            : "";
+
+                    templateDetails.textContent =
+                        updatedDate
+                            ? `${questionCount} ${questionLabel} • Updated ${updatedDate}`
+                            : `${questionCount} ${questionLabel}`;
+
+                    card.appendChild(
+                        templateDetails
+                    );
+
                     if (template.description) {
                         const description =
                             document.createElement("p");
