@@ -1411,10 +1411,13 @@ function initializeClientProfilePage(client) {
                     templateDetails.className =
                         "assessment-template-meta";
 
-                    const questionCount =
+                    const questions =
                         Array.isArray(template.questions)
-                            ? template.questions.length
-                            : 0;
+                            ? template.questions
+                            : [];
+
+                    const questionCount =
+                        questions.length;
 
                     const questionLabel =
                         questionCount === 1
@@ -1436,6 +1439,79 @@ function initializeClientProfilePage(client) {
                     card.appendChild(
                         templateDetails
                     );
+
+                    const questionTypeCounts =
+                        questions.reduce(
+                            (counts, question) => {
+                                const responseType =
+                                    typeof question === "object"
+                                        ? question?.responseType || "text"
+                                        : "text";
+
+                                if (responseType === "number") {
+                                    counts.number += 1;
+                                } else if (responseType === "yes-no") {
+                                    counts.yesNo += 1;
+                                } else if (
+                                    responseType === "multiple-choice"
+                                ) {
+                                    counts.multipleChoice += 1;
+                                } else {
+                                    counts.text += 1;
+                                }
+
+                                return counts;
+                            },
+                            {
+                                text: 0,
+                                number: 0,
+                                yesNo: 0,
+                                multipleChoice: 0
+                            }
+                        );
+
+                    const questionTypeParts = [];
+
+                    if (questionTypeCounts.text > 0) {
+                        questionTypeParts.push(
+                            `${questionTypeCounts.text} Text`
+                        );
+                    }
+
+                    if (questionTypeCounts.number > 0) {
+                        questionTypeParts.push(
+                            `${questionTypeCounts.number} Number`
+                        );
+                    }
+
+                    if (questionTypeCounts.yesNo > 0) {
+                        questionTypeParts.push(
+                            `${questionTypeCounts.yesNo} Yes / No`
+                        );
+                    }
+
+                    if (
+                        questionTypeCounts.multipleChoice > 0
+                    ) {
+                        questionTypeParts.push(
+                            `${questionTypeCounts.multipleChoice} Multiple Choice`
+                        );
+                    }
+
+                    if (questionTypeParts.length > 0) {
+                        const questionTypeSummary =
+                            document.createElement("p");
+
+                        questionTypeSummary.className =
+                            "assessment-template-meta";
+
+                        questionTypeSummary.textContent =
+                            questionTypeParts.join(" • ");
+
+                        card.appendChild(
+                            questionTypeSummary
+                        );
+                    }
 
                     if (template.description) {
                         const description =
