@@ -2527,398 +2527,385 @@ function initializeClientProfilePage(client) {
                 }
             );
         }
+        function createAssessmentQuestionRow(
+            question = null,
+            {
+                preserveQuestionId = false
+            } = {}
+        ) {
+            if (!questionsList) {
+                return null;
+            }
+
+            const questionRow =
+                document.createElement("div");
+
+            questionRow.className =
+                "assessment-template-question-row";
+
+            if (
+                preserveQuestionId &&
+                typeof question === "object" &&
+                question?.id
+            ) {
+                questionRow.dataset.questionId =
+                    String(question.id);
+            } else {
+                questionRow.dataset.questionId =
+                    `assessment-question-${Date.now()}-${Math.random()
+                        .toString(36)
+                        .slice(2, 8)}`;
+            }
+
+            const questionLabel =
+                document.createElement("label");
+
+            questionLabel.className =
+                "assessment-template-question-label";
+
+            questionLabel.appendChild(
+                document.createTextNode("Question ")
+            );
+
+            const questionInput =
+                document.createElement("input");
+
+            questionInput.type = "text";
+            questionInput.className =
+                "assessment-template-question-input";
+
+            questionInput.placeholder =
+                "Enter assessment question";
+
+            questionInput.value =
+                typeof question === "string"
+                    ? question
+                    : String(
+                        question?.text || ""
+                    );
+
+            questionLabel.appendChild(
+                questionInput
+            );
+
+            questionRow.appendChild(
+                questionLabel
+            );
+
+            const responseTypeLabel =
+                document.createElement("label");
+
+            responseTypeLabel.textContent =
+                "Response Type";
+
+            const responseTypeSelect =
+                document.createElement("select");
+
+            responseTypeSelect.className =
+                "assessment-template-question-response-type";
+
+            const responseTypes = [
+                {
+                    value: "text",
+                    label: "Text"
+                },
+                {
+                    value: "number",
+                    label: "Number"
+                },
+                {
+                    value: "yes-no",
+                    label: "Yes / No"
+                },
+                {
+                    value: "multiple-choice",
+                    label: "Multiple Choice"
+                }
+            ];
+
+            responseTypes.forEach((responseType) => {
+                const option =
+                    document.createElement("option");
+
+                option.value =
+                    responseType.value;
+
+                option.textContent =
+                    responseType.label;
+
+                responseTypeSelect.appendChild(
+                    option
+                );
+            });
+
+            responseTypeSelect.value =
+                typeof question === "object" &&
+                    question
+                    ? question.responseType || "text"
+                    : "text";
+
+            responseTypeLabel.appendChild(
+                responseTypeSelect
+            );
+
+            questionRow.appendChild(
+                responseTypeLabel
+            );
+
+            const requiredLabel =
+                document.createElement("label");
+
+            const requiredCheckbox =
+                document.createElement("input");
+
+            requiredCheckbox.type = "checkbox";
+            requiredCheckbox.className =
+                "assessment-template-question-required";
+
+            requiredCheckbox.checked =
+                typeof question === "object" &&
+                    question
+                    ? Boolean(question.required)
+                    : false;
+
+            requiredLabel.appendChild(
+                requiredCheckbox
+            );
+
+            requiredLabel.appendChild(
+                document.createTextNode(" Required")
+            );
+
+            questionRow.appendChild(
+                requiredLabel
+            );
+
+            const moveUpButton =
+                document.createElement("button");
+
+            moveUpButton.type = "button";
+            moveUpButton.className =
+                "secondary-btn";
+
+            moveUpButton.textContent =
+                "Move Up";
+
+            moveUpButton.addEventListener(
+                "click",
+                () => {
+                    const previousRow =
+                        questionRow.previousElementSibling;
+
+                    if (!previousRow) {
+                        return;
+                    }
+
+                    questionsList.insertBefore(
+                        questionRow,
+                        previousRow
+                    );
+
+                    updateAssessmentQuestionNumbers();
+                }
+            );
+
+            const moveDownButton =
+                document.createElement("button");
+
+            moveDownButton.type = "button";
+            moveDownButton.className =
+                "secondary-btn";
+
+            moveDownButton.textContent =
+                "Move Down";
+
+            moveDownButton.addEventListener(
+                "click",
+                () => {
+                    const nextRow =
+                        questionRow.nextElementSibling;
+
+                    if (!nextRow) {
+                        return;
+                    }
+
+                    questionsList.insertBefore(
+                        nextRow,
+                        questionRow
+                    );
+
+                    updateAssessmentQuestionNumbers();
+                }
+            );
+
+            const duplicateQuestionButton =
+                document.createElement("button");
+
+            duplicateQuestionButton.type =
+                "button";
+
+            duplicateQuestionButton.className =
+                "secondary-btn";
+
+            duplicateQuestionButton.textContent =
+                "Duplicate Question";
+
+            duplicateQuestionButton.addEventListener(
+                "click",
+                () => {
+                    const optionValues =
+                        Array.from(
+                            questionRow.querySelectorAll(
+                                ".assessment-template-multiple-choice-option-input"
+                            )
+                        ).map(
+                            (optionInput) =>
+                                optionInput.value
+                        );
+
+                    const duplicateQuestion = {
+                        text: questionInput.value,
+                        responseType:
+                            responseTypeSelect.value,
+                        required:
+                            requiredCheckbox.checked,
+                        options: optionValues
+                    };
+
+                    const duplicateRow =
+                        createAssessmentQuestionRow(
+                            duplicateQuestion
+                        );
+
+                    if (!duplicateRow) {
+                        return;
+                    }
+
+                    questionsList.insertBefore(
+                        duplicateRow,
+                        questionRow.nextElementSibling
+                    );
+
+                    updateAssessmentQuestionNumbers();
+
+                    duplicateRow
+                        .querySelector(
+                            ".assessment-template-question-input"
+                        )
+                        ?.focus();
+                }
+            );
+
+            const removeQuestionButton =
+                document.createElement("button");
+
+            removeQuestionButton.type = "button";
+            removeQuestionButton.className =
+                "secondary-btn";
+
+            removeQuestionButton.textContent =
+                "Remove Question";
+
+            removeQuestionButton.addEventListener(
+                "click",
+                () => {
+                    questionRow.remove();
+
+                    updateAssessmentQuestionNumbers();
+                }
+            );
+
+            questionRow.appendChild(
+                moveUpButton
+            );
+
+            questionRow.appendChild(
+                moveDownButton
+            );
+
+            questionRow.appendChild(
+                duplicateQuestionButton
+            );
+
+            questionRow.appendChild(
+                removeQuestionButton
+            );
+
+            const initialOptions =
+                typeof question === "object" &&
+                    question &&
+                    Array.isArray(question.options)
+                    ? question.options
+                    : [];
+
+            const {
+                optionsContainer,
+                addOption
+            } = createMultipleChoiceOptionsEditor(
+                questionRow,
+                initialOptions
+            );
+
+            const updateMultipleChoiceOptionsVisibility =
+                () => {
+                    const isMultipleChoice =
+                        responseTypeSelect.value ===
+                        "multiple-choice";
+
+                    optionsContainer.classList.toggle(
+                        "hidden",
+                        !isMultipleChoice
+                    );
+
+                    if (
+                        isMultipleChoice &&
+                        !optionsContainer.querySelector(
+                            ".assessment-template-multiple-choice-option-input"
+                        )
+                    ) {
+                        addOption();
+                    }
+                };
+
+            responseTypeSelect.addEventListener(
+                "change",
+                updateMultipleChoiceOptionsVisibility
+            );
+
+            updateMultipleChoiceOptionsVisibility();
+
+            return questionRow;
+        }
+
         if (
             addQuestionButton &&
             questionsList
         ) {
-            addQuestionButton.addEventListener("click", () => {
-                const questionRow =
-                    document.createElement("div");
+            addQuestionButton.addEventListener(
+                "click",
+                () => {
+                    const questionRow =
+                        createAssessmentQuestionRow();
 
-                questionRow.className =
-                    "assessment-template-question-row";
-
-                questionRow.dataset.questionId =
-                    `assessment-question-${Date.now()}`;
-
-                const questionLabel =
-                    document.createElement("label");
-
-                questionLabel.className =
-                    "assessment-template-question-label";
-
-                questionLabel.textContent =
-                    "Question";
-
-                const questionInput =
-                    document.createElement("input");
-
-                questionInput.type = "text";
-                questionInput.className =
-                    "assessment-template-question-input";
-
-                questionInput.placeholder =
-                    "Enter assessment question";
-
-                questionLabel.appendChild(
-                    questionInput
-                );
-
-                questionRow.appendChild(
-                    questionLabel
-                );
-
-                const responseTypeLabel =
-                    document.createElement("label");
-
-                responseTypeLabel.textContent =
-                    "Response Type";
-
-                const responseTypeSelect =
-                    document.createElement("select");
-
-                responseTypeSelect.className =
-                    "assessment-template-question-response-type";
-
-                const responseTypes = [
-                    {
-                        value: "text",
-                        label: "Text"
-                    },
-                    {
-                        value: "number",
-                        label: "Number"
-                    },
-                    {
-                        value: "yes-no",
-                        label: "Yes / No"
-                    },
-                    {
-                        value: "multiple-choice",
-                        label: "Multiple Choice"
+                    if (!questionRow) {
+                        return;
                     }
-                ];
 
-                responseTypes.forEach((responseType) => {
-                    const option =
-                        document.createElement("option");
-
-                    option.value =
-                        responseType.value;
-
-                    option.textContent =
-                        responseType.label;
-
-                    responseTypeSelect.appendChild(
-                        option
+                    questionsList.appendChild(
+                        questionRow
                     );
-                });
 
-                responseTypeSelect.value = "text";
+                    updateAssessmentQuestionNumbers();
 
-                responseTypeLabel.appendChild(
-                    responseTypeSelect
-                );
-
-                questionRow.appendChild(
-                    responseTypeLabel
-                );
-
-                const requiredLabel =
-                    document.createElement("label");
-
-                const requiredCheckbox =
-                    document.createElement("input");
-
-                requiredCheckbox.type = "checkbox";
-                requiredCheckbox.className =
-                    "assessment-template-question-required";
-
-                requiredCheckbox.checked = false;
-
-                requiredLabel.appendChild(
-                    requiredCheckbox
-                );
-
-                requiredLabel.appendChild(
-                    document.createTextNode(" Required")
-                );
-
-                questionRow.appendChild(
-                    requiredLabel
-                );
-                const moveUpButton =
-                    document.createElement("button");
-
-                moveUpButton.type = "button";
-                moveUpButton.className =
-                    "secondary-btn";
-
-                moveUpButton.textContent =
-                    "Move Up";
-
-                moveUpButton.addEventListener(
-                    "click",
-                    () => {
-                        const previousRow =
-                            questionRow.previousElementSibling;
-
-                        if (previousRow) {
-                            questionsList.insertBefore(
-                                questionRow,
-                                previousRow
-                            );
-
-                            updateAssessmentQuestionNumbers();
-                        }
-                    }
-                );
-
-                const moveDownButton =
-                    document.createElement("button");
-
-                moveDownButton.type = "button";
-                moveDownButton.className =
-                    "secondary-btn";
-
-                moveDownButton.textContent =
-                    "Move Down";
-
-                moveDownButton.addEventListener(
-                    "click",
-                    () => {
-                        const nextRow =
-                            questionRow.nextElementSibling;
-
-                        if (nextRow) {
-                            questionsList.insertBefore(
-                                nextRow,
-                                questionRow
-                            );
-
-                            updateAssessmentQuestionNumbers();
-                        }
-                    }
-                );
-                const duplicateQuestionButton =
-                    document.createElement("button");
-
-                duplicateQuestionButton.type = "button";
-                duplicateQuestionButton.className =
-                    "secondary-btn";
-
-                duplicateQuestionButton.textContent =
-                    "Duplicate Question";
-
-                duplicateQuestionButton.addEventListener(
-                    "click",
-                    () => {
-                        const questionText =
-                            questionInput.value;
-
-                        const responseType =
-                            responseTypeSelect.value;
-
-                        const required =
-                            requiredCheckbox.checked;
-
-                        const optionValues =
-                            Array.from(
-                                questionRow.querySelectorAll(
-                                    ".assessment-template-multiple-choice-option-input"
-                                )
-                            ).map((optionInput) =>
-                                optionInput.value
-                            );
-
-                        const existingRows =
-                            new Set(
-                                Array.from(
-                                    questionsList.children
-                                )
-                            );
-
-                        addQuestionButton.click();
-
-                        const duplicateRow =
-                            Array.from(
-                                questionsList.children
-                            ).find(
-                                (row) =>
-                                    !existingRows.has(row)
-                            );
-
-                        if (!duplicateRow) {
-                            return;
-                        }
-
-                        const duplicateQuestionInput =
-                            duplicateRow.querySelector(
-                                ".assessment-template-question-input"
-                            );
-
-                        const duplicateResponseTypeSelect =
-                            duplicateRow.querySelector(
-                                ".assessment-template-question-response-type"
-                            );
-
-                        const duplicateRequiredCheckbox =
-                            duplicateRow.querySelector(
-                                ".assessment-template-question-required"
-                            );
-
-                        if (duplicateQuestionInput) {
-                            duplicateQuestionInput.value =
-                                questionText;
-                        }
-
-                        if (duplicateRequiredCheckbox) {
-                            duplicateRequiredCheckbox.checked =
-                                required;
-                        }
-
-                        if (duplicateResponseTypeSelect) {
-                            duplicateResponseTypeSelect.value =
-                                responseType;
-
-                            duplicateResponseTypeSelect.dispatchEvent(
-                                new Event("change")
-                            );
-                        }
-
-                        if (
-                            responseType ===
-                            "multiple-choice"
-                        ) {
-                            const getDuplicateOptionInputs =
-                                () =>
-                                    Array.from(
-                                        duplicateRow.querySelectorAll(
-                                            ".assessment-template-multiple-choice-option-input"
-                                        )
-                                    );
-
-                            const addOptionButton =
-                                Array.from(
-                                    duplicateRow.querySelectorAll(
-                                        ".assessment-template-multiple-choice-options button"
-                                    )
-                                ).find(
-                                    (button) =>
-                                        button.textContent ===
-                                        "+ Add Option"
-                                );
-
-                            optionValues.forEach(
-                                (optionValue, index) => {
-                                    let optionInputs =
-                                        getDuplicateOptionInputs();
-
-                                    if (
-                                        index >=
-                                        optionInputs.length &&
-                                        addOptionButton
-                                    ) {
-                                        addOptionButton.click();
-
-                                        optionInputs =
-                                            getDuplicateOptionInputs();
-                                    }
-
-                                    if (optionInputs[index]) {
-                                        optionInputs[index].value =
-                                            optionValue;
-                                    }
-                                }
-                            );
-                        }
-
-                        questionsList.insertBefore(
-                            duplicateRow,
-                            questionRow.nextElementSibling
-                        );
-
-                        updateAssessmentQuestionNumbers();
-
-                        duplicateQuestionInput?.focus();
-                    }
-                );
-                const removeQuestionButton =
-                    document.createElement("button");
-
-                removeQuestionButton.type = "button";
-                removeQuestionButton.className =
-                    "secondary-btn";
-
-                removeQuestionButton.textContent =
-                    "Remove Question";
-
-                removeQuestionButton.addEventListener(
-                    "click",
-                    () => {
-                        questionRow.remove();
-
-                        updateAssessmentQuestionNumbers();
-                    }
-                );
-
-                questionRow.appendChild(
-                    moveUpButton
-                );
-
-                questionRow.appendChild(
-                    moveDownButton
-                );
-
-                questionRow.appendChild(
-                    duplicateQuestionButton
-                );
-
-                questionRow.appendChild(
-                    removeQuestionButton
-                );
-
-                const {
-                    optionsContainer,
-                    addOption
-                } = createMultipleChoiceOptionsEditor(
                     questionRow
-                );
-
-                optionsContainer.classList.add("hidden");
-
-                responseTypeSelect.addEventListener(
-                    "change",
-                    () => {
-                        const isMultipleChoice =
-                            responseTypeSelect.value ===
-                            "multiple-choice";
-
-                        optionsContainer.classList.toggle(
-                            "hidden",
-                            !isMultipleChoice
-                        );
-
-                        if (
-                            isMultipleChoice &&
-                            !optionsContainer.querySelector(
-                                ".assessment-template-multiple-choice-option-input"
-                            )
-                        ) {
-                            addOption();
-                        }
-                    }
-                );
-
-                questionsList.appendChild(
-                    questionRow
-                );
-
-                updateAssessmentQuestionNumbers();
-
-                questionInput.focus();
-            });
+                        .querySelector(
+                            ".assessment-template-question-input"
+                        )
+                        ?.focus();
+                }
+            );
         }
+
         function addAssessmentTemplateValidationMessage(
             container,
             message,
