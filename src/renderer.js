@@ -2436,6 +2436,38 @@ function initializeClientProfilePage(client) {
                 responseTypeSelect
             };
         }
+        function initializeMultipleChoiceVisibility({
+            responseTypeSelect,
+            optionsContainer,
+            addOption
+        }) {
+            const updateVisibility = () => {
+                const isMultipleChoice =
+                    responseTypeSelect.value ===
+                    "multiple-choice";
+
+                optionsContainer.classList.toggle(
+                    "hidden",
+                    !isMultipleChoice
+                );
+
+                if (
+                    isMultipleChoice &&
+                    !optionsContainer.querySelector(
+                        ".assessment-template-multiple-choice-option-input"
+                    )
+                ) {
+                    addOption();
+                }
+            };
+
+            responseTypeSelect.addEventListener(
+                "change",
+                updateVisibility
+            );
+
+            updateVisibility();
+        }
 
         function createAssessmentQuestionRow(
             question = null,
@@ -2536,33 +2568,11 @@ function initializeClientProfilePage(client) {
                 initialOptions
             );
 
-            const updateMultipleChoiceOptionsVisibility =
-                () => {
-                    const isMultipleChoice =
-                        responseTypeSelect.value ===
-                        "multiple-choice";
-
-                    optionsContainer.classList.toggle(
-                        "hidden",
-                        !isMultipleChoice
-                    );
-
-                    if (
-                        isMultipleChoice &&
-                        !optionsContainer.querySelector(
-                            ".assessment-template-multiple-choice-option-input"
-                        )
-                    ) {
-                        addOption();
-                    }
-                };
-
-            responseTypeSelect.addEventListener(
-                "change",
-                updateMultipleChoiceOptionsVisibility
-            );
-
-            updateMultipleChoiceOptionsVisibility();
+            initializeMultipleChoiceVisibility({
+                responseTypeSelect,
+                optionsContainer,
+                addOption
+            });
 
             return questionRow;
         }
