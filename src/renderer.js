@@ -2494,6 +2494,27 @@ function initializeClientProfilePage(client) {
                 addOption
             });
         }
+        function assignAssessmentQuestionId(
+            questionRow,
+            question,
+            preserveQuestionId = false
+        ) {
+            if (
+                preserveQuestionId &&
+                typeof question === "object" &&
+                question?.id
+            ) {
+                questionRow.dataset.questionId =
+                    String(question.id);
+
+                return;
+            }
+
+            questionRow.dataset.questionId =
+                `assessment-question-${Date.now()}-${Math.random()
+                    .toString(36)
+                    .slice(2, 8)}`;
+        }
 
         function createAssessmentQuestionRow(
             question = null,
@@ -2511,19 +2532,11 @@ function initializeClientProfilePage(client) {
             questionRow.className =
                 "assessment-template-question-row";
 
-            if (
-                preserveQuestionId &&
-                typeof question === "object" &&
-                question?.id
-            ) {
-                questionRow.dataset.questionId =
-                    String(question.id);
-            } else {
-                questionRow.dataset.questionId =
-                    `assessment-question-${Date.now()}-${Math.random()
-                        .toString(36)
-                        .slice(2, 8)}`;
-            }
+            assignAssessmentQuestionId(
+                questionRow,
+                question,
+                preserveQuestionId
+            );
 
             const questionText =
                 typeof question === "string"
