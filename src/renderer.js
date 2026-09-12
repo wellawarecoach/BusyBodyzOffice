@@ -2138,6 +2138,55 @@ function initializeClientProfilePage(client) {
                 }
             );
         }
+        function createAssessmentResponseTypeSelect(
+            initialResponseType = "text"
+        ) {
+            const responseTypeSelect =
+                document.createElement("select");
+
+            responseTypeSelect.className =
+                "assessment-template-question-response-type";
+
+            const responseTypes = [
+                {
+                    value: "text",
+                    label: "Text"
+                },
+                {
+                    value: "number",
+                    label: "Number"
+                },
+                {
+                    value: "yes-no",
+                    label: "Yes / No"
+                },
+                {
+                    value: "multiple-choice",
+                    label: "Multiple Choice"
+                }
+            ];
+
+            responseTypes.forEach((responseType) => {
+                const option =
+                    document.createElement("option");
+
+                option.value =
+                    responseType.value;
+
+                option.textContent =
+                    responseType.label;
+
+                responseTypeSelect.appendChild(
+                    option
+                );
+            });
+
+            responseTypeSelect.value =
+                initialResponseType || "text";
+
+            return responseTypeSelect;
+        }
+
         function createAssessmentQuestionRow(
             question = null,
             {
@@ -2209,52 +2258,16 @@ function initializeClientProfilePage(client) {
             responseTypeLabel.textContent =
                 "Response Type";
 
-            const responseTypeSelect =
-                document.createElement("select");
-
-            responseTypeSelect.className =
-                "assessment-template-question-response-type";
-
-            const responseTypes = [
-                {
-                    value: "text",
-                    label: "Text"
-                },
-                {
-                    value: "number",
-                    label: "Number"
-                },
-                {
-                    value: "yes-no",
-                    label: "Yes / No"
-                },
-                {
-                    value: "multiple-choice",
-                    label: "Multiple Choice"
-                }
-            ];
-
-            responseTypes.forEach((responseType) => {
-                const option =
-                    document.createElement("option");
-
-                option.value =
-                    responseType.value;
-
-                option.textContent =
-                    responseType.label;
-
-                responseTypeSelect.appendChild(
-                    option
-                );
-            });
-
-            responseTypeSelect.value =
+            const initialResponseType =
                 typeof question === "object" &&
                     question
                     ? question.responseType || "text"
                     : "text";
 
+            const responseTypeSelect =
+                createAssessmentResponseTypeSelect(
+                    initialResponseType
+                );
             responseTypeLabel.appendChild(
                 responseTypeSelect
             );
