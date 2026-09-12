@@ -2057,6 +2057,15 @@ function initializeClientProfilePage(client) {
                 optionRow.appendChild(removeOptionButton);
 
                 optionsList.appendChild(optionRow);
+
+                if (!optionText) {
+                    optionInput.focus();
+
+                    optionInput.scrollIntoView({
+                        block: "center",
+                        behavior: "smooth"
+                    });
+                }
             }
 
             const addOptionButton =
@@ -2404,6 +2413,29 @@ function initializeClientProfilePage(client) {
                 questionInput
             };
         }
+        function createAssessmentResponseTypeControl(
+            initialResponseType = "text"
+        ) {
+            const responseTypeLabel =
+                document.createElement("label");
+
+            responseTypeLabel.textContent =
+                "Response Type";
+
+            const responseTypeSelect =
+                createAssessmentResponseTypeSelect(
+                    initialResponseType
+                );
+
+            responseTypeLabel.appendChild(
+                responseTypeSelect
+            );
+
+            return {
+                responseTypeLabel,
+                responseTypeSelect
+            };
+        }
 
         function createAssessmentQuestionRow(
             question = null,
@@ -2452,31 +2484,22 @@ function initializeClientProfilePage(client) {
             questionRow.appendChild(
                 questionLabel
             );
-            const responseTypeLabel =
-                document.createElement("label");
-
-            responseTypeLabel.textContent =
-                "Response Type";
-
             const initialResponseType =
                 typeof question === "object" &&
                     question
                     ? question.responseType || "text"
                     : "text";
 
-            const responseTypeSelect =
-                createAssessmentResponseTypeSelect(
-                    initialResponseType
-                );
-
-            responseTypeLabel.appendChild(
+            const {
+                responseTypeLabel,
                 responseTypeSelect
+            } = createAssessmentResponseTypeControl(
+                initialResponseType
             );
 
             questionRow.appendChild(
                 responseTypeLabel
             );
-
             const {
                 requiredLabel,
                 requiredCheckbox
@@ -2564,11 +2587,19 @@ function initializeClientProfilePage(client) {
 
                     updateAssessmentQuestionNumbers();
 
-                    questionRow
-                        .querySelector(
+                    const newQuestionInput =
+                        questionRow.querySelector(
                             ".assessment-template-question-input"
-                        )
-                        ?.focus();
+                        );
+
+                    if (newQuestionInput) {
+                        newQuestionInput.focus();
+
+                        newQuestionInput.scrollIntoView({
+                            block: "center",
+                            behavior: "smooth"
+                        });
+                    }
                 }
             );
         }
