@@ -2369,6 +2369,41 @@ function initializeClientProfilePage(client) {
                 requiredCheckbox
             };
         }
+        function createAssessmentQuestionTextControl(
+            initialText = ""
+        ) {
+            const questionLabel =
+                document.createElement("label");
+
+            questionLabel.className =
+                "assessment-template-question-label";
+
+            questionLabel.appendChild(
+                document.createTextNode("Question ")
+            );
+
+            const questionInput =
+                document.createElement("input");
+
+            questionInput.type = "text";
+            questionInput.className =
+                "assessment-template-question-input";
+
+            questionInput.placeholder =
+                "Enter assessment question";
+
+            questionInput.value =
+                String(initialText || "");
+
+            questionLabel.appendChild(
+                questionInput
+            );
+
+            return {
+                questionLabel,
+                questionInput
+            };
+        }
 
         function createAssessmentQuestionRow(
             question = null,
@@ -2400,41 +2435,23 @@ function initializeClientProfilePage(client) {
                         .slice(2, 8)}`;
             }
 
-            const questionLabel =
-                document.createElement("label");
-
-            questionLabel.className =
-                "assessment-template-question-label";
-
-            questionLabel.appendChild(
-                document.createTextNode("Question ")
-            );
-
-            const questionInput =
-                document.createElement("input");
-
-            questionInput.type = "text";
-            questionInput.className =
-                "assessment-template-question-input";
-
-            questionInput.placeholder =
-                "Enter assessment question";
-
-            questionInput.value =
+            const questionText =
                 typeof question === "string"
                     ? question
                     : String(
                         question?.text || ""
                     );
 
-            questionLabel.appendChild(
+            const {
+                questionLabel,
                 questionInput
+            } = createAssessmentQuestionTextControl(
+                questionText
             );
 
             questionRow.appendChild(
                 questionLabel
             );
-
             const responseTypeLabel =
                 document.createElement("label");
 
@@ -2451,6 +2468,7 @@ function initializeClientProfilePage(client) {
                 createAssessmentResponseTypeSelect(
                     initialResponseType
                 );
+
             responseTypeLabel.appendChild(
                 responseTypeSelect
             );
