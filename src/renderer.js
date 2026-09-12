@@ -2468,6 +2468,32 @@ function initializeClientProfilePage(client) {
 
             updateVisibility();
         }
+        function initializeAssessmentMultipleChoiceEditor({
+            questionRow,
+            responseTypeSelect,
+            question
+        }) {
+            const initialOptions =
+                typeof question === "object" &&
+                    question &&
+                    Array.isArray(question.options)
+                    ? question.options
+                    : [];
+
+            const {
+                optionsContainer,
+                addOption
+            } = createMultipleChoiceOptionsEditor(
+                questionRow,
+                initialOptions
+            );
+
+            initializeMultipleChoiceVisibility({
+                responseTypeSelect,
+                optionsContainer,
+                addOption
+            });
+        }
 
         function createAssessmentQuestionRow(
             question = null,
@@ -2553,27 +2579,11 @@ function initializeClientProfilePage(client) {
                 requiredCheckbox
             });
 
-            const initialOptions =
-                typeof question === "object" &&
-                    question &&
-                    Array.isArray(question.options)
-                    ? question.options
-                    : [];
-
-            const {
-                optionsContainer,
-                addOption
-            } = createMultipleChoiceOptionsEditor(
+            initializeAssessmentMultipleChoiceEditor({
                 questionRow,
-                initialOptions
-            );
-
-            initializeMultipleChoiceVisibility({
                 responseTypeSelect,
-                optionsContainer,
-                addOption
+                question
             });
-
             return questionRow;
         }
 
