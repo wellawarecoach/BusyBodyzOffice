@@ -817,6 +817,12 @@ function validateAndNormalizeAssessmentTemplateQuestions(questions) {
                     ? String(question.id)
                     : `assessment-question-${Date.now()}-${index}`,
             text: questionText,
+            instructions:
+                typeof question === "object"
+                    ? String(
+                        question?.instructions || ""
+                    ).trim()
+                    : "",
             responseType,
             required:
                 typeof question === "object"

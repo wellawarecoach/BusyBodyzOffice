@@ -2266,6 +2266,7 @@ function initializeClientProfilePage(client) {
         function addAssessmentQuestionActionButtons({
             questionRow,
             questionInput,
+            instructionsInput,
             responseTypeSelect,
             requiredCheckbox
         }) {
@@ -2352,6 +2353,8 @@ function initializeClientProfilePage(client) {
 
                     const duplicateQuestion = {
                         text: questionInput.value,
+                        instructions:
+                            instructionsInput?.value || "",
                         responseType:
                             responseTypeSelect.value,
                         required:
@@ -2479,6 +2482,38 @@ function initializeClientProfilePage(client) {
             return {
                 questionLabel,
                 questionInput
+            };
+        }
+        function createAssessmentQuestionInstructionsControl(
+            initialInstructions = ""
+        ) {
+            const instructionsLabel =
+                document.createElement("label");
+
+            instructionsLabel.textContent =
+                "Coach Instructions / Testing Notes";
+
+            const instructionsInput =
+                document.createElement("textarea");
+
+            instructionsInput.className =
+                "assessment-template-question-instructions";
+
+            instructionsInput.rows = 3;
+
+            instructionsInput.placeholder =
+                "Optional setup, positioning, cues, scoring, safety notes, or testing instructions.";
+
+            instructionsInput.value =
+                String(initialInstructions || "");
+
+            instructionsLabel.appendChild(
+                instructionsInput
+            );
+
+            return {
+                instructionsLabel,
+                instructionsInput
             };
         }
         function createAssessmentResponseTypeControl(
@@ -2619,10 +2654,27 @@ function initializeClientProfilePage(client) {
             } = createAssessmentQuestionTextControl(
                 questionText
             );
-
             questionRow.appendChild(
                 questionLabel
             );
+
+            const questionInstructions =
+                typeof question === "object" &&
+                    question
+                    ? question.instructions || ""
+                    : "";
+
+            const {
+                instructionsLabel,
+                instructionsInput
+            } = createAssessmentQuestionInstructionsControl(
+                questionInstructions
+            );
+
+            questionRow.appendChild(
+                instructionsLabel
+            );
+
             const initialResponseType =
                 typeof question === "object" &&
                     question
@@ -2656,6 +2708,7 @@ function initializeClientProfilePage(client) {
             addAssessmentQuestionActionButtons({
                 questionRow,
                 questionInput,
+                instructionsInput,
                 responseTypeSelect,
                 requiredCheckbox
             });
@@ -2904,6 +2957,11 @@ function initializeClientProfilePage(client) {
                                 normalizedQuestionText
                             );
 
+                            const instructionsInput =
+                                row.querySelector(
+                                    ".assessment-template-question-instructions"
+                                );
+
                             const responseTypeSelect =
                                 row.querySelector(
                                     ".assessment-template-question-response-type"
@@ -2913,6 +2971,9 @@ function initializeClientProfilePage(client) {
                                 row.querySelector(
                                     ".assessment-template-question-required"
                                 );
+
+                            const instructions =
+                                instructionsInput?.value.trim() || "";
 
                             const responseType =
                                 responseTypeSelect?.value || "text";
@@ -2993,6 +3054,7 @@ function initializeClientProfilePage(client) {
                                     row.dataset.questionId ||
                                     `assessment-question-${Date.now()}-${index}`,
                                 text,
+                                instructions,
                                 responseType,
                                 required:
                                     requiredCheckbox?.checked || false,
