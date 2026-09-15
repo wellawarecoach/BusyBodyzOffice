@@ -1526,6 +1526,63 @@ function initializeClientProfilePage(client) {
                         card.appendChild(description);
                     }
 
+                    if (template.protocol) {
+                        const protocolSection =
+                            document.createElement("div");
+
+                        protocolSection.className =
+                            "assessment-template-protocol-preview";
+
+                        const protocolToggleButton =
+                            document.createElement("button");
+
+                        protocolToggleButton.type = "button";
+                        protocolToggleButton.className =
+                            "secondary-btn";
+
+                        protocolToggleButton.textContent =
+                            "View Protocol";
+
+                        const protocolContent =
+                            document.createElement("p");
+
+                        protocolContent.className =
+                            "assessment-template-description";
+
+                        protocolContent.textContent =
+                            template.protocol;
+
+                        protocolContent.hidden = true;
+
+                        protocolToggleButton.addEventListener(
+                            "click",
+                            () => {
+                                const willShow =
+                                    protocolContent.hidden;
+
+                                protocolContent.hidden =
+                                    !willShow;
+
+                                protocolToggleButton.textContent =
+                                    willShow
+                                        ? "Hide Protocol"
+                                        : "View Protocol";
+                            }
+                        );
+
+                        protocolSection.appendChild(
+                            protocolToggleButton
+                        );
+
+                        protocolSection.appendChild(
+                            protocolContent
+                        );
+
+                        card.appendChild(
+                            protocolSection
+                        );
+                    }
+
                     const actions =
                         document.createElement("div");
 
