@@ -920,10 +920,11 @@ ipcMain.handle("save-assessment-template", async (event, templateData) => {
             description: String(
                 templateData?.description || ""
             ).trim(),
+            protocol: String(
+                templateData?.protocol || ""
+            ).trim(),
             questions: questionValidation.questions,
-            protocol: null,
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
         };
 
         templates.push(template);
@@ -1110,6 +1111,9 @@ ipcMain.handle(
                 ).trim(),
                 description: String(
                     templateData?.description || ""
+                ).trim(),
+                protocol: String(
+                    templateData?.protocol || ""
                 ).trim(),
                 questions: questionValidation.questions,
                 updatedAt: new Date().toISOString()

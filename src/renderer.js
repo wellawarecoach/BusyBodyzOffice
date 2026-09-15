@@ -1560,6 +1560,11 @@ function initializeClientProfilePage(client) {
                                 "assessment-template-description"
                             );
 
+                        const protocolInput =
+                            document.getElementById(
+                                "assessment-template-protocol"
+                            );
+
                         const saveButton =
                             document.getElementById(
                                 "save-assessment-template-button"
@@ -1603,6 +1608,12 @@ function initializeClientProfilePage(client) {
                             descriptionInput.value =
                                 template.description || "";
                         }
+
+                        if (protocolInput) {
+                            protocolInput.value =
+                                template.protocol || "";
+                        }
+
                         if (questionsList) {
                             questionsList.innerHTML = "";
 
@@ -2698,6 +2709,11 @@ function initializeClientProfilePage(client) {
                         .value
                         .trim();
 
+                    const protocol = document
+                        .getElementById("assessment-template-protocol")
+                        .value
+                        .trim();
+
                     document
                         .querySelectorAll(
                             ".assessment-template-question-validation"
@@ -3004,6 +3020,7 @@ function initializeClientProfilePage(client) {
                                     version,
                                     status,
                                     description,
+                                    protocol,
                                     questions
                                 });
                         } else {
@@ -3014,6 +3031,7 @@ function initializeClientProfilePage(client) {
                                     version,
                                     status,
                                     description,
+                                    protocol,
                                     questions
                                 });
                         }

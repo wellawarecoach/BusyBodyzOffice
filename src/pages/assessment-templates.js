@@ -209,27 +209,31 @@ export function getAssessmentTemplatesPage(client) {
 ></div>
                         </div>
 
-                        <div class="assessment-template-builder-section">
+                                           <div class="assessment-template-builder-section">
                             <div class="form-section-heading">
                                 <h3>
-                                    Protocol
+                                    Assessment Protocol / Instructions
                                 </h3>
 
                                 <p>
-                                    Testing instructions, procedures,
-                                    scoring and reference information
-                                    will be added here in the next stage.
+                                    Define how this assessment should be
+                                    prepared, administered, scored, or
+                                    interpreted by the coach.
                                 </p>
                             </div>
 
-                            <button
-                                id="edit-assessment-protocol-button"
-                                class="secondary-btn"
-                                type="button"
-                                disabled
-                            >
-                                Add Protocol
-                            </button>
+                            <div class="form-field">
+                                <label for="assessment-template-protocol">
+                                    Protocol / Instructions
+                                </label>
+
+                                <textarea
+                                    id="assessment-template-protocol"
+                                    name="protocol"
+                                    rows="6"
+                                    placeholder="Enter preparation instructions, testing procedures, equipment requirements, scoring guidance, safety notes, or interpretation information."
+                                ></textarea>
+                            </div>
                         </div>
 
                         <div class="form-actions">
