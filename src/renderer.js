@@ -1582,7 +1582,102 @@ function initializeClientProfilePage(client) {
                             protocolSection
                         );
                     }
+                    const questionsWithInstructions =
+                        questions.filter(
+                            (question) =>
+                                typeof question === "object" &&
+                                String(
+                                    question?.instructions || ""
+                                ).trim()
+                        );
 
+                    if (questionsWithInstructions.length > 0) {
+                        const instructionsSection =
+                            document.createElement("div");
+
+                        instructionsSection.className =
+                            "assessment-template-question-instructions-preview";
+
+                        const instructionsToggleButton =
+                            document.createElement("button");
+
+                        instructionsToggleButton.type = "button";
+                        instructionsToggleButton.className =
+                            "secondary-btn";
+
+                        instructionsToggleButton.textContent =
+                            "View Question Instructions";
+
+                        const instructionsContent =
+                            document.createElement("div");
+
+                        instructionsContent.hidden = true;
+
+                        questionsWithInstructions.forEach(
+                            (question) => {
+                                const instructionItem =
+                                    document.createElement("div");
+
+                                instructionItem.className =
+                                    "assessment-template-question-instruction-item";
+
+                                const questionHeading =
+                                    document.createElement("strong");
+
+                                questionHeading.textContent =
+                                    question.text || "Assessment Question";
+
+                                const instructionText =
+                                    document.createElement("p");
+
+                                instructionText.className =
+                                    "assessment-template-description";
+
+                                instructionText.textContent =
+                                    question.instructions;
+
+                                instructionItem.appendChild(
+                                    questionHeading
+                                );
+
+                                instructionItem.appendChild(
+                                    instructionText
+                                );
+
+                                instructionsContent.appendChild(
+                                    instructionItem
+                                );
+                            }
+                        );
+
+                        instructionsToggleButton.addEventListener(
+                            "click",
+                            () => {
+                                const willShow =
+                                    instructionsContent.hidden;
+
+                                instructionsContent.hidden =
+                                    !willShow;
+
+                                instructionsToggleButton.textContent =
+                                    willShow
+                                        ? "Hide Question Instructions"
+                                        : "View Question Instructions";
+                            }
+                        );
+
+                        instructionsSection.appendChild(
+                            instructionsToggleButton
+                        );
+
+                        instructionsSection.appendChild(
+                            instructionsContent
+                        );
+
+                        card.appendChild(
+                            instructionsSection
+                        );
+                    }
                     const actions =
                         document.createElement("div");
 
