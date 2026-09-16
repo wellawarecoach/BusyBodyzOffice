@@ -1534,8 +1534,243 @@ function initializeClientProfilePage(client) {
                                         saveAssessmentButton.textContent =
                                             "Save Assessment";
 
-                                        saveAssessmentButton.disabled =
-                                            true;
+                                        saveAssessmentButton.addEventListener(
+                                            "click",
+                                            async () => {
+                                                assessmentForm
+                                                    .querySelectorAll(
+                                                        ".assessment-template-question-validation"
+                                                    )
+                                                    .forEach(
+                                                        (message) => {
+                                                            message.remove();
+                                                        }
+                                                    );
+
+                                                const responseControls =
+                                                    Array.from(
+                                                        assessmentForm.querySelectorAll(
+                                                            ".client-assessment-response"
+                                                        )
+                                                    );
+
+                                                let hasMissingRequiredResponse =
+                                                    false;
+
+                                                const assessmentQuestions =
+                                                    templateQuestions.map(
+                                                        (
+                                                            question,
+                                                            index
+                                                        ) => {
+                                                            const responseControl =
+                                                                responseControls[
+                                                                index
+                                                                ];
+
+                                                            const response =
+                                                                responseControl
+                                                                    ?.value
+                                                                    ?.trim() ||
+                                                                "";
+
+                                                            if (
+                                                                question.required &&
+                                                                !response
+                                                            ) {
+                                                                hasMissingRequiredResponse =
+                                                                    true;
+
+                                                                const questionSection =
+                                                                    responseControl
+                                                                        ?.closest(
+                                                                            ".client-assessment-question"
+                                                                        );
+
+                                                                if (
+                                                                    questionSection
+                                                                ) {
+                                                                    const validationMessage =
+                                                                        document.createElement(
+                                                                            "p"
+                                                                        );
+
+                                                                    validationMessage.className =
+                                                                        "assessment-template-question-validation";
+
+                                                                    validationMessage.textContent =
+                                                                        "A response is required.";
+
+                                                                    questionSection.appendChild(
+                                                                        validationMessage
+                                                                    );
+                                                                }
+                                                            }
+
+                                                            return {
+                                                                id:
+                                                                    question.id ||
+                                                                    "",
+                                                                text:
+                                                                    question.text ||
+                                                                    "",
+                                                                instructions:
+                                                                    question.instructions ||
+                                                                    "",
+                                                                responseType:
+                                                                    question.responseType ||
+                                                                    "text",
+                                                                required:
+                                                                    Boolean(
+                                                                        question.required
+                                                                    ),
+                                                                options:
+                                                                    Array.isArray(
+                                                                        question.options
+                                                                    )
+                                                                        ? [
+                                                                            ...question.options
+                                                                        ]
+                                                                        : [],
+                                                                response,
+                                                                order:
+                                                                    index
+                                                            };
+                                                        }
+                                                    );
+
+                                                if (
+                                                    hasMissingRequiredResponse
+                                                ) {
+                                                    const firstValidation =
+                                                        assessmentForm.querySelector(
+                                                            ".assessment-template-question-validation"
+                                                        );
+
+                                                    firstValidation
+                                                        ?.closest(
+                                                            ".client-assessment-question"
+                                                        )
+                                                        ?.scrollIntoView({
+                                                            block:
+                                                                "center"
+                                                        });
+
+                                                    return;
+                                                }
+
+                                                saveAssessmentButton.disabled =
+                                                    true;
+
+                                                saveAssessmentButton.textContent =
+                                                    "Saving...";
+
+                                                try {
+                                                    const result =
+                                                        await window.busyBodyz
+                                                            .saveClientAssessment(
+                                                                {
+                                                                    clientId:
+                                                                        client.id,
+                                                                    assessment:
+                                                                    {
+                                                                        templateId:
+                                                                            template.id,
+                                                                        templateName:
+                                                                            template.templateName ||
+                                                                            "Assessment",
+                                                                        templateVersion:
+                                                                            template.version ||
+                                                                            "1.0",
+                                                                        category:
+                                                                            template.category ||
+                                                                            "",
+                                                                        description:
+                                                                            template.description ||
+                                                                            "",
+                                                                        protocol:
+                                                                            template.protocol ||
+                                                                            "",
+                                                                        status:
+                                                                            "Completed",
+                                                                        questions:
+                                                                            assessmentQuestions
+                                                                    }
+                                                                }
+                                                            );
+
+                                                    if (
+                                                        !result.success
+                                                    ) {
+                                                        const errorMessage =
+                                                            document.createElement(
+                                                                "p"
+                                                            );
+
+                                                        errorMessage.className =
+                                                            "assessment-template-question-validation";
+
+                                                        errorMessage.textContent =
+                                                            result.error ||
+                                                            "Unable to save the assessment.";
+
+                                                        actions.appendChild(
+                                                            errorMessage
+                                                        );
+
+                                                        saveAssessmentButton.disabled =
+                                                            false;
+
+                                                        saveAssessmentButton.textContent =
+                                                            "Save Assessment";
+
+                                                        return;
+                                                    }
+
+                                                    const workspace =
+                                                        document.getElementById(
+                                                            "workspace"
+                                                        );
+
+                                                    workspace.innerHTML =
+                                                        getClientAssessmentsPage(
+                                                            result.client
+                                                        );
+
+                                                    initializeClientAssessmentsPage(
+                                                        result.client
+                                                    );
+                                                } catch (
+                                                error
+                                                ) {
+                                                    console.error(
+                                                        "Unable to save client assessment:",
+                                                        error
+                                                    );
+
+                                                    const errorMessage =
+                                                        document.createElement(
+                                                            "p"
+                                                        );
+
+                                                    errorMessage.className =
+                                                        "assessment-template-question-validation";
+
+                                                    errorMessage.textContent =
+                                                        "An unexpected error occurred while saving the assessment.";
+
+                                                    actions.appendChild(
+                                                        errorMessage
+                                                    );
+
+                                                    saveAssessmentButton.disabled =
+                                                        false;
+
+                                                    saveAssessmentButton.textContent =
+                                                        "Save Assessment";
+                                                }
+                                            }
+                                        );
 
                                         actions.appendChild(
                                             cancelAssessmentButton
