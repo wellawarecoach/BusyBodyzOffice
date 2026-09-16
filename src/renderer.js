@@ -884,6 +884,14 @@ function initializeClientProfilePage(client) {
             "manage-assessment-templates-button"
         );
 
+        const addAssessmentButton = document.getElementById(
+            "add-client-assessment-button"
+        );
+
+        const assessmentsList = document.getElementById(
+            "client-assessments-list"
+        );
+
         if (!backButton) {
             return;
         }
@@ -899,15 +907,693 @@ function initializeClientProfilePage(client) {
         });
 
         if (manageTemplatesButton) {
-            manageTemplatesButton.addEventListener("click", () => {
-                const workspace =
-                    document.getElementById("workspace");
+            manageTemplatesButton.addEventListener(
+                "click",
+                () => {
+                    const workspace =
+                        document.getElementById("workspace");
 
-                workspace.innerHTML =
-                    getAssessmentTemplatesPage(client);
+                    workspace.innerHTML =
+                        getAssessmentTemplatesPage(client);
 
-                initializeAssessmentTemplatesPage(client);
-            });
+                    initializeAssessmentTemplatesPage(client);
+                }
+            );
+        }
+
+        if (
+            addAssessmentButton &&
+            assessmentsList
+        ) {
+            addAssessmentButton.addEventListener(
+                "click",
+                async () => {
+                    assessmentsList.innerHTML = "";
+
+                    const selectionPanel =
+                        document.createElement("div");
+
+                    selectionPanel.className =
+                        "assessment-template-selection";
+
+                    const heading =
+                        document.createElement("h3");
+
+                    heading.textContent =
+                        "Select Assessment Template";
+
+                    const instructions =
+                        document.createElement("p");
+
+                    instructions.textContent =
+                        "Choose an active assessment template to begin a new assessment for this client.";
+
+                    selectionPanel.appendChild(
+                        heading
+                    );
+
+                    selectionPanel.appendChild(
+                        instructions
+                    );
+
+                    const cancelButton =
+                        document.createElement("button");
+
+                    cancelButton.type = "button";
+                    cancelButton.className =
+                        "secondary-btn";
+
+                    cancelButton.textContent =
+                        "Cancel";
+
+                    cancelButton.addEventListener(
+                        "click",
+                        () => {
+                            const workspace =
+                                document.getElementById(
+                                    "workspace"
+                                );
+
+                            workspace.innerHTML =
+                                getClientAssessmentsPage(
+                                    client
+                                );
+
+                            initializeClientAssessmentsPage(
+                                client
+                            );
+                        }
+                    );
+
+                    selectionPanel.appendChild(
+                        cancelButton
+                    );
+
+                    assessmentsList.appendChild(
+                        selectionPanel
+                    );
+
+                    try {
+                        const result =
+                            await window.busyBodyz
+                                .getAssessmentTemplates();
+
+                        if (!result.success) {
+                            const errorMessage =
+                                document.createElement(
+                                    "p"
+                                );
+
+                            errorMessage.textContent =
+                                result.error ||
+                                "Unable to load assessment templates.";
+
+                            selectionPanel.appendChild(
+                                errorMessage
+                            );
+
+                            return;
+                        }
+
+                        const templates =
+                            Array.isArray(
+                                result.templates
+                            )
+                                ? result.templates
+                                : [];
+
+                        const activeTemplates =
+                            templates.filter(
+                                (template) =>
+                                    String(
+                                        template?.status ||
+                                        "Active"
+                                    )
+                                        .trim()
+                                        .toLowerCase() ===
+                                    "active"
+                            );
+
+                        if (
+                            activeTemplates.length === 0
+                        ) {
+                            const emptyState =
+                                document.createElement(
+                                    "div"
+                                );
+
+                            emptyState.className =
+                                "empty-state";
+
+                            const emptyHeading =
+                                document.createElement(
+                                    "h3"
+                                );
+
+                            emptyHeading.textContent =
+                                "No active assessment templates";
+
+                            const emptyMessage =
+                                document.createElement(
+                                    "p"
+                                );
+
+                            emptyMessage.textContent =
+                                "Create or activate an assessment template before starting a client assessment.";
+
+                            emptyState.appendChild(
+                                emptyHeading
+                            );
+
+                            emptyState.appendChild(
+                                emptyMessage
+                            );
+
+                            selectionPanel.appendChild(
+                                emptyState
+                            );
+
+                            return;
+                        }
+
+                        const templateList =
+                            document.createElement(
+                                "div"
+                            );
+
+                        templateList.className =
+                            "assessment-template-selection-list";
+
+                        activeTemplates.forEach(
+                            (template) => {
+                                const templateCard =
+                                    document.createElement(
+                                        "div"
+                                    );
+
+                                templateCard.className =
+                                    "assessment-template-card";
+
+                                const templateName =
+                                    document.createElement(
+                                        "h3"
+                                    );
+
+                                templateName.textContent =
+                                    template.templateName ||
+                                    "Unnamed Template";
+
+                                const templateMeta =
+                                    document.createElement(
+                                        "p"
+                                    );
+
+                                templateMeta.className =
+                                    "assessment-template-meta";
+
+                                const category =
+                                    template.category ||
+                                    "Uncategorized";
+
+                                const questions =
+                                    Array.isArray(
+                                        template.questions
+                                    )
+                                        ? template.questions
+                                        : [];
+
+                                templateMeta.textContent =
+                                    `${category} • ${questions.length} ${questions.length === 1
+                                        ? "question"
+                                        : "questions"
+                                    }`;
+
+                                const selectButton =
+                                    document.createElement(
+                                        "button"
+                                    );
+
+                                selectButton.type =
+                                    "button";
+
+                                selectButton.className =
+                                    "primary-btn";
+
+                                selectButton.textContent =
+                                    "Select Template";
+
+                                selectButton.addEventListener(
+                                    "click",
+                                    () => {
+                                        assessmentsList.innerHTML =
+                                            "";
+
+                                        const assessmentForm =
+                                            document.createElement(
+                                                "div"
+                                            );
+
+                                        assessmentForm.className =
+                                            "client-assessment-form";
+
+                                        const assessmentHeader =
+                                            document.createElement(
+                                                "div"
+                                            );
+
+                                        const assessmentTitle =
+                                            document.createElement(
+                                                "h3"
+                                            );
+
+                                        assessmentTitle.textContent =
+                                            template.templateName ||
+                                            "Assessment";
+
+                                        const assessmentMeta =
+                                            document.createElement(
+                                                "p"
+                                            );
+
+                                        assessmentMeta.className =
+                                            "assessment-template-meta";
+
+                                        assessmentMeta.textContent =
+                                            `${template.category ||
+                                            "Uncategorized"
+                                            } • Version ${template.version ||
+                                            "1.0"
+                                            }`;
+
+                                        assessmentHeader.appendChild(
+                                            assessmentTitle
+                                        );
+
+                                        assessmentHeader.appendChild(
+                                            assessmentMeta
+                                        );
+
+                                        assessmentForm.appendChild(
+                                            assessmentHeader
+                                        );
+
+                                        if (template.description) {
+                                            const description =
+                                                document.createElement(
+                                                    "p"
+                                                );
+
+                                            description.className =
+                                                "assessment-template-description";
+
+                                            description.textContent =
+                                                template.description;
+
+                                            assessmentForm.appendChild(
+                                                description
+                                            );
+                                        }
+
+                                        if (template.protocol) {
+                                            const protocolSection =
+                                                document.createElement(
+                                                    "div"
+                                                );
+
+                                            protocolSection.className =
+                                                "assessment-template-protocol-preview";
+
+                                            const protocolHeading =
+                                                document.createElement(
+                                                    "strong"
+                                                );
+
+                                            protocolHeading.textContent =
+                                                "Assessment Protocol / Instructions";
+
+                                            const protocolText =
+                                                document.createElement(
+                                                    "p"
+                                                );
+
+                                            protocolText.className =
+                                                "assessment-template-description";
+
+                                            protocolText.textContent =
+                                                template.protocol;
+
+                                            protocolSection.appendChild(
+                                                protocolHeading
+                                            );
+
+                                            protocolSection.appendChild(
+                                                protocolText
+                                            );
+
+                                            assessmentForm.appendChild(
+                                                protocolSection
+                                            );
+                                        }
+
+                                        const templateQuestions =
+                                            Array.isArray(
+                                                template.questions
+                                            )
+                                                ? template.questions
+                                                : [];
+
+                                        templateQuestions.forEach(
+                                            (
+                                                question,
+                                                index
+                                            ) => {
+                                                const questionSection =
+                                                    document.createElement(
+                                                        "div"
+                                                    );
+
+                                                questionSection.className =
+                                                    "client-assessment-question";
+
+                                                const questionLabel =
+                                                    document.createElement(
+                                                        "label"
+                                                    );
+
+                                                questionLabel.textContent =
+                                                    `Question ${index + 1
+                                                    }: ${question.text ||
+                                                    ""
+                                                    }`;
+
+                                                questionSection.appendChild(
+                                                    questionLabel
+                                                );
+
+                                                if (
+                                                    question.instructions
+                                                ) {
+                                                    const instructions =
+                                                        document.createElement(
+                                                            "p"
+                                                        );
+
+                                                    instructions.className =
+                                                        "assessment-template-description";
+
+                                                    instructions.textContent =
+                                                        question.instructions;
+
+                                                    questionSection.appendChild(
+                                                        instructions
+                                                    );
+                                                }
+
+                                                let responseControl =
+                                                    null;
+
+                                                const responseType =
+                                                    question.responseType ||
+                                                    "text";
+
+                                                if (
+                                                    responseType ===
+                                                    "number"
+                                                ) {
+                                                    responseControl =
+                                                        document.createElement(
+                                                            "input"
+                                                        );
+
+                                                    responseControl.type =
+                                                        "number";
+                                                } else if (
+                                                    responseType ===
+                                                    "yes-no"
+                                                ) {
+                                                    responseControl =
+                                                        document.createElement(
+                                                            "select"
+                                                        );
+
+                                                    const blankOption =
+                                                        document.createElement(
+                                                            "option"
+                                                        );
+
+                                                    blankOption.value =
+                                                        "";
+
+                                                    blankOption.textContent =
+                                                        "Select";
+
+                                                    const yesOption =
+                                                        document.createElement(
+                                                            "option"
+                                                        );
+
+                                                    yesOption.value =
+                                                        "Yes";
+
+                                                    yesOption.textContent =
+                                                        "Yes";
+
+                                                    const noOption =
+                                                        document.createElement(
+                                                            "option"
+                                                        );
+
+                                                    noOption.value =
+                                                        "No";
+
+                                                    noOption.textContent =
+                                                        "No";
+
+                                                    responseControl.appendChild(
+                                                        blankOption
+                                                    );
+
+                                                    responseControl.appendChild(
+                                                        yesOption
+                                                    );
+
+                                                    responseControl.appendChild(
+                                                        noOption
+                                                    );
+                                                } else if (
+                                                    responseType ===
+                                                    "multiple-choice"
+                                                ) {
+                                                    responseControl =
+                                                        document.createElement(
+                                                            "select"
+                                                        );
+
+                                                    const blankOption =
+                                                        document.createElement(
+                                                            "option"
+                                                        );
+
+                                                    blankOption.value =
+                                                        "";
+
+                                                    blankOption.textContent =
+                                                        "Select";
+
+                                                    responseControl.appendChild(
+                                                        blankOption
+                                                    );
+
+                                                    const options =
+                                                        Array.isArray(
+                                                            question.options
+                                                        )
+                                                            ? question.options
+                                                            : [];
+
+                                                    options.forEach(
+                                                        (
+                                                            optionValue
+                                                        ) => {
+                                                            const option =
+                                                                document.createElement(
+                                                                    "option"
+                                                                );
+
+                                                            option.value =
+                                                                optionValue;
+
+                                                            option.textContent =
+                                                                optionValue;
+
+                                                            responseControl.appendChild(
+                                                                option
+                                                            );
+                                                        }
+                                                    );
+                                                } else {
+                                                    responseControl =
+                                                        document.createElement(
+                                                            "textarea"
+                                                        );
+
+                                                    responseControl.rows =
+                                                        3;
+                                                }
+
+                                                responseControl.className =
+                                                    "client-assessment-response";
+
+                                                responseControl.dataset.questionId =
+                                                    question.id || "";
+
+                                                responseControl.dataset.responseType =
+                                                    responseType;
+
+                                                if (
+                                                    question.required
+                                                ) {
+                                                    responseControl.required =
+                                                        true;
+
+                                                    const requiredText =
+                                                        document.createElement(
+                                                            "span"
+                                                        );
+
+                                                    requiredText.textContent =
+                                                        " Required";
+
+                                                    questionLabel.appendChild(
+                                                        requiredText
+                                                    );
+                                                }
+
+                                                questionSection.appendChild(
+                                                    responseControl
+                                                );
+
+                                                assessmentForm.appendChild(
+                                                    questionSection
+                                                );
+                                            }
+                                        );
+
+                                        const actions =
+                                            document.createElement(
+                                                "div"
+                                            );
+
+                                        actions.className =
+                                            "client-assessments-actions";
+
+                                        const cancelAssessmentButton =
+                                            document.createElement(
+                                                "button"
+                                            );
+
+                                        cancelAssessmentButton.type =
+                                            "button";
+
+                                        cancelAssessmentButton.className =
+                                            "secondary-btn";
+
+                                        cancelAssessmentButton.textContent =
+                                            "Cancel";
+
+                                        cancelAssessmentButton.addEventListener(
+                                            "click",
+                                            () => {
+                                                const workspace =
+                                                    document.getElementById(
+                                                        "workspace"
+                                                    );
+
+                                                workspace.innerHTML =
+                                                    getClientAssessmentsPage(
+                                                        client
+                                                    );
+
+                                                initializeClientAssessmentsPage(
+                                                    client
+                                                );
+                                            }
+                                        );
+
+                                        const saveAssessmentButton =
+                                            document.createElement(
+                                                "button"
+                                            );
+
+                                        saveAssessmentButton.type =
+                                            "button";
+
+                                        saveAssessmentButton.className =
+                                            "primary-btn";
+
+                                        saveAssessmentButton.textContent =
+                                            "Save Assessment";
+
+                                        saveAssessmentButton.disabled =
+                                            true;
+
+                                        actions.appendChild(
+                                            cancelAssessmentButton
+                                        );
+
+                                        actions.appendChild(
+                                            saveAssessmentButton
+                                        );
+
+                                        assessmentForm.appendChild(
+                                            actions
+                                        );
+
+                                        assessmentsList.appendChild(
+                                            assessmentForm
+                                        );
+                                    }
+                                );
+
+                                templateCard.appendChild(
+                                    templateName
+                                );
+
+                                templateCard.appendChild(
+                                    templateMeta
+                                );
+
+                                templateCard.appendChild(
+                                    selectButton
+                                );
+
+                                templateList.appendChild(
+                                    templateCard
+                                );
+                            }
+                        );
+
+                        selectionPanel.appendChild(
+                            templateList
+                        );
+                    } catch (error) {
+                        console.error(
+                            "Unable to load assessment templates for client assessment:",
+                            error
+                        );
+
+                        const errorMessage =
+                            document.createElement("p");
+
+                        errorMessage.textContent =
+                            "An unexpected error occurred while loading assessment templates.";
+
+                        selectionPanel.appendChild(
+                            errorMessage
+                        );
+                    }
+                }
+            );
         }
     }
     async function initializeAssessmentTemplatesPage(client) {
