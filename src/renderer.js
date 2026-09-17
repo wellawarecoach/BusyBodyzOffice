@@ -1370,7 +1370,395 @@ function initializeClientProfilePage(client) {
                         actions.appendChild(
                             viewButton
                         );
+                        const reassessButton =
+                            document.createElement(
+                                "button"
+                            );
 
+                        reassessButton.type =
+                            "button";
+
+                        reassessButton.className =
+                            "primary-btn";
+
+                        reassessButton.textContent =
+                            "Reassess";
+
+                        reassessButton.addEventListener(
+                            "click",
+                            () => {
+                                assessmentsList.innerHTML =
+                                    "";
+
+                                const reassessmentForm =
+                                    document.createElement(
+                                        "div"
+                                    );
+
+                                reassessmentForm.className =
+                                    "client-assessment-form";
+
+                                const title =
+                                    document.createElement(
+                                        "h3"
+                                    );
+
+                                title.textContent =
+                                    `Reassessment — ${assessment.templateName ||
+                                    "Assessment"
+                                    }`;
+
+                                reassessmentForm.appendChild(
+                                    title
+                                );
+
+                                const meta =
+                                    document.createElement(
+                                        "p"
+                                    );
+
+                                meta.className =
+                                    "assessment-template-meta";
+
+                                meta.textContent =
+                                    `${assessment.category ||
+                                    "Uncategorized"
+                                    } • Based on Version ${assessment.templateVersion ||
+                                    "1.0"
+                                    }`;
+
+                                reassessmentForm.appendChild(
+                                    meta
+                                );
+
+                                if (
+                                    assessment.protocol
+                                ) {
+                                    const protocolSection =
+                                        document.createElement(
+                                            "div"
+                                        );
+
+                                    protocolSection.className =
+                                        "assessment-template-protocol-preview";
+
+                                    const protocolHeading =
+                                        document.createElement(
+                                            "strong"
+                                        );
+
+                                    protocolHeading.textContent =
+                                        "Assessment Protocol / Instructions";
+
+                                    const protocolText =
+                                        document.createElement(
+                                            "p"
+                                        );
+
+                                    protocolText.className =
+                                        "assessment-template-description";
+
+                                    protocolText.textContent =
+                                        assessment.protocol;
+
+                                    protocolSection.appendChild(
+                                        protocolHeading
+                                    );
+
+                                    protocolSection.appendChild(
+                                        protocolText
+                                    );
+
+                                    reassessmentForm.appendChild(
+                                        protocolSection
+                                    );
+                                }
+
+                                const savedQuestions =
+                                    Array.isArray(
+                                        assessment.questions
+                                    )
+                                        ? assessment.questions
+                                        : [];
+
+                                savedQuestions.forEach(
+                                    (
+                                        question,
+                                        index
+                                    ) => {
+                                        const questionSection =
+                                            document.createElement(
+                                                "div"
+                                            );
+
+                                        questionSection.className =
+                                            "client-assessment-question";
+
+                                        const questionLabel =
+                                            document.createElement(
+                                                "label"
+                                            );
+
+                                        questionLabel.textContent =
+                                            `Question ${index + 1
+                                            }: ${question.text ||
+                                            ""
+                                            }`;
+
+                                        questionSection.appendChild(
+                                            questionLabel
+                                        );
+
+                                        if (
+                                            question.instructions
+                                        ) {
+                                            const instructions =
+                                                document.createElement(
+                                                    "p"
+                                                );
+
+                                            instructions.className =
+                                                "assessment-template-description";
+
+                                            instructions.textContent =
+                                                question.instructions;
+
+                                            questionSection.appendChild(
+                                                instructions
+                                            );
+                                        }
+
+                                        let responseControl =
+                                            null;
+
+                                        const responseType =
+                                            question.responseType ||
+                                            "text";
+
+                                        if (
+                                            responseType ===
+                                            "number"
+                                        ) {
+                                            responseControl =
+                                                document.createElement(
+                                                    "input"
+                                                );
+
+                                            responseControl.type =
+                                                "number";
+                                        } else if (
+                                            responseType ===
+                                            "yes-no"
+                                        ) {
+                                            responseControl =
+                                                document.createElement(
+                                                    "select"
+                                                );
+
+                                            [
+                                                ["", "Select"],
+                                                ["Yes", "Yes"],
+                                                ["No", "No"]
+                                            ].forEach(
+                                                ([
+                                                    value,
+                                                    label
+                                                ]) => {
+                                                    const option =
+                                                        document.createElement(
+                                                            "option"
+                                                        );
+
+                                                    option.value =
+                                                        value;
+
+                                                    option.textContent =
+                                                        label;
+
+                                                    responseControl.appendChild(
+                                                        option
+                                                    );
+                                                }
+                                            );
+                                        } else if (
+                                            responseType ===
+                                            "multiple-choice"
+                                        ) {
+                                            responseControl =
+                                                document.createElement(
+                                                    "select"
+                                                );
+
+                                            const blankOption =
+                                                document.createElement(
+                                                    "option"
+                                                );
+
+                                            blankOption.value =
+                                                "";
+
+                                            blankOption.textContent =
+                                                "Select";
+
+                                            responseControl.appendChild(
+                                                blankOption
+                                            );
+
+                                            const options =
+                                                Array.isArray(
+                                                    question.options
+                                                )
+                                                    ? question.options
+                                                    : [];
+
+                                            options.forEach(
+                                                (
+                                                    optionValue
+                                                ) => {
+                                                    const option =
+                                                        document.createElement(
+                                                            "option"
+                                                        );
+
+                                                    option.value =
+                                                        optionValue;
+
+                                                    option.textContent =
+                                                        optionValue;
+
+                                                    responseControl.appendChild(
+                                                        option
+                                                    );
+                                                }
+                                            );
+                                        } else {
+                                            responseControl =
+                                                document.createElement(
+                                                    "textarea"
+                                                );
+
+                                            responseControl.rows =
+                                                3;
+                                        }
+
+                                        responseControl.className =
+                                            "client-assessment-response";
+
+                                        responseControl.dataset.questionId =
+                                            question.id ||
+                                            "";
+
+                                        responseControl.dataset.responseType =
+                                            responseType;
+
+                                        if (
+                                            question.required
+                                        ) {
+                                            responseControl.required =
+                                                true;
+
+                                            const requiredText =
+                                                document.createElement(
+                                                    "span"
+                                                );
+
+                                            requiredText.textContent =
+                                                " Required";
+
+                                            questionLabel.appendChild(
+                                                requiredText
+                                            );
+                                        }
+
+                                        questionSection.appendChild(
+                                            responseControl
+                                        );
+
+                                        reassessmentForm.appendChild(
+                                            questionSection
+                                        );
+                                    }
+                                );
+
+                                const reassessmentActions =
+                                    document.createElement(
+                                        "div"
+                                    );
+
+                                reassessmentActions.className =
+                                    "client-assessments-actions";
+
+                                const cancelButton =
+                                    document.createElement(
+                                        "button"
+                                    );
+
+                                cancelButton.type =
+                                    "button";
+
+                                cancelButton.className =
+                                    "secondary-btn";
+
+                                cancelButton.textContent =
+                                    "Cancel";
+
+                                cancelButton.addEventListener(
+                                    "click",
+                                    () => {
+                                        const workspace =
+                                            document.getElementById(
+                                                "workspace"
+                                            );
+
+                                        workspace.innerHTML =
+                                            getClientAssessmentsPage(
+                                                client
+                                            );
+
+                                        initializeClientAssessmentsPage(
+                                            client
+                                        );
+                                    }
+                                );
+
+                                const saveReassessmentButton =
+                                    document.createElement(
+                                        "button"
+                                    );
+
+                                saveReassessmentButton.type =
+                                    "button";
+
+                                saveReassessmentButton.className =
+                                    "primary-btn";
+
+                                saveReassessmentButton.textContent =
+                                    "Save Reassessment";
+
+                                saveReassessmentButton.disabled =
+                                    true;
+
+                                reassessmentActions.appendChild(
+                                    cancelButton
+                                );
+
+                                reassessmentActions.appendChild(
+                                    saveReassessmentButton
+                                );
+
+                                reassessmentForm.appendChild(
+                                    reassessmentActions
+                                );
+
+                                assessmentsList.appendChild(
+                                    reassessmentForm
+                                );
+                            }
+                        );
+
+                        actions.appendChild(
+                            reassessButton
+                        );
                         card.appendChild(
                             actions
                         );
