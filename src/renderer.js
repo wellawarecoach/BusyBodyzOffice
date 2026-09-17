@@ -892,6 +892,222 @@ function initializeClientProfilePage(client) {
             "client-assessments-list"
         );
 
+        if (assessmentsList) {
+            const assessments =
+                Array.isArray(client.assessments)
+                    ? client.assessments
+                    : [];
+
+            assessmentsList.innerHTML = "";
+
+            if (assessments.length === 0) {
+                const emptyState =
+                    document.createElement("div");
+
+                emptyState.className =
+                    "empty-state";
+
+                const heading =
+                    document.createElement("h3");
+
+                heading.textContent =
+                    "No assessments yet";
+
+                const message =
+                    document.createElement("p");
+
+                message.textContent =
+                    "This client does not currently have any saved assessments.";
+
+                emptyState.appendChild(
+                    heading
+                );
+
+                emptyState.appendChild(
+                    message
+                );
+
+                assessmentsList.appendChild(
+                    emptyState
+                );
+            } else {
+                const sortedAssessments =
+                    [...assessments].sort(
+                        (assessmentA, assessmentB) => {
+                            const dateA =
+                                Date.parse(
+                                    assessmentA?.createdAt ||
+                                    ""
+                                ) || 0;
+
+                            const dateB =
+                                Date.parse(
+                                    assessmentB?.createdAt ||
+                                    ""
+                                ) || 0;
+
+                            return dateB - dateA;
+                        }
+                    );
+
+                sortedAssessments.forEach(
+                    (assessment) => {
+                        const card =
+                            document.createElement(
+                                "div"
+                            );
+
+                        card.className =
+                            "assessment-template-card";
+
+                        const header =
+                            document.createElement(
+                                "div"
+                            );
+
+                        header.className =
+                            "assessment-template-card-header";
+
+                        const titleArea =
+                            document.createElement(
+                                "div"
+                            );
+
+                        const title =
+                            document.createElement(
+                                "h3"
+                            );
+
+                        title.textContent =
+                            assessment.templateName ||
+                            "Assessment";
+
+                        const meta =
+                            document.createElement(
+                                "p"
+                            );
+
+                        const category =
+                            assessment.category ||
+                            "Uncategorized";
+
+                        const version =
+                            assessment.templateVersion ||
+                            "1.0";
+
+                        meta.textContent =
+                            `${category} • Version ${version}`;
+
+                        titleArea.appendChild(
+                            title
+                        );
+
+                        titleArea.appendChild(
+                            meta
+                        );
+
+                        const status =
+                            document.createElement(
+                                "span"
+                            );
+
+                        status.className =
+                            "assessment-template-status";
+
+                        status.textContent =
+                            assessment.status ||
+                            "Completed";
+
+                        header.appendChild(
+                            titleArea
+                        );
+
+                        header.appendChild(
+                            status
+                        );
+
+                        card.appendChild(
+                            header
+                        );
+
+                        const details =
+                            document.createElement(
+                                "p"
+                            );
+
+                        details.className =
+                            "assessment-template-meta";
+
+                        const questions =
+                            Array.isArray(
+                                assessment.questions
+                            )
+                                ? assessment.questions
+                                : [];
+
+                        const completedDate =
+                            assessment.createdAt
+                                ? new Date(
+                                    assessment.createdAt
+                                ).toLocaleDateString()
+                                : "";
+
+                        details.textContent =
+                            completedDate
+                                ? `${questions.length} ${questions.length === 1
+                                    ? "question"
+                                    : "questions"
+                                } • Completed ${completedDate}`
+                                : `${questions.length} ${questions.length === 1
+                                    ? "question"
+                                    : "questions"
+                                }`;
+
+                        card.appendChild(
+                            details
+                        );
+
+                        const actions =
+                            document.createElement(
+                                "div"
+                            );
+
+                        actions.className =
+                            "assessment-template-card-actions";
+
+                        const viewButton =
+                            document.createElement(
+                                "button"
+                            );
+
+                        viewButton.type =
+                            "button";
+
+                        viewButton.className =
+                            "secondary-btn";
+
+                        viewButton.textContent =
+                            "View Assessment";
+
+                        viewButton.disabled =
+                            true;
+
+                        actions.appendChild(
+                            viewButton
+                        );
+
+                        card.appendChild(
+                            actions
+                        );
+
+                        assessmentsList.appendChild(
+                            card
+                        );
+                    }
+                );
+            }
+        }
+
         if (!backButton) {
             return;
         }
