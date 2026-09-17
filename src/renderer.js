@@ -1089,8 +1089,283 @@ function initializeClientProfilePage(client) {
                         viewButton.textContent =
                             "View Assessment";
 
-                        viewButton.disabled =
-                            true;
+                        viewButton.addEventListener(
+                            "click",
+                            () => {
+                                assessmentsList.innerHTML =
+                                    "";
+
+                                const assessmentView =
+                                    document.createElement(
+                                        "div"
+                                    );
+
+                                assessmentView.className =
+                                    "client-assessment-form";
+
+                                const title =
+                                    document.createElement(
+                                        "h3"
+                                    );
+
+                                title.textContent =
+                                    assessment.templateName ||
+                                    "Assessment";
+
+                                assessmentView.appendChild(
+                                    title
+                                );
+
+                                const meta =
+                                    document.createElement(
+                                        "p"
+                                    );
+
+                                meta.className =
+                                    "assessment-template-meta";
+
+                                meta.textContent =
+                                    `${assessment.category ||
+                                    "Uncategorized"
+                                    } • Version ${assessment.templateVersion ||
+                                    "1.0"
+                                    }`;
+
+                                assessmentView.appendChild(
+                                    meta
+                                );
+
+                                const completedDate =
+                                    assessment.createdAt
+                                        ? new Date(
+                                            assessment.createdAt
+                                        ).toLocaleString()
+                                        : "";
+
+                                if (completedDate) {
+                                    const date =
+                                        document.createElement(
+                                            "p"
+                                        );
+
+                                    date.className =
+                                        "assessment-template-meta";
+
+                                    date.textContent =
+                                        `Completed ${completedDate}`;
+
+                                    assessmentView.appendChild(
+                                        date
+                                    );
+                                }
+
+                                if (
+                                    assessment.description
+                                ) {
+                                    const description =
+                                        document.createElement(
+                                            "p"
+                                        );
+
+                                    description.className =
+                                        "assessment-template-description";
+
+                                    description.textContent =
+                                        assessment.description;
+
+                                    assessmentView.appendChild(
+                                        description
+                                    );
+                                }
+
+                                if (
+                                    assessment.protocol
+                                ) {
+                                    const protocolSection =
+                                        document.createElement(
+                                            "div"
+                                        );
+
+                                    protocolSection.className =
+                                        "assessment-template-protocol-preview";
+
+                                    const protocolHeading =
+                                        document.createElement(
+                                            "strong"
+                                        );
+
+                                    protocolHeading.textContent =
+                                        "Assessment Protocol / Instructions";
+
+                                    const protocolText =
+                                        document.createElement(
+                                            "p"
+                                        );
+
+                                    protocolText.className =
+                                        "assessment-template-description";
+
+                                    protocolText.textContent =
+                                        assessment.protocol;
+
+                                    protocolSection.appendChild(
+                                        protocolHeading
+                                    );
+
+                                    protocolSection.appendChild(
+                                        protocolText
+                                    );
+
+                                    assessmentView.appendChild(
+                                        protocolSection
+                                    );
+                                }
+
+                                const savedQuestions =
+                                    Array.isArray(
+                                        assessment.questions
+                                    )
+                                        ? assessment.questions
+                                        : [];
+
+                                savedQuestions.forEach(
+                                    (
+                                        question,
+                                        index
+                                    ) => {
+                                        const questionSection =
+                                            document.createElement(
+                                                "div"
+                                            );
+
+                                        questionSection.className =
+                                            "client-assessment-question";
+
+                                        const questionHeading =
+                                            document.createElement(
+                                                "strong"
+                                            );
+
+                                        questionHeading.textContent =
+                                            `Question ${index + 1
+                                            }: ${question.text ||
+                                            ""
+                                            }`;
+
+                                        questionSection.appendChild(
+                                            questionHeading
+                                        );
+
+                                        if (
+                                            question.instructions
+                                        ) {
+                                            const instructions =
+                                                document.createElement(
+                                                    "p"
+                                                );
+
+                                            instructions.className =
+                                                "assessment-template-description";
+
+                                            instructions.textContent =
+                                                question.instructions;
+
+                                            questionSection.appendChild(
+                                                instructions
+                                            );
+                                        }
+
+                                        const responseLabel =
+                                            document.createElement(
+                                                "p"
+                                            );
+
+                                        responseLabel.className =
+                                            "assessment-template-meta";
+
+                                        responseLabel.textContent =
+                                            "Response";
+
+                                        questionSection.appendChild(
+                                            responseLabel
+                                        );
+
+                                        const response =
+                                            document.createElement(
+                                                "p"
+                                            );
+
+                                        response.className =
+                                            "assessment-template-description";
+
+                                        response.textContent =
+                                            question.response ||
+                                            "No response recorded.";
+
+                                        questionSection.appendChild(
+                                            response
+                                        );
+
+                                        assessmentView.appendChild(
+                                            questionSection
+                                        );
+                                    }
+                                );
+
+                                const actions =
+                                    document.createElement(
+                                        "div"
+                                    );
+
+                                actions.className =
+                                    "client-assessments-actions";
+
+                                const backButton =
+                                    document.createElement(
+                                        "button"
+                                    );
+
+                                backButton.type =
+                                    "button";
+
+                                backButton.className =
+                                    "secondary-btn";
+
+                                backButton.textContent =
+                                    "← Back to Assessments";
+
+                                backButton.addEventListener(
+                                    "click",
+                                    () => {
+                                        const workspace =
+                                            document.getElementById(
+                                                "workspace"
+                                            );
+
+                                        workspace.innerHTML =
+                                            getClientAssessmentsPage(
+                                                client
+                                            );
+
+                                        initializeClientAssessmentsPage(
+                                            client
+                                        );
+                                    }
+                                );
+
+                                actions.appendChild(
+                                    backButton
+                                );
+
+                                assessmentView.appendChild(
+                                    actions
+                                );
+
+                                assessmentsList.appendChild(
+                                    assessmentView
+                                );
+                            }
+                        );
 
                         actions.appendChild(
                             viewButton
