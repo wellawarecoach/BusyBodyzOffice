@@ -68,10 +68,15 @@ contextBridge.exposeInMainWorld("busyBodyz", {
             "update-assessment-template",
             templateData
         ),
-
     deleteAssessmentTemplate: (templateId) =>
         ipcRenderer.invoke(
             "delete-assessment-template",
             templateId
+        ),
+
+    saveClientAssessment: (payload) =>
+        ipcRenderer.invoke(
+            "save-client-assessment",
+            payload
         )
 });

@@ -1233,6 +1233,231 @@ ipcMain.handle(
         }
     }
 );
+ipcMain.handle(
+    "save-client-assessment",
+    async (event, payload) => {
+        try {
+            const clientId = String(
+                payload?.clientId || ""
+            ).trim();
+
+            const assessmentData =
+                payload?.assessment;
+
+            if (!clientId) {
+                return {
+                    success: false,
+                    error: "A valid client ID is required."
+                };
+            }
+
+            if (!assessmentData) {
+                return {
+                    success: false,
+                    error: "Assessment information is required."
+                };
+            }
+
+            const templateId = String(
+                assessmentData.templateId || ""
+            ).trim();
+
+            const templateName = String(
+                assessmentData.templateName || ""
+            ).trim();
+
+            if (!templateId) {
+                return {
+                    success: false,
+                    error: "Assessment template ID is required."
+                };
+            }
+
+            if (!templateName) {
+                return {
+                    success: false,
+                    error: "Assessment template name is required."
+                };
+            }
+
+            const questions =
+                Array.isArray(
+                    assessmentData.questions
+                )
+                    ? assessmentData.questions
+                    : [];
+
+            if (questions.length === 0) {
+                return {
+                    success: false,
+                    error: "Assessment questions are required."
+                };
+            }
+
+            const normalizedQuestions =
+                questions.map(
+                    (question, index) => ({
+                        id: String(
+                            question?.id ||
+                            `assessment-question-${index}`
+                        ),
+                        text: String(
+                            question?.text || ""
+                        ).trim(),
+                        instructions: String(
+                            question?.instructions || ""
+                        ).trim(),
+                        responseType: String(
+                            question?.responseType ||
+                            "text"
+                        ).trim(),
+                        required:
+                            Boolean(
+                                question?.required
+                            ),
+                        options:
+                            Array.isArray(
+                                question?.options
+                            )
+                                ? question.options.map(
+                                    (option) =>
+                                        String(
+                                            option
+                                        ).trim()
+                                )
+                                : [],
+                        response:
+                            question?.response ===
+                                null ||
+                                question?.response ===
+                                undefined
+                                ? ""
+                                : String(
+                                    question.response
+                                ).trim(),
+                        order: index
+                    })
+                );
+
+            const clients =
+                readClients();
+
+            const clientIndex =
+                clients.findIndex(
+                    (client) =>
+                        client.id === clientId
+                );
+
+            if (clientIndex === -1) {
+                return {
+                    success: false,
+                    error: "Client not found."
+                };
+            }
+
+            const client =
+                clients[clientIndex];
+
+            const existingAssessments =
+                Array.isArray(
+                    client.assessments
+                )
+                    ? client.assessments
+                    : [];
+
+            const now =
+                new Date().toISOString();
+
+            const assessment = {
+                id:
+                    `assessment-${Date.now()}`,
+
+                templateId,
+                templateName,
+
+                templateVersion: String(
+                    assessmentData.templateVersion ||
+                    "1.0"
+                ).trim(),
+
+                category: String(
+                    assessmentData.category || ""
+                ).trim(),
+
+                description: String(
+                    assessmentData.description || ""
+                ).trim(),
+
+                protocol: String(
+                    assessmentData.protocol || ""
+                ).trim(),
+
+                status: String(
+                    assessmentData.status ||
+                    "Completed"
+                ).trim(),
+
+                assessmentType: String(
+                    assessmentData.assessmentType ||
+                    "Assessment"
+                ).trim(),
+
+                parentAssessmentId: String(
+                    assessmentData.parentAssessmentId ||
+                    ""
+                ).trim(),
+
+                baselineAssessmentId: String(
+                    assessmentData.baselineAssessmentId ||
+                    ""
+                ).trim(),
+
+                questions:
+                    normalizedQuestions,
+
+                createdAt: now,
+                updatedAt: now
+            };
+            const updatedClient = {
+                ...client,
+                assessments: [
+                    ...existingAssessments,
+                    assessment
+                ],
+                updatedAt: now
+            };
+
+            clients[clientIndex] =
+                updatedClient;
+
+            const saved =
+                writeClients(clients);
+
+            if (!saved) {
+                return {
+                    success: false,
+                    error: "Unable to save the assessment."
+                };
+            }
+
+            return {
+                success: true,
+                client: updatedClient,
+                assessment
+            };
+        } catch (error) {
+            console.error(
+                "Failed to save client assessment:",
+                error
+            );
+
+            return {
+                success: false,
+                error: "An unexpected error occurred while saving the assessment."
+            };
+        }
+    }
+);
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {

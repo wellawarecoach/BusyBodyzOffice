@@ -1014,10 +1014,16 @@ function initializeClientProfilePage(client) {
                         status.className =
                             "assessment-template-status";
 
-                        status.textContent =
-                            assessment.status ||
-                            "Completed";
+                        const assessmentType =
+                            assessment.assessmentType ||
+                            "Assessment";
 
+                        status.textContent =
+                            assessmentType ===
+                                "Reassessment"
+                                ? "Reassessment"
+                                : assessment.status ||
+                                "Completed";
                         header.appendChild(
                             titleArea
                         );
@@ -1052,17 +1058,26 @@ function initializeClientProfilePage(client) {
                                 ).toLocaleDateString()
                                 : "";
 
+                        const historyAssessmentType =
+                            assessment.assessmentType ||
+                            "Assessment";
+
+                        const typeLabel =
+                            historyAssessmentType ===
+                                "Reassessment"
+                                ? "Reassessment"
+                                : "Initial Assessment";
+
                         details.textContent =
                             completedDate
-                                ? `${questions.length} ${questions.length === 1
+                                ? `${typeLabel} • ${questions.length} ${questions.length === 1
                                     ? "question"
                                     : "questions"
                                 } • Completed ${completedDate}`
-                                : `${questions.length} ${questions.length === 1
+                                : `${typeLabel} • ${questions.length} ${questions.length === 1
                                     ? "question"
                                     : "questions"
                                 }`;
-
                         card.appendChild(
                             details
                         );
@@ -1141,6 +1156,92 @@ function initializeClientProfilePage(client) {
                                             assessment.createdAt
                                         ).toLocaleString()
                                         : "";
+
+                                const isReassessment =
+                                    assessment.assessmentType ===
+                                    "Reassessment";
+
+                                if (isReassessment) {
+                                    const type =
+                                        document.createElement(
+                                            "p"
+                                        );
+
+                                    type.className =
+                                        "assessment-template-meta";
+
+                                    type.textContent =
+                                        "Reassessment";
+
+                                    assessmentView.appendChild(
+                                        type
+                                    );
+
+                                    const baselineId =
+                                        assessment.baselineAssessmentId ||
+                                        assessment.parentAssessmentId ||
+                                        "";
+
+                                    const baselineAssessment =
+                                        assessments.find(
+                                            (item) =>
+                                                item.id === baselineId
+                                        );
+                                    const parentId =
+                                        assessment.parentAssessmentId ||
+                                        "";
+
+                                    const parentAssessment =
+                                        assessments.find(
+                                            (item) =>
+                                                item.id === parentId
+                                        );
+
+                                    const hasPreviousReassessment =
+                                        parentAssessment &&
+                                        parentAssessment.id !==
+                                        baselineAssessment?.id;
+                                    if (baselineAssessment) {
+                                        const baselineDate =
+                                            baselineAssessment.createdAt
+                                                ? new Date(
+                                                    baselineAssessment.createdAt
+                                                ).toLocaleString()
+                                                : "";
+
+                                        const baseline =
+                                            document.createElement(
+                                                "p"
+                                            );
+
+                                        baseline.className =
+                                            "assessment-template-meta";
+
+                                        baseline.textContent =
+                                            baselineDate
+                                                ? `Baseline: ${baselineAssessment.templateName || "Assessment"} • ${baselineDate}`
+                                                : `Baseline: ${baselineAssessment.templateName || "Assessment"}`;
+
+                                        assessmentView.appendChild(
+                                            baseline
+                                        );
+                                    }
+                                } else {
+                                    const type =
+                                        document.createElement(
+                                            "p"
+                                        );
+
+                                    type.className =
+                                        "assessment-template-meta";
+
+                                    type.textContent =
+                                        "Initial Assessment";
+
+                                    assessmentView.appendChild(
+                                        type
+                                    );
+                                }
 
                                 if (completedDate) {
                                     const date =
@@ -1274,38 +1375,406 @@ function initializeClientProfilePage(client) {
                                                 instructions
                                             );
                                         }
+                                        const isReassessment =
+                                            assessment.assessmentType ===
+                                            "Reassessment";
 
-                                        const responseLabel =
-                                            document.createElement(
-                                                "p"
+                                        if (isReassessment) {
+                                            const baselineId =
+                                                assessment.baselineAssessmentId ||
+                                                assessment.parentAssessmentId ||
+                                                "";
+
+                                            const baselineAssessment =
+                                                assessments.find(
+                                                    (item) =>
+                                                        item.id === baselineId
+                                                );
+                                            const parentId =
+                                                assessment.parentAssessmentId ||
+                                                "";
+
+                                            const parentAssessment =
+                                                assessments.find(
+                                                    (item) =>
+                                                        item.id === parentId
+                                                );
+
+                                            const hasPreviousReassessment =
+                                                parentAssessment &&
+                                                parentAssessment.id !==
+                                                baselineAssessment?.id;
+                                            const baselineQuestions =
+                                                Array.isArray(
+                                                    baselineAssessment?.questions
+                                                )
+                                                    ? baselineAssessment.questions
+                                                    : [];
+
+                                            const baselineQuestion =
+                                                baselineQuestions.find(
+                                                    (baselineItem) =>
+                                                        baselineItem.id ===
+                                                        question.id
+                                                ) ||
+                                                baselineQuestions[index] ||
+                                                null;
+                                            const parentQuestions =
+                                                Array.isArray(
+                                                    parentAssessment?.questions
+                                                )
+                                                    ? parentAssessment.questions
+                                                    : [];
+
+                                            const parentQuestion =
+                                                parentQuestions.find(
+                                                    (parentItem) =>
+                                                        parentItem.id ===
+                                                        question.id
+                                                ) ||
+                                                parentQuestions[index] ||
+                                                null;
+                                            const baselineLabel =
+                                                document.createElement(
+                                                    "p"
+                                                );
+
+                                            baselineLabel.className =
+                                                "assessment-template-meta";
+
+                                            baselineLabel.textContent =
+                                                "Baseline Response";
+
+                                            questionSection.appendChild(
+                                                baselineLabel
                                             );
 
-                                        responseLabel.className =
-                                            "assessment-template-meta";
+                                            const baselineResponse =
+                                                document.createElement(
+                                                    "p"
+                                                );
 
-                                        responseLabel.textContent =
-                                            "Response";
+                                            baselineResponse.className =
+                                                "assessment-template-description";
 
-                                        questionSection.appendChild(
-                                            responseLabel
-                                        );
+                                            baselineResponse.textContent =
+                                                baselineQuestion?.response ||
+                                                "No baseline response recorded.";
 
-                                        const response =
-                                            document.createElement(
-                                                "p"
+                                            questionSection.appendChild(
+                                                baselineResponse
                                             );
 
-                                        response.className =
-                                            "assessment-template-description";
+                                            if (
+                                                hasPreviousReassessment &&
+                                                parentQuestion
+                                            ) {
+                                                const previousLabel =
+                                                    document.createElement(
+                                                        "p"
+                                                    );
 
-                                        response.textContent =
-                                            question.response ||
-                                            "No response recorded.";
+                                                previousLabel.className =
+                                                    "assessment-template-meta";
 
-                                        questionSection.appendChild(
-                                            response
-                                        );
+                                                previousLabel.textContent =
+                                                    "Previous Reassessment";
 
+                                                questionSection.appendChild(
+                                                    previousLabel
+                                                );
+
+                                                const previousResponse =
+                                                    document.createElement(
+                                                        "p"
+                                                    );
+
+                                                previousResponse.className =
+                                                    "assessment-template-description";
+
+                                                previousResponse.textContent =
+                                                    parentQuestion.response ||
+                                                    "No previous reassessment response recorded.";
+
+                                                questionSection.appendChild(
+                                                    previousResponse
+                                                );
+                                            }
+
+                                            const reassessmentLabel =
+                                                document.createElement(
+                                                    "p"
+                                                );
+
+                                            reassessmentLabel.className =
+                                                "assessment-template-meta";
+
+                                            reassessmentLabel.textContent =
+                                                hasPreviousReassessment
+                                                    ? "Current Reassessment"
+                                                    : "Reassessment Response";
+
+                                            questionSection.appendChild(
+                                                reassessmentLabel
+                                            );
+
+                                            const reassessmentResponse =
+                                                document.createElement(
+                                                    "p"
+                                                );
+
+                                            reassessmentResponse.className =
+                                                "assessment-template-description";
+
+                                            reassessmentResponse.textContent =
+                                                question.response ||
+                                                "No reassessment response recorded.";
+
+                                            questionSection.appendChild(
+                                                reassessmentResponse
+                                            );
+                                            const responseType =
+                                                question.responseType ||
+                                                "text";
+
+                                            if (
+                                                responseType === "number" &&
+                                                baselineQuestion
+                                            ) {
+                                                const baselineNumber =
+                                                    Number(
+                                                        baselineQuestion.response
+                                                    );
+
+                                                const reassessmentNumber =
+                                                    Number(
+                                                        question.response
+                                                    );
+
+                                                if (
+                                                    Number.isFinite(
+                                                        baselineNumber
+                                                    ) &&
+                                                    Number.isFinite(
+                                                        reassessmentNumber
+                                                    )
+                                                ) {
+                                                    const rawChangeFromBaseline =
+                                                        reassessmentNumber -
+                                                        baselineNumber;
+
+                                                    const baselineChangeLabel =
+                                                        document.createElement(
+                                                            "p"
+                                                        );
+
+                                                    baselineChangeLabel.className =
+                                                        "assessment-template-meta";
+
+                                                    baselineChangeLabel.textContent =
+                                                        "Change From Baseline";
+
+                                                    questionSection.appendChild(
+                                                        baselineChangeLabel
+                                                    );
+
+                                                    const baselineChangeValue =
+                                                        document.createElement(
+                                                            "p"
+                                                        );
+
+                                                    baselineChangeValue.className =
+                                                        "assessment-template-description";
+
+                                                    baselineChangeValue.textContent =
+                                                        rawChangeFromBaseline > 0
+                                                            ? `+${rawChangeFromBaseline}`
+                                                            : String(
+                                                                rawChangeFromBaseline
+                                                            );
+
+                                                    questionSection.appendChild(
+                                                        baselineChangeValue
+                                                    );
+
+                                                    if (baselineNumber !== 0) {
+                                                        const percentChangeFromBaseline =
+                                                            (
+                                                                (
+                                                                    rawChangeFromBaseline /
+                                                                    baselineNumber
+                                                                ) *
+                                                                100
+                                                            ).toFixed(1);
+
+                                                        const baselinePercentLabel =
+                                                            document.createElement(
+                                                                "p"
+                                                            );
+
+                                                        baselinePercentLabel.className =
+                                                            "assessment-template-meta";
+
+                                                        baselinePercentLabel.textContent =
+                                                            "Percent Change From Baseline";
+
+                                                        questionSection.appendChild(
+                                                            baselinePercentLabel
+                                                        );
+
+                                                        const baselinePercentValue =
+                                                            document.createElement(
+                                                                "p"
+                                                            );
+
+                                                        baselinePercentValue.className =
+                                                            "assessment-template-description";
+
+                                                        baselinePercentValue.textContent =
+                                                            Number(
+                                                                percentChangeFromBaseline
+                                                            ) > 0
+                                                                ? `+${percentChangeFromBaseline}%`
+                                                                : `${percentChangeFromBaseline}%`;
+
+                                                        questionSection.appendChild(
+                                                            baselinePercentValue
+                                                        );
+                                                    }
+
+                                                    if (
+                                                        hasPreviousReassessment &&
+                                                        parentQuestion
+                                                    ) {
+                                                        const previousNumber =
+                                                            Number(
+                                                                parentQuestion.response
+                                                            );
+
+                                                        if (
+                                                            Number.isFinite(
+                                                                previousNumber
+                                                            )
+                                                        ) {
+                                                            const rawChangeFromPrevious =
+                                                                reassessmentNumber -
+                                                                previousNumber;
+
+                                                            const previousChangeLabel =
+                                                                document.createElement(
+                                                                    "p"
+                                                                );
+
+                                                            previousChangeLabel.className =
+                                                                "assessment-template-meta";
+
+                                                            previousChangeLabel.textContent =
+                                                                "Change From Previous Reassessment";
+
+                                                            questionSection.appendChild(
+                                                                previousChangeLabel
+                                                            );
+
+                                                            const previousChangeValue =
+                                                                document.createElement(
+                                                                    "p"
+                                                                );
+
+                                                            previousChangeValue.className =
+                                                                "assessment-template-description";
+
+                                                            previousChangeValue.textContent =
+                                                                rawChangeFromPrevious > 0
+                                                                    ? `+${rawChangeFromPrevious}`
+                                                                    : String(
+                                                                        rawChangeFromPrevious
+                                                                    );
+
+                                                            questionSection.appendChild(
+                                                                previousChangeValue
+                                                            );
+
+                                                            if (previousNumber !== 0) {
+                                                                const percentChangeFromPrevious =
+                                                                    (
+                                                                        (
+                                                                            rawChangeFromPrevious /
+                                                                            previousNumber
+                                                                        ) *
+                                                                        100
+                                                                    ).toFixed(1);
+
+                                                                const previousPercentLabel =
+                                                                    document.createElement(
+                                                                        "p"
+                                                                    );
+
+                                                                previousPercentLabel.className =
+                                                                    "assessment-template-meta";
+
+                                                                previousPercentLabel.textContent =
+                                                                    "Percent Change From Previous";
+
+                                                                questionSection.appendChild(
+                                                                    previousPercentLabel
+                                                                );
+
+                                                                const previousPercentValue =
+                                                                    document.createElement(
+                                                                        "p"
+                                                                    );
+
+                                                                previousPercentValue.className =
+                                                                    "assessment-template-description";
+
+                                                                previousPercentValue.textContent =
+                                                                    Number(
+                                                                        percentChangeFromPrevious
+                                                                    ) > 0
+                                                                        ? `+${percentChangeFromPrevious}%`
+                                                                        : `${percentChangeFromPrevious}%`;
+
+                                                                questionSection.appendChild(
+                                                                    previousPercentValue
+                                                                );
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                        } else {
+                                            const responseLabel =
+                                                document.createElement(
+                                                    "p"
+                                                );
+
+                                            responseLabel.className =
+                                                "assessment-template-meta";
+
+                                            responseLabel.textContent =
+                                                "Response";
+
+                                            questionSection.appendChild(
+                                                responseLabel
+                                            );
+
+                                            const response =
+                                                document.createElement(
+                                                    "p"
+                                                );
+
+                                            response.className =
+                                                "assessment-template-description";
+
+                                            response.textContent =
+                                                question.response ||
+                                                "No response recorded.";
+
+                                            questionSection.appendChild(
+                                                response
+                                            );
+                                        }
                                         assessmentView.appendChild(
                                             questionSection
                                         );
@@ -1736,7 +2205,245 @@ function initializeClientProfilePage(client) {
                                     "Save Reassessment";
 
                                 saveReassessmentButton.disabled =
-                                    true;
+                                    false;
+
+                                saveReassessmentButton.addEventListener(
+                                    "click",
+                                    async () => {
+                                        reassessmentForm
+                                            .querySelectorAll(
+                                                ".assessment-template-question-validation"
+                                            )
+                                            .forEach((message) => {
+                                                message.remove();
+                                            });
+
+                                        const responseControls =
+                                            Array.from(
+                                                reassessmentForm.querySelectorAll(
+                                                    ".client-assessment-response"
+                                                )
+                                            );
+
+                                        let hasMissingRequiredResponse =
+                                            false;
+
+                                        const reassessmentQuestions =
+                                            savedQuestions.map(
+                                                (
+                                                    question,
+                                                    index
+                                                ) => {
+                                                    const responseControl =
+                                                        responseControls[index];
+
+                                                    const response =
+                                                        responseControl
+                                                            ?.value
+                                                            ?.trim() ||
+                                                        "";
+
+                                                    if (
+                                                        question.required &&
+                                                        !response
+                                                    ) {
+                                                        hasMissingRequiredResponse =
+                                                            true;
+
+                                                        const questionSection =
+                                                            responseControl
+                                                                ?.closest(
+                                                                    ".client-assessment-question"
+                                                                );
+
+                                                        if (questionSection) {
+                                                            const validationMessage =
+                                                                document.createElement(
+                                                                    "p"
+                                                                );
+
+                                                            validationMessage.className =
+                                                                "assessment-template-question-validation";
+
+                                                            validationMessage.textContent =
+                                                                "A response is required.";
+
+                                                            questionSection.appendChild(
+                                                                validationMessage
+                                                            );
+                                                        }
+                                                    }
+
+                                                    return {
+                                                        id:
+                                                            question.id ||
+                                                            "",
+                                                        text:
+                                                            question.text ||
+                                                            "",
+                                                        instructions:
+                                                            question.instructions ||
+                                                            "",
+                                                        responseType:
+                                                            question.responseType ||
+                                                            "text",
+                                                        required:
+                                                            Boolean(
+                                                                question.required
+                                                            ),
+                                                        options:
+                                                            Array.isArray(
+                                                                question.options
+                                                            )
+                                                                ? [
+                                                                    ...question.options
+                                                                ]
+                                                                : [],
+                                                        response,
+                                                        order:
+                                                            index
+                                                    };
+                                                }
+                                            );
+
+                                        if (
+                                            hasMissingRequiredResponse
+                                        ) {
+                                            const firstValidation =
+                                                reassessmentForm.querySelector(
+                                                    ".assessment-template-question-validation"
+                                                );
+
+                                            firstValidation
+                                                ?.closest(
+                                                    ".client-assessment-question"
+                                                )
+                                                ?.scrollIntoView({
+                                                    block:
+                                                        "center"
+                                                });
+
+                                            return;
+                                        }
+
+                                        saveReassessmentButton.disabled =
+                                            true;
+
+                                        saveReassessmentButton.textContent =
+                                            "Saving...";
+
+                                        try {
+                                            const result =
+                                                await window.busyBodyz
+                                                    .saveClientAssessment(
+                                                        {
+                                                            clientId:
+                                                                client.id,
+                                                            assessment:
+                                                            {
+                                                                templateId:
+                                                                    assessment.templateId ||
+                                                                    "",
+                                                                templateName:
+                                                                    assessment.templateName ||
+                                                                    "Assessment",
+                                                                templateVersion:
+                                                                    assessment.templateVersion ||
+                                                                    "1.0",
+                                                                category:
+                                                                    assessment.category ||
+                                                                    "",
+                                                                description:
+                                                                    assessment.description ||
+                                                                    "",
+                                                                protocol:
+                                                                    assessment.protocol ||
+                                                                    "",
+                                                                status:
+                                                                    "Completed",
+                                                                assessmentType:
+                                                                    "Reassessment",
+                                                                parentAssessmentId:
+                                                                    assessment.id ||
+                                                                    "",
+                                                                baselineAssessmentId:
+                                                                    assessment.baselineAssessmentId ||
+                                                                    assessment.id ||
+                                                                    "",
+                                                                questions:
+                                                                    reassessmentQuestions
+                                                            }
+                                                        }
+                                                    );
+
+                                            if (!result.success) {
+                                                const errorMessage =
+                                                    document.createElement(
+                                                        "p"
+                                                    );
+
+                                                errorMessage.className =
+                                                    "assessment-template-question-validation";
+
+                                                errorMessage.textContent =
+                                                    result.error ||
+                                                    "Unable to save the reassessment.";
+
+                                                reassessmentActions.appendChild(
+                                                    errorMessage
+                                                );
+
+                                                saveReassessmentButton.disabled =
+                                                    false;
+
+                                                saveReassessmentButton.textContent =
+                                                    "Save Reassessment";
+
+                                                return;
+                                            }
+
+                                            const workspace =
+                                                document.getElementById(
+                                                    "workspace"
+                                                );
+
+                                            workspace.innerHTML =
+                                                getClientAssessmentsPage(
+                                                    result.client
+                                                );
+
+                                            initializeClientAssessmentsPage(
+                                                result.client
+                                            );
+                                        } catch (error) {
+                                            console.error(
+                                                "Unable to save reassessment:",
+                                                error
+                                            );
+
+                                            const errorMessage =
+                                                document.createElement(
+                                                    "p"
+                                                );
+
+                                            errorMessage.className =
+                                                "assessment-template-question-validation";
+
+                                            errorMessage.textContent =
+                                                "An unexpected error occurred while saving the reassessment.";
+
+                                            reassessmentActions.appendChild(
+                                                errorMessage
+                                            );
+
+                                            saveReassessmentButton.disabled =
+                                                false;
+
+                                            saveReassessmentButton.textContent =
+                                                "Save Reassessment";
+                                        }
+                                    }
+                                );
 
                                 reassessmentActions.appendChild(
                                     cancelButton
