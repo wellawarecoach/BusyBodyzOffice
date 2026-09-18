@@ -1018,10 +1018,48 @@ function initializeClientProfilePage(client) {
                             assessment.assessmentType ||
                             "Assessment";
 
+                        let reassessmentNumber = 0;
+
+                        if (
+                            assessmentType ===
+                            "Reassessment"
+                        ) {
+                            let currentAssessment =
+                                assessment;
+
+                            const visitedIds =
+                                new Set();
+
+                            while (
+                                currentAssessment &&
+                                currentAssessment.assessmentType ===
+                                "Reassessment" &&
+                                !visitedIds.has(
+                                    currentAssessment.id
+                                )
+                            ) {
+                                visitedIds.add(
+                                    currentAssessment.id
+                                );
+
+                                reassessmentNumber += 1;
+
+                                const parentId =
+                                    currentAssessment.parentAssessmentId ||
+                                    "";
+
+                                currentAssessment =
+                                    assessments.find(
+                                        (item) =>
+                                            item.id === parentId
+                                    );
+                            }
+                        }
+
                         status.textContent =
                             assessmentType ===
                                 "Reassessment"
-                                ? "Reassessment"
+                                ? `Reassessment #${reassessmentNumber}`
                                 : assessment.status ||
                                 "Completed";
                         header.appendChild(
@@ -1065,9 +1103,8 @@ function initializeClientProfilePage(client) {
                         const typeLabel =
                             historyAssessmentType ===
                                 "Reassessment"
-                                ? "Reassessment"
+                                ? `Reassessment #${reassessmentNumber}`
                                 : "Initial Assessment";
-
                         details.textContent =
                             completedDate
                                 ? `${typeLabel} • ${questions.length} ${questions.length === 1
@@ -1170,8 +1207,41 @@ function initializeClientProfilePage(client) {
                                     type.className =
                                         "assessment-template-meta";
 
+                                    let reassessmentNumber = 0;
+
+                                    let currentAssessment =
+                                        assessment;
+
+                                    const visitedIds =
+                                        new Set();
+
+                                    while (
+                                        currentAssessment &&
+                                        currentAssessment.assessmentType ===
+                                        "Reassessment" &&
+                                        !visitedIds.has(
+                                            currentAssessment.id
+                                        )
+                                    ) {
+                                        visitedIds.add(
+                                            currentAssessment.id
+                                        );
+
+                                        reassessmentNumber += 1;
+
+                                        const nextParentId =
+                                            currentAssessment.parentAssessmentId ||
+                                            "";
+
+                                        currentAssessment =
+                                            assessments.find(
+                                                (item) =>
+                                                    item.id === nextParentId
+                                            );
+                                    }
+
                                     type.textContent =
-                                        "Reassessment";
+                                        `Reassessment #${reassessmentNumber}`;
 
                                     assessmentView.appendChild(
                                         type
@@ -1187,6 +1257,7 @@ function initializeClientProfilePage(client) {
                                             (item) =>
                                                 item.id === baselineId
                                         );
+
                                     const parentId =
                                         assessment.parentAssessmentId ||
                                         "";
@@ -1197,10 +1268,6 @@ function initializeClientProfilePage(client) {
                                                 item.id === parentId
                                         );
 
-                                    const hasPreviousReassessment =
-                                        parentAssessment &&
-                                        parentAssessment.id !==
-                                        baselineAssessment?.id;
                                     if (baselineAssessment) {
                                         const baselineDate =
                                             baselineAssessment.createdAt
@@ -1226,6 +1293,205 @@ function initializeClientProfilePage(client) {
                                             baseline
                                         );
                                     }
+
+                                    if (
+                                        parentAssessment &&
+                                        parentAssessment.id !==
+                                        baselineAssessment?.id
+                                    ) {
+                                        let parentReassessmentNumber = 0;
+
+                                        let currentParent =
+                                            parentAssessment;
+
+                                        const visitedParentIds =
+                                            new Set();
+
+                                        while (
+                                            currentParent &&
+                                            currentParent.assessmentType ===
+                                            "Reassessment" &&
+                                            !visitedParentIds.has(
+                                                currentParent.id
+                                            )
+                                        ) {
+                                            visitedParentIds.add(
+                                                currentParent.id
+                                            );
+
+                                            parentReassessmentNumber += 1;
+
+                                            const nextParentId =
+                                                currentParent.parentAssessmentId ||
+                                                "";
+
+                                            currentParent =
+                                                assessments.find(
+                                                    (item) =>
+                                                        item.id === nextParentId
+                                                );
+                                        }
+
+                                        const previousDate =
+                                            parentAssessment.createdAt
+                                                ? new Date(
+                                                    parentAssessment.createdAt
+                                                ).toLocaleString()
+                                                : "";
+
+                                        const previous =
+                                            document.createElement(
+                                                "p"
+                                            );
+
+                                        previous.className =
+                                            "assessment-template-meta";
+
+                                        previous.textContent =
+                                            previousDate
+                                                ? `Previous: Reassessment #${parentReassessmentNumber} • ${previousDate}`
+                                                : `Previous: Reassessment #${parentReassessmentNumber}`;
+
+                                        assessmentView.appendChild(
+                                            previous
+                                        );
+                                    }
+
+                                    if (completedDate) {
+                                        const date =
+                                            document.createElement(
+                                                "p"
+                                            );
+
+                                        date.className =
+                                            "assessment-template-meta";
+
+                                        date.textContent =
+                                            `Completed ${completedDate}`;
+
+                                        assessmentView.appendChild(
+                                            date
+                                        );
+                                    }
+
+                                    const numericQuestions =
+                                        Array.isArray(
+                                            assessment.questions
+                                        )
+                                            ? assessment.questions.filter(
+                                                (question) =>
+                                                    question.responseType ===
+                                                    "number"
+                                            )
+                                            : [];
+
+                                    if (
+                                        numericQuestions.length > 0 &&
+                                        baselineAssessment
+                                    ) {
+                                        const baselineQuestions =
+                                            Array.isArray(
+                                                baselineAssessment.questions
+                                            )
+                                                ? baselineAssessment.questions
+                                                : [];
+
+                                        let increasedCount = 0;
+                                        let decreasedCount = 0;
+                                        let unchangedCount = 0;
+
+                                        numericQuestions.forEach(
+                                            (question, index) => {
+                                                const baselineQuestion =
+                                                    baselineQuestions.find(
+                                                        (item) =>
+                                                            item.id ===
+                                                            question.id
+                                                    ) ||
+                                                    baselineQuestions[index] ||
+                                                    null;
+
+                                                if (!baselineQuestion) {
+                                                    return;
+                                                }
+
+                                                const baselineValue =
+                                                    Number(
+                                                        baselineQuestion.response
+                                                    );
+
+                                                const currentValue =
+                                                    Number(
+                                                        question.response
+                                                    );
+
+                                                if (
+                                                    !Number.isFinite(
+                                                        baselineValue
+                                                    ) ||
+                                                    !Number.isFinite(
+                                                        currentValue
+                                                    )
+                                                ) {
+                                                    return;
+                                                }
+
+                                                if (
+                                                    currentValue >
+                                                    baselineValue
+                                                ) {
+                                                    increasedCount += 1;
+                                                } else if (
+                                                    currentValue <
+                                                    baselineValue
+                                                ) {
+                                                    decreasedCount += 1;
+                                                } else {
+                                                    unchangedCount += 1;
+                                                }
+                                            }
+                                        );
+
+                                        const summary =
+                                            document.createElement(
+                                                "div"
+                                            );
+
+                                        summary.className =
+                                            "assessment-template-protocol-preview";
+
+                                        const summaryHeading =
+                                            document.createElement(
+                                                "strong"
+                                            );
+
+                                        summaryHeading.textContent =
+                                            "Numeric Progress Summary";
+
+                                        const summaryText =
+                                            document.createElement(
+                                                "p"
+                                            );
+
+                                        summaryText.className =
+                                            "assessment-template-description";
+
+                                        summaryText.textContent =
+                                            `Increased: ${increasedCount} • Decreased: ${decreasedCount} • Unchanged: ${unchangedCount}`;
+
+                                        summary.appendChild(
+                                            summaryHeading
+                                        );
+
+                                        summary.appendChild(
+                                            summaryText
+                                        );
+
+                                        assessmentView.appendChild(
+                                            summary
+                                        );
+                                    }
+
                                 } else {
                                     const type =
                                         document.createElement(
@@ -1241,25 +1507,24 @@ function initializeClientProfilePage(client) {
                                     assessmentView.appendChild(
                                         type
                                     );
-                                }
 
-                                if (completedDate) {
-                                    const date =
-                                        document.createElement(
-                                            "p"
+                                    if (completedDate) {
+                                        const date =
+                                            document.createElement(
+                                                "p"
+                                            );
+
+                                        date.className =
+                                            "assessment-template-meta";
+
+                                        date.textContent =
+                                            `Completed ${completedDate}`;
+
+                                        assessmentView.appendChild(
+                                            date
                                         );
-
-                                    date.className =
-                                        "assessment-template-meta";
-
-                                    date.textContent =
-                                        `Completed ${completedDate}`;
-
-                                    assessmentView.appendChild(
-                                        date
-                                    );
+                                    }
                                 }
-
                                 if (
                                     assessment.description
                                 ) {
