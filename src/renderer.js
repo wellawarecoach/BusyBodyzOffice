@@ -891,7 +891,520 @@ function initializeClientProfilePage(client) {
         const assessmentsList = document.getElementById(
             "client-assessments-list"
         );
+        // Assessment progress chart container.
 
+        const assessmentProgressPanel =
+            document.createElement("div");
+
+        assessmentProgressPanel.id =
+            "assessment-progress-panel";
+
+        assessmentProgressPanel.className =
+            "assessment-progress-panel";
+
+        assessmentProgressPanel.hidden =
+            true;
+        // Progress chart button.
+
+        const showProgressButton =
+            document.createElement("button");
+
+        showProgressButton.type =
+            "button";
+
+        showProgressButton.className =
+            "secondary-btn";
+
+        showProgressButton.textContent =
+            "View Progress Chart";
+
+        showProgressButton.addEventListener(
+            "click",
+            () => {
+                const isHidden =
+                    assessmentProgressPanel.hidden;
+
+                assessmentProgressPanel.hidden =
+                    !isHidden;
+
+                showProgressButton.textContent =
+                    isHidden
+                        ? "Hide Progress Chart"
+                        : "View Progress Chart";
+            }
+        );
+        if (assessmentsList) {
+
+            assessmentsList.before(
+                showProgressButton
+            );
+
+            showProgressButton.after(
+                assessmentProgressPanel
+            );
+        }
+        // Prepare numeric assessment questions for progress tracking.
+
+        const clientAssessments =
+            Array.isArray(client.assessments)
+                ? client.assessments
+                : [];
+
+        const numericQuestionMap =
+            new Map();
+
+        clientAssessments.forEach((assessment) => {
+
+            const questions =
+                Array.isArray(assessment.questions)
+                    ? assessment.questions
+                    : [];
+
+            questions.forEach((question) => {
+
+                if (
+                    question.responseType !== "number"
+                ) {
+                    return;
+                }
+
+                const questionKey =
+                    `${assessment.templateId}::${question.id}`;
+
+                if (!numericQuestionMap.has(questionKey)) {
+
+                    numericQuestionMap.set(questionKey, {
+                        templateId: assessment.templateId,
+                        templateName:
+                            assessment.templateName || "Assessment",
+                        questionId: question.id,
+                        questionText:
+                            question.text || "Numeric question"
+                    });
+                }
+            });
+        });
+
+        // Create the chart heading.
+
+        const progressHeading =
+            document.createElement("h3");
+
+        progressHeading.textContent =
+            "Assessment Progress";
+
+        assessmentProgressPanel.appendChild(
+            progressHeading
+        );
+
+        // Create the question selector.
+
+        const progressQuestionSelect =
+            document.createElement("select");
+
+        progressQuestionSelect.className =
+            "client-assessment-response";
+
+        const defaultOption =
+            document.createElement("option");
+
+        defaultOption.value = "";
+
+        defaultOption.textContent =
+            "Select a numeric assessment question";
+
+        progressQuestionSelect.appendChild(
+            defaultOption
+        );
+
+        numericQuestionMap.forEach((question, key) => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = key;
+
+            option.textContent =
+                `${question.templateName} — ${question.questionText}`;
+
+            progressQuestionSelect.appendChild(
+                option
+            );
+        });
+
+        assessmentProgressPanel.appendChild(
+            progressQuestionSelect
+        );
+
+        // Empty chart placeholder.
+
+        const progressChartArea =
+            document.createElement("div");
+
+        progressChartArea.className =
+            "assessment-progress-chart";
+
+        progressChartArea.textContent =
+            numericQuestionMap.size > 0
+                ? "Select a question to view its progress."
+                : "No numeric assessment questions are available.";
+
+        assessmentProgressPanel.appendChild(
+            progressChartArea
+        );
+        // Batch 15D — Numeric assessment progress chart.
+
+        progressQuestionSelect.addEventListener(
+            "change",
+            () => {
+                const selectedKey =
+                    progressQuestionSelect.value;
+
+                progressChartArea.innerHTML = "";
+
+                if (!selectedKey) {
+                    progressChartArea.textContent =
+                        "Select a question to view its progress.";
+
+                    return;
+                }
+
+                const selectedQuestion =
+                    numericQuestionMap.get(selectedKey);
+
+                if (!selectedQuestion) {
+                    progressChartArea.textContent =
+                        "Selected question was not found.";
+
+                    return;
+                }
+
+                const results = [];
+
+                clientAssessments.forEach((assessment) => {
+                    if (
+                        assessment.templateId !==
+                        selectedQuestion.templateId
+                    ) {
+                        return;
+                    }
+
+                    const questions =
+                        Array.isArray(assessment.questions)
+                            ? assessment.questions
+                            : [];
+
+                    const question =
+                        questions.find(
+                            (item) =>
+                                item.id ===
+                                selectedQuestion.questionId
+                        );
+
+                    if (!question) {
+                        return;
+                    }
+
+                    const response =
+                        String(
+                            question.response ?? ""
+                        ).trim();
+
+                    if (response === "") {
+                        return;
+                    }
+
+                    const value =
+                        Number(response);
+
+                    if (!Number.isFinite(value)) {
+                        return;
+                    }
+
+                    const date =
+                        new Date(assessment.createdAt);
+
+                    if (
+                        !Number.isFinite(date.getTime())
+                    ) {
+                        return;
+                    }
+
+                    results.push({
+                        id: assessment.id,
+                        date,
+                        value
+                    });
+                });
+
+                results.sort(
+                    (a, b) =>
+                        a.date.getTime() -
+                        b.date.getTime()
+                );
+
+                if (results.length === 0) {
+                    progressChartArea.textContent =
+                        "No recorded numeric results are available for this question.";
+
+                    return;
+                }
+
+                // Chart dimensions.
+
+                const width = 720;
+                const height = 300;
+
+                const margin = {
+                    top: 35,
+                    right: 35,
+                    bottom: 60,
+                    left: 65
+                };
+
+                const chartWidth =
+                    width -
+                    margin.left -
+                    margin.right;
+
+                const chartHeight =
+                    height -
+                    margin.top -
+                    margin.bottom;
+
+                // Establish vertical axis range.
+
+                const values =
+                    results.map(
+                        (result) => result.value
+                    );
+
+                let minimum =
+                    Math.min(...values);
+
+                let maximum =
+                    Math.max(...values);
+
+                if (minimum === maximum) {
+                    const padding =
+                        Math.max(
+                            Math.abs(minimum) * 0.1,
+                            1
+                        );
+
+                    minimum -= padding;
+                    maximum += padding;
+                } else {
+                    const padding =
+                        (maximum - minimum) * 0.1;
+
+                    minimum -= padding;
+                    maximum += padding;
+                }
+
+                const xPosition =
+                    (index) =>
+                        results.length === 1
+                            ? margin.left +
+                            chartWidth / 2
+                            : margin.left +
+                            index *
+                            (
+                                chartWidth /
+                                (results.length - 1)
+                            );
+
+                const yPosition =
+                    (value) =>
+                        margin.top +
+                        chartHeight -
+                        (
+                            (value - minimum) /
+                            (maximum - minimum)
+                        ) *
+                        chartHeight;
+
+                // Create SVG elements safely.
+
+                const svgNamespace =
+                    "http://www.w3.org/2000/svg";
+
+                const createSvgElement =
+                    (name, attributes = {}) => {
+                        const element =
+                            document.createElementNS(
+                                svgNamespace,
+                                name
+                            );
+
+                        Object.entries(attributes).forEach(
+                            ([key, value]) => {
+                                element.setAttribute(
+                                    key,
+                                    String(value)
+                                );
+                            }
+                        );
+
+                        return element;
+                    };
+
+                const svg =
+                    createSvgElement("svg", {
+                        viewBox: `0 0 ${width} ${height}`,
+                        role: "img",
+                        "aria-label":
+                            `Progress chart for ${selectedQuestion.questionText}`
+                    });
+
+                svg.style.width = "100%";
+                svg.style.height = "auto";
+                svg.style.display = "block";
+
+                // Draw horizontal gridlines and value labels.
+
+                const gridSteps = 4;
+
+                for (
+                    let step = 0;
+                    step <= gridSteps;
+                    step += 1
+                ) {
+                    const value =
+                        minimum +
+                        (
+                            (maximum - minimum) *
+                            step /
+                            gridSteps
+                        );
+
+                    const y =
+                        yPosition(value);
+
+                    const gridline =
+                        createSvgElement("line", {
+                            x1: margin.left,
+                            y1: y,
+                            x2:
+                                width -
+                                margin.right,
+                            y2: y,
+                            stroke: "#dbe3eb",
+                            "stroke-width": 1
+                        });
+
+                    svg.appendChild(gridline);
+
+                    const label =
+                        createSvgElement("text", {
+                            x: margin.left - 12,
+                            y: y + 4,
+                            "text-anchor": "end",
+                            "font-size": 12,
+                            fill: "#64748b"
+                        });
+
+                    label.textContent =
+                        Number(
+                            value.toFixed(2)
+                        ).toString();
+
+                    svg.appendChild(label);
+                }
+
+                // Draw progress line.
+
+                if (results.length > 1) {
+                    const points =
+                        results.map(
+                            (result, index) =>
+                                `${xPosition(index)},${yPosition(result.value)}`
+                        ).join(" ");
+
+                    const line =
+                        createSvgElement("polyline", {
+                            points,
+                            fill: "none",
+                            stroke: "#2563eb",
+                            "stroke-width": 3,
+                            "stroke-linecap": "round",
+                            "stroke-linejoin": "round"
+                        });
+
+                    svg.appendChild(line);
+                }
+
+                // Draw data points, result labels and dates.
+
+                results.forEach(
+                    (result, index) => {
+                        const x =
+                            xPosition(index);
+
+                        const y =
+                            yPosition(result.value);
+
+                        const point =
+                            createSvgElement("circle", {
+                                cx: x,
+                                cy: y,
+                                r: 5,
+                                fill: "#2563eb",
+                                stroke: "#ffffff",
+                                "stroke-width": 2
+                            });
+
+                        svg.appendChild(point);
+
+                        const valueLabel =
+                            createSvgElement("text", {
+                                x,
+                                y: y - 12,
+                                "text-anchor": "middle",
+                                "font-size": 12,
+                                "font-weight": 600,
+                                fill: "#1e293b"
+                            });
+
+                        valueLabel.textContent =
+                            String(result.value);
+
+                        svg.appendChild(valueLabel);
+
+                        const dateLabel =
+                            createSvgElement("text", {
+                                x,
+                                y: height - 30,
+                                "text-anchor": "middle",
+                                "font-size": 11,
+                                fill: "#64748b"
+                            });
+
+                        dateLabel.textContent =
+                            result.date.toLocaleDateString();
+
+                        svg.appendChild(dateLabel);
+                    }
+                );
+
+                // Add the chart to the progress panel.
+
+                progressChartArea.appendChild(svg);
+
+                const resultCount =
+                    document.createElement("p");
+
+                resultCount.className =
+                    "assessment-template-meta";
+
+                resultCount.textContent =
+                    `${results.length} recorded result${results.length === 1 ? "" : "s"}`;
+
+                progressChartArea.appendChild(
+                    resultCount
+                );
+            }
+        );
         if (assessmentsList) {
             const assessments =
                 Array.isArray(client.assessments)

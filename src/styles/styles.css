@@ -588,3 +588,30 @@ body {
         margin-bottom: 10px;
     }
 }
+
+/* Assessment progress chart */
+
+.assessment-progress-panel {
+    margin: 24px 0;
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid #dbe3eb;
+    border-radius: 10px;
+}
+
+.assessment-progress-panel h3 {
+    margin: 0 0 8px;
+    color: #1e293b;
+}
+
+.assessment-progress-chart {
+    width: 100%;
+    min-height: 280px;
+    margin-top: 20px;
+}
+
+.assessment-progress-empty {
+    padding: 24px;
+    text-align: center;
+    color: #64748b;
+}
