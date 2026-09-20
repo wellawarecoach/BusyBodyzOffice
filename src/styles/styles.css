@@ -615,3 +615,39 @@ body {
     text-align: center;
     color: #64748b;
 }
+
+/* Assessment progress results table */
+
+.assessment-progress-results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 14px;
+}
+
+.assessment-progress-results-table th,
+.assessment-progress-results-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #dbe3eb;
+    text-align: left;
+}
+
+.assessment-progress-results-table th {
+    background: #f4f7fb;
+    color: #334155;
+    font-weight: 600;
+}
+
+.assessment-progress-results-table td {
+    color: #475569;
+}
+
+.assessment-progress-results-table td:last-child,
+.assessment-progress-results-table th:last-child {
+    text-align: right;
+    font-weight: 600;
+}
+
+.assessment-progress-results-table tbody tr:hover {
+    background: #f8fafc;
+}

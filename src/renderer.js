@@ -1151,10 +1151,14 @@ function initializeClientProfilePage(client) {
                 }
 
                 // Chart dimensions.
+                // Increase chart width as more results are recorded.
 
-                const width = 720;
+                const width = Math.max(
+                    720,
+                    results.length * 110
+                );
+
                 const height = 300;
-
                 const margin = {
                     top: 35,
                     right: 35,
@@ -1257,10 +1261,15 @@ function initializeClientProfilePage(client) {
                             `Progress chart for ${selectedQuestion.questionText}`
                     });
 
-                svg.style.width = "100%";
-                svg.style.height = "auto";
+                svg.style.width = `${width}px`;
+                svg.style.maxWidth = "none";
+                svg.style.height = `${height}px`;
                 svg.style.display = "block";
 
+                // Allow charts with many results to scroll horizontally.
+
+                progressChartArea.style.overflowX = "auto";
+                progressChartArea.style.maxWidth = "100%";
                 // Draw horizontal gridlines and value labels.
 
                 const gridSteps = 4;
@@ -1354,6 +1363,24 @@ function initializeClientProfilePage(client) {
                                 "stroke-width": 2
                             });
 
+                        // Display the exact result when hovering
+                        // over a chart data point.
+
+                        const pointTooltip =
+                            createSvgElement("title");
+
+                        pointTooltip.textContent =
+                            `Test ${index + 1}
+Value: ${result.value}
+Date: ${result.date.toLocaleString()}`;
+
+                        point.appendChild(
+                            pointTooltip
+                        );
+
+                        svg.appendChild(
+                            point
+                        );
                         svg.appendChild(point);
 
                         const valueLabel =
@@ -1381,8 +1408,7 @@ function initializeClientProfilePage(client) {
                             });
 
                         dateLabel.textContent =
-                            result.date.toLocaleDateString();
-
+                            `Test ${index + 1}`;
                         svg.appendChild(dateLabel);
                     }
                 );
@@ -1390,6 +1416,8 @@ function initializeClientProfilePage(client) {
                 // Add the chart to the progress panel.
 
                 progressChartArea.appendChild(svg);
+
+                // Display assessment history beneath the progress chart.
 
                 const resultCount =
                     document.createElement("p");
@@ -1402,6 +1430,155 @@ function initializeClientProfilePage(client) {
 
                 progressChartArea.appendChild(
                     resultCount
+                );
+
+                // Identify each result using its saved assessment record.
+
+                const resultsHeading =
+                    document.createElement("h4");
+
+                resultsHeading.textContent =
+                    "Recorded Assessment Results";
+
+                progressChartArea.appendChild(
+                    resultsHeading
+                );
+
+                const resultsTable =
+                    document.createElement("table");
+
+                resultsTable.className =
+                    "assessment-progress-results-table";
+
+                const tableHead =
+                    document.createElement("thead");
+
+                const headingRow =
+                    document.createElement("tr");
+
+                [
+                    "Assessment",
+                    "Date",
+                    "Recorded Value"
+                ].forEach((headingText) => {
+                    const headingCell =
+                        document.createElement("th");
+
+                    headingCell.textContent =
+                        headingText;
+
+                    headingRow.appendChild(
+                        headingCell
+                    );
+                });
+
+                tableHead.appendChild(
+                    headingRow
+                );
+
+                resultsTable.appendChild(
+                    tableHead
+                );
+
+                const tableBody =
+                    document.createElement("tbody");
+
+                results.forEach((result) => {
+
+                    const savedAssessment =
+                        clientAssessments.find(
+                            (assessment) =>
+                                assessment.id === result.id
+                        );
+
+                    let assessmentLabel =
+                        "Initial Assessment";
+
+                    if (
+                        savedAssessment?.assessmentType ===
+                        "Reassessment"
+                    ) {
+                        let reassessmentNumber = 0;
+
+                        let currentAssessment =
+                            savedAssessment;
+
+                        const visitedIds =
+                            new Set();
+
+                        while (
+                            currentAssessment &&
+                            currentAssessment.assessmentType ===
+                            "Reassessment" &&
+                            !visitedIds.has(
+                                currentAssessment.id
+                            )
+                        ) {
+                            visitedIds.add(
+                                currentAssessment.id
+                            );
+
+                            reassessmentNumber += 1;
+
+                            const parentId =
+                                currentAssessment.parentAssessmentId ||
+                                "";
+
+                            currentAssessment =
+                                clientAssessments.find(
+                                    (assessment) =>
+                                        assessment.id === parentId
+                                );
+                        }
+
+                        assessmentLabel =
+                            `Reassessment #${reassessmentNumber}`;
+                    }
+
+                    const row =
+                        document.createElement("tr");
+
+                    const assessmentCell =
+                        document.createElement("td");
+
+                    assessmentCell.textContent =
+                        assessmentLabel;
+
+                    const dateCell =
+                        document.createElement("td");
+
+                    dateCell.textContent =
+                        result.date.toLocaleString();
+
+                    const valueCell =
+                        document.createElement("td");
+
+                    valueCell.textContent =
+                        String(result.value);
+
+                    row.appendChild(
+                        assessmentCell
+                    );
+
+                    row.appendChild(
+                        dateCell
+                    );
+
+                    row.appendChild(
+                        valueCell
+                    );
+
+                    tableBody.appendChild(
+                        row
+                    );
+                });
+
+                resultsTable.appendChild(
+                    tableBody
+                );
+
+                progressChartArea.appendChild(
+                    resultsTable
                 );
             }
         );
@@ -1657,6 +1834,11 @@ function initializeClientProfilePage(client) {
                         viewButton.addEventListener(
                             "click",
                             () => {
+                                // Close the progress chart when viewing an assessment.
+                                assessmentProgressPanel.hidden = true;
+
+                                showProgressButton.textContent =
+                                    "View Progress Chart";
                                 assessmentsList.innerHTML =
                                     "";
 
