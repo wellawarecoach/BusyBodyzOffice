@@ -521,3 +521,70 @@ body {
 
     border-top: 1px solid #e4e7eb;
 }
+
+/* Assessment comparison layout */
+
+.client-assessment-question {
+    margin-bottom: 24px;
+    padding: 20px;
+    border: 1px solid #dbe3eb;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.client-assessment-question strong {
+    display: block;
+    margin-bottom: 12px;
+}
+
+.assessment-comparison-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 24px;
+    align-items: center;
+    margin-top: 16px;
+    padding: 16px;
+    background: #f4f7fb;
+    border-radius: 8px;
+}
+
+.assessment-comparison-label {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.assessment-comparison-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.assessment-comparison-positive {
+    color: #15803d;
+}
+
+.assessment-comparison-negative {
+    color: #b91c1c;
+}
+
+.assessment-comparison-neutral {
+    color: #475569;
+}
+
+@media (max-width: 600px) {
+    .client-assessment-question {
+        padding: 14px;
+    }
+
+    .assessment-comparison-grid {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .assessment-comparison-value {
+        text-align: left;
+        margin-bottom: 10px;
+    }
+}

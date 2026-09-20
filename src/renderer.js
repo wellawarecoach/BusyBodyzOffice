@@ -2059,6 +2059,68 @@ function initializeClientProfilePage(client) {
                                                 response
                                             );
                                         }
+                                        // Organize saved comparison results into a compact grid.
+                                        // Existing response and calculation elements are reused.
+
+                                        if (isReassessment) {
+
+                                            const comparisonGrid =
+                                                document.createElement("div");
+
+                                            comparisonGrid.className =
+                                                "assessment-comparison-grid";
+
+                                            const comparisonLabels =
+                                                Array.from(
+                                                    questionSection.children
+                                                ).filter(
+                                                    (element) =>
+                                                        element.matches(
+                                                            "p.assessment-template-meta"
+                                                        )
+                                                );
+
+                                            comparisonLabels.forEach(
+                                                (label) => {
+
+                                                    const value =
+                                                        label.nextElementSibling;
+
+                                                    if (
+                                                        !value ||
+                                                        !value.matches(
+                                                            "p.assessment-template-description"
+                                                        )
+                                                    ) {
+                                                        return;
+                                                    }
+
+                                                    label.classList.add(
+                                                        "assessment-comparison-label"
+                                                    );
+
+                                                    value.classList.add(
+                                                        "assessment-comparison-value"
+                                                    );
+
+                                                    comparisonGrid.appendChild(
+                                                        label
+                                                    );
+
+                                                    comparisonGrid.appendChild(
+                                                        value
+                                                    );
+                                                }
+                                            );
+
+                                            if (
+                                                comparisonGrid.children.length > 0
+                                            ) {
+                                                questionSection.appendChild(
+                                                    comparisonGrid
+                                                );
+                                            }
+                                        }
                                         assessmentView.appendChild(
                                             questionSection
                                         );
