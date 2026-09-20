@@ -1415,16 +1415,29 @@ function initializeClientProfilePage(client) {
                                                     return;
                                                 }
 
+                                                // Do not treat unanswered questions as zero.
+                                                const baselineResponse =
+                                                    String(
+                                                        baselineQuestion.response ?? ""
+                                                    ).trim();
+
+                                                const currentResponse =
+                                                    String(
+                                                        question.response ?? ""
+                                                    ).trim();
+
+                                                if (
+                                                    baselineResponse === "" ||
+                                                    currentResponse === ""
+                                                ) {
+                                                    return;
+                                                }
+
                                                 const baselineValue =
-                                                    Number(
-                                                        baselineQuestion.response
-                                                    );
+                                                    Number(baselineResponse);
 
                                                 const currentValue =
-                                                    Number(
-                                                        question.response
-                                                    );
-
+                                                    Number(currentResponse);
                                                 if (
                                                     !Number.isFinite(
                                                         baselineValue
@@ -1804,7 +1817,13 @@ function initializeClientProfilePage(client) {
 
                                             if (
                                                 responseType === "number" &&
-                                                baselineQuestion
+                                                baselineQuestion &&
+                                                String(
+                                                    baselineQuestion.response ?? ""
+                                                ).trim() !== "" &&
+                                                String(
+                                                    question.response ?? ""
+                                                ).trim() !== ""
                                             ) {
                                                 const baselineNumber =
                                                     Number(
