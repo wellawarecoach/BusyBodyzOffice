@@ -1458,6 +1458,325 @@ ipcMain.handle(
         }
     }
 );
+// Batch 15H.3C — Link independent assessments.
+
+ipcMain.handle(
+    "link-client-assessments",
+    async (event, payload) => {
+        try {
+            const clientId = String(
+                payload?.clientId || ""
+            ).trim();
+
+            const assessmentIds =
+                payload?.assessmentIds;
+
+            if (
+                !clientId ||
+                !Array.isArray(assessmentIds) ||
+                assessmentIds.length < 2 ||
+                new Set(assessmentIds).size !==
+                assessmentIds.length
+            ) {
+                return {
+                    success: false,
+                    error:
+                        "Select at least two distinct assessments."
+                };
+            }
+
+            const clients = readClients();
+
+            const clientIndex =
+                clients.findIndex(
+                    (client) =>
+                        client.id === clientId
+                );
+
+            if (clientIndex === -1) {
+                return {
+                    success: false,
+                    error: "Client not found."
+                };
+            }
+
+            const client =
+                clients[clientIndex];
+
+            const assessments =
+                Array.isArray(client.assessments)
+                    ? client.assessments
+                    : [];
+
+            const selected =
+                assessmentIds.map(
+                    (id) =>
+                        assessments.find(
+                            (assessment) =>
+                                assessment.id === id
+                        )
+                );
+
+            if (
+                selected.some(
+                    (assessment) =>
+                        !assessment
+                )
+            ) {
+                return {
+                    success: false,
+                    error:
+                        "One or more selected assessments were not found."
+                };
+            }
+
+            // Only independent initial assessments
+            // can be linked.
+
+            if (
+                selected.some(
+                    (assessment) =>
+                        assessment.assessmentType ===
+                        "Reassessment"
+                )
+            ) {
+                return {
+                    success: false,
+                    error:
+                        "Existing reassessments cannot be linked using this tool."
+                };
+            }
+
+            // Do not reorganize assessments
+            // that already have linked records.
+
+            const selectedIds =
+                new Set(assessmentIds);
+
+            const hasExistingLinks =
+                assessments.some(
+                    (assessment) =>
+                        assessment.assessmentType ===
+                        "Reassessment" &&
+                        (
+                            selectedIds.has(
+                                assessment.parentAssessmentId
+                            ) ||
+                            selectedIds.has(
+                                assessment.baselineAssessmentId
+                            )
+                        )
+                );
+
+            if (hasExistingLinks) {
+                return {
+                    success: false,
+                    error:
+                        "One or more selected assessments already belong to an assessment history."
+                };
+            }
+
+            // All assessments must use the same template.
+
+            const templateId =
+                selected[0].templateId;
+
+            if (
+                !templateId ||
+                !selected.every(
+                    (assessment) =>
+                        assessment.templateId ===
+                        templateId
+                )
+            ) {
+                return {
+                    success: false,
+                    error:
+                        "Selected assessments must use the same template."
+                };
+            }
+
+            // Verify question compatibility.
+
+            const getQuestionStructure =
+                (assessment) =>
+                    (
+                        Array.isArray(
+                            assessment.questions
+                        )
+                            ? assessment.questions
+                            : []
+                    ).map(
+                        (question) => ({
+                            id: question.id || "",
+                            text: question.text || "",
+                            responseType:
+                                question.responseType ||
+                                "text",
+                            options:
+                                Array.isArray(
+                                    question.options
+                                )
+                                    ? question.options
+                                    : []
+                        })
+                    );
+
+            const baselineStructure =
+                JSON.stringify(
+                    getQuestionStructure(
+                        selected[0]
+                    )
+                );
+
+            if (
+                !selected.every(
+                    (assessment) =>
+                        JSON.stringify(
+                            getQuestionStructure(
+                                assessment
+                            )
+                        ) === baselineStructure
+                )
+            ) {
+                return {
+                    success: false,
+                    error:
+                        "Selected assessments have incompatible question structures."
+                };
+            }
+
+            // Establish chronological order.
+
+            if (
+                selected.some(
+                    (assessment) =>
+                        !Number.isFinite(
+                            Date.parse(
+                                assessment.createdAt ||
+                                ""
+                            )
+                        )
+                )
+            ) {
+                return {
+                    success: false,
+                    error:
+                        "One or more assessments have invalid dates."
+                };
+            }
+
+            const ordered =
+                [...selected].sort(
+                    (a, b) =>
+                        Date.parse(a.createdAt) -
+                        Date.parse(b.createdAt)
+                );
+
+            const hasDuplicateTimestamps =
+                ordered.some(
+                    (assessment, index) =>
+                        index > 0 &&
+                        Date.parse(
+                            assessment.createdAt
+                        ) ===
+                        Date.parse(
+                            ordered[index - 1]
+                                .createdAt
+                        )
+                );
+
+            if (hasDuplicateTimestamps) {
+                return {
+                    success: false,
+                    error:
+                        "Assessment timestamps must be distinct before linking."
+                };
+            }
+
+            // Build the linked history.
+            // Preserve original responses, dates,
+            // IDs, questions and template snapshots.
+
+            const baseline =
+                ordered[0];
+
+            const updatedAssessments =
+                assessments.map(
+                    (assessment) => {
+                        const position =
+                            ordered.findIndex(
+                                (item) =>
+                                    item.id ===
+                                    assessment.id
+                            );
+
+                        if (position <= 0) {
+                            return assessment;
+                        }
+
+                        return {
+                            ...assessment,
+
+                            assessmentType:
+                                "Reassessment",
+
+                            baselineAssessmentId:
+                                baseline.id,
+
+                            parentAssessmentId:
+                                ordered[
+                                    position - 1
+                                ].id
+                        };
+                    }
+                );
+
+            const updatedClient = {
+                ...client,
+                assessments:
+                    updatedAssessments,
+                updatedAt:
+                    new Date().toISOString()
+            };
+
+            clients[clientIndex] =
+                updatedClient;
+
+            const saved =
+                writeClients(clients);
+
+            if (!saved) {
+                return {
+                    success: false,
+                    error:
+                        "Unable to save the linked assessment history."
+                };
+            }
+
+            return {
+                success: true,
+                client: updatedClient,
+                baselineAssessmentId:
+                    baseline.id,
+                linkedCount:
+                    ordered.length
+            };
+
+        } catch (error) {
+            console.error(
+                "Unable to link client assessments:",
+                error
+            );
+
+            return {
+                success: false,
+                error:
+                    "An unexpected error occurred while linking assessments."
+            };
+        }
+    }
+);
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {

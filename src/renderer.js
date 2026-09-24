@@ -943,6 +943,757 @@ function initializeClientProfilePage(client) {
                 assessmentProgressPanel
             );
         }
+        // Batch 15H.3A — Link existing assessments interface.
+
+        if (assessmentsList) {
+
+            // Create the button.
+
+            const linkAssessmentsButton =
+                document.createElement("button");
+
+            linkAssessmentsButton.type =
+                "button";
+
+            linkAssessmentsButton.className =
+                "secondary-btn";
+
+            linkAssessmentsButton.textContent =
+                "Link Existing Assessments";
+
+            // Create the selection panel.
+
+            const linkAssessmentsPanel =
+                document.createElement("div");
+
+            linkAssessmentsPanel.className =
+                "assessment-progress-panel";
+
+            linkAssessmentsPanel.hidden =
+                true;
+
+            const linkHeading =
+                document.createElement("h3");
+
+            linkHeading.textContent =
+                "Link Existing Assessments";
+
+            linkAssessmentsPanel.appendChild(
+                linkHeading
+            );
+
+            const linkInstructions =
+                document.createElement("p");
+
+            linkInstructions.className =
+                "assessment-template-description";
+
+            linkInstructions.textContent =
+                "Select independent assessments to prepare " +
+                "a continuous assessment history. " +
+                "No records will be changed during this step.";
+
+            linkAssessmentsPanel.appendChild(
+                linkInstructions
+            );
+
+            // Show only independent initial assessments.
+
+            const independentAssessments =
+                (Array.isArray(client.assessments)
+                    ? client.assessments
+                    : []
+                )
+                    .filter(
+                        (assessment) =>
+                            assessment.assessmentType !==
+                            "Reassessment"
+                    )
+                    .sort(
+                        (a, b) =>
+                            Date.parse(a.createdAt || "") -
+                            Date.parse(b.createdAt || "")
+                    );
+
+            // Create the assessment selection area.
+
+            const linkSelectionArea =
+                document.createElement("div");
+
+            linkSelectionArea.className =
+                "assessment-template-selection";
+
+            linkAssessmentsPanel.appendChild(
+                linkSelectionArea
+            );
+
+            // Create a preview area.
+
+            const linkPreview =
+                document.createElement("p");
+
+            linkPreview.className =
+                "assessment-template-meta";
+
+            linkAssessmentsPanel.appendChild(
+                linkPreview
+            );
+
+            const selectedAssessmentIds =
+                new Set();
+
+            // Batch 15H.3B — Validate selected assessment histories.
+
+            function updateLinkPreview() {
+
+                const selected =
+                    independentAssessments.filter(
+                        (assessment) =>
+                            selectedAssessmentIds.has(
+                                assessment.id
+                            )
+                    );
+
+                linkPreview.replaceChildren();
+
+                const showMessage = (message) => {
+
+                    const paragraph =
+                        document.createElement("p");
+
+                    paragraph.textContent =
+                        message;
+
+                    linkPreview.appendChild(
+                        paragraph
+                    );
+                };
+
+                // Require at least two assessments.
+
+                if (selected.length === 0) {
+
+                    showMessage(
+                        "No assessments selected."
+                    );
+
+                    return;
+                }
+
+                if (selected.length === 1) {
+
+                    showMessage(
+                        "Select at least one additional assessment."
+                    );
+
+                    return;
+                }
+
+                // Confirm that every assessment uses
+                // the same saved template.
+
+                const templateId =
+                    selected[0].templateId;
+
+                const sameTemplate =
+                    selected.every(
+                        (assessment) =>
+                            assessment.templateId ===
+                            templateId
+                    );
+
+                if (
+                    !templateId ||
+                    !sameTemplate
+                ) {
+
+                    showMessage(
+                        "These assessments cannot be linked. " +
+                        "Select assessments from the same template."
+                    );
+
+                    return;
+                }
+
+                // Prevent existing assessment histories
+                // from being silently reorganized.
+
+                const allAssessments =
+                    Array.isArray(client.assessments)
+                        ? client.assessments
+                        : [];
+
+                const hasExistingLinks =
+                    selected.some(
+                        (assessment) =>
+                            allAssessments.some(
+                                (other) =>
+                                    other.assessmentType ===
+                                    "Reassessment" &&
+                                    (
+                                        other.parentAssessmentId ===
+                                        assessment.id ||
+                                        other.baselineAssessmentId ===
+                                        assessment.id
+                                    )
+                            )
+                    );
+
+                if (hasExistingLinks) {
+
+                    showMessage(
+                        "One or more selected assessments already " +
+                        "have linked reassessments. " +
+                        "Existing histories cannot be reorganized " +
+                        "using this linking tool."
+                    );
+
+                    return;
+                }
+
+                // Check question compatibility.
+
+                const getQuestionStructure =
+                    (assessment) => {
+
+                        const questions =
+                            Array.isArray(assessment.questions)
+                                ? assessment.questions
+                                : [];
+
+                        return questions.map(
+                            (question) => ({
+                                id:
+                                    question.id || "",
+
+                                text:
+                                    question.text || "",
+
+                                responseType:
+                                    question.responseType ||
+                                    "text",
+
+                                options:
+                                    Array.isArray(question.options)
+                                        ? question.options
+                                        : []
+                            })
+                        );
+                    };
+
+                const baselineStructure =
+                    JSON.stringify(
+                        getQuestionStructure(
+                            selected[0]
+                        )
+                    );
+
+                const compatibleQuestions =
+                    selected.every(
+                        (assessment) =>
+                            JSON.stringify(
+                                getQuestionStructure(
+                                    assessment
+                                )
+                            ) === baselineStructure
+                    );
+
+                if (!compatibleQuestions) {
+
+                    showMessage(
+                        "These assessments have different " +
+                        "question structures. " +
+                        "Check their questions, response types, " +
+                        "and answer options before linking."
+                    );
+
+                    return;
+                }
+
+                // Check assessment dates.
+
+                const validDates =
+                    selected.every(
+                        (assessment) =>
+                            Number.isFinite(
+                                Date.parse(
+                                    assessment.createdAt ||
+                                    ""
+                                )
+                            )
+                    );
+
+                if (!validDates) {
+
+                    showMessage(
+                        "One or more assessments have an " +
+                        "invalid completion date. " +
+                        "The assessment sequence cannot be determined."
+                    );
+
+                    return;
+                }
+
+                // Establish chronological order.
+
+                const orderedAssessments =
+                    [...selected].sort(
+                        (a, b) =>
+                            Date.parse(a.createdAt) -
+                            Date.parse(b.createdAt)
+                    );
+
+                const hasDuplicateTimestamps =
+                    orderedAssessments.some(
+                        (assessment, index) =>
+                            index > 0 &&
+                            Date.parse(
+                                assessment.createdAt
+                            ) ===
+                            Date.parse(
+                                orderedAssessments[
+                                    index - 1
+                                ].createdAt
+                            )
+                    );
+
+                if (hasDuplicateTimestamps) {
+
+                    showMessage(
+                        "Two or more selected assessments " +
+                        "have the same completion timestamp. " +
+                        "Their reassessment order must be " +
+                        "confirmed before linking."
+                    );
+
+                    return;
+                }
+
+                // Display the validated sequence.
+
+                const heading =
+                    document.createElement("strong");
+
+                heading.textContent =
+                    "Proposed Assessment History";
+
+                linkPreview.appendChild(
+                    heading
+                );
+
+                orderedAssessments.forEach(
+                    (assessment, index) => {
+
+                        const row =
+                            document.createElement("p");
+
+                        const sequenceLabel =
+                            index === 0
+                                ? "Baseline"
+                                : `Reassessment #${index}`;
+
+                        const date =
+                            new Date(
+                                assessment.createdAt
+                            ).toLocaleString();
+
+                        row.textContent =
+                            `${sequenceLabel} — ${date}`;
+
+                        linkPreview.appendChild(
+                            row
+                        );
+                    }
+                );
+
+                showMessage(
+                    "Compatibility checks passed. " +
+                    "No assessment records have been changed."
+                );
+
+                return true;
+            }
+            // Batch 15H.3E — Save linked assessment history.
+
+            const saveLinkingButton =
+                document.createElement("button");
+
+            saveLinkingButton.type =
+                "button";
+
+            saveLinkingButton.className =
+                "primary-btn";
+
+            saveLinkingButton.textContent =
+                "Save Linked Assessments";
+
+            saveLinkingButton.disabled =
+                true;
+
+            linkAssessmentsPanel.appendChild(
+                saveLinkingButton
+            );
+
+            saveLinkingButton.addEventListener(
+                "click",
+                async () => {
+
+                    // Run the existing compatibility checks.
+
+                    const isValid =
+                        updateLinkPreview();
+
+                    if (isValid !== true) {
+                        alert(
+                            "The selected assessments cannot be linked. " +
+                            "Review the validation message before saving."
+                        );
+
+                        return;
+                    }
+
+                    // Collect selected assessments in chronological order.
+
+                    const selected =
+                        independentAssessments.filter(
+                            (assessment) =>
+                                selectedAssessmentIds.has(
+                                    assessment.id
+                                )
+                        );
+
+                    if (selected.length < 2) {
+                        alert(
+                            "Select at least two assessments."
+                        );
+
+                        return;
+                    }
+
+                    const baseline =
+                        selected[0];
+
+                    const latest =
+                        selected[selected.length - 1];
+
+                    const baselineDate =
+                        new Date(
+                            baseline.createdAt
+                        ).toLocaleString();
+
+                    const latestDate =
+                        new Date(
+                            latest.createdAt
+                        ).toLocaleString();
+
+                    // Require confirmation before modifying records.
+
+                    const confirmed =
+                        confirm(
+                            `Link ${selected.length} assessments?\n\n` +
+                            `Baseline: ${baselineDate}\n` +
+                            `Latest: ${latestDate}\n\n` +
+                            "The selected assessments will become " +
+                            "one continuous assessment history.\n\n" +
+                            "Original responses, questions and " +
+                            "assessment dates will be preserved.\n\n" +
+                            "Do you want to continue?"
+                        );
+
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    // Prevent repeated clicks while saving.
+
+                    saveLinkingButton.disabled =
+                        true;
+
+                    saveLinkingButton.textContent =
+                        "Saving...";
+
+                    try {
+
+                        const result =
+                            await window.busyBodyz
+                                .linkClientAssessments({
+                                    clientId:
+                                        client.id,
+
+                                    assessmentIds:
+                                        selected.map(
+                                            (assessment) =>
+                                                assessment.id
+                                        )
+                                });
+
+                        if (
+                            !result ||
+                            !result.success
+                        ) {
+                            alert(
+                                result?.error ||
+                                "Unable to link the selected assessments."
+                            );
+
+                            saveLinkingButton.disabled =
+                                false;
+
+                            saveLinkingButton.textContent =
+                                "Save Linked Assessments";
+
+                            return;
+                        }
+
+                        // Refresh the assessment history
+                        // using the updated client record.
+
+                        const workspace =
+                            document.getElementById(
+                                "workspace"
+                            );
+
+                        workspace.innerHTML =
+                            getClientAssessmentsPage(
+                                result.client
+                            );
+
+                        initializeClientAssessmentsPage(
+                            result.client
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            "Unable to link assessments:",
+                            error
+                        );
+
+                        alert(
+                            "An unexpected error occurred while " +
+                            "linking the selected assessments."
+                        );
+
+                        saveLinkingButton.disabled =
+                            false;
+
+                        saveLinkingButton.textContent =
+                            "Save Linked Assessments";
+                    }
+                }
+            );
+            // Group assessments by their saved template.
+
+            const assessmentGroups =
+                new Map();
+
+            independentAssessments.forEach(
+                (assessment) => {
+
+                    const templateId =
+                        assessment.templateId || "";
+
+                    if (!assessmentGroups.has(templateId)) {
+
+                        assessmentGroups.set(
+                            templateId,
+                            []
+                        );
+                    }
+
+                    assessmentGroups.get(
+                        templateId
+                    ).push(
+                        assessment
+                    );
+                }
+            );
+
+            // Render assessments in each group.
+
+            assessmentGroups.forEach(
+                (group, templateId) => {
+
+                    const groupHeading =
+                        document.createElement("h4");
+
+                    groupHeading.textContent =
+                        group[0].templateName ||
+                        "Assessment";
+
+                    linkSelectionArea.appendChild(
+                        groupHeading
+                    );
+
+                    group.forEach(
+                        (assessment, index) => {
+
+                            const row =
+                                document.createElement("label");
+
+                            row.style.display =
+                                "flex";
+
+                            row.style.alignItems =
+                                "center";
+
+                            row.style.gap =
+                                "12px";
+
+                            row.style.marginBottom =
+                                "12px";
+
+                            const checkbox =
+                                document.createElement("input");
+
+                            checkbox.type =
+                                "checkbox";
+
+                            checkbox.value =
+                                assessment.id;
+                            // Identify initial assessments that already
+                            // have reassessments linked to them.
+
+                            const allClientAssessments =
+                                Array.isArray(client.assessments)
+                                    ? client.assessments
+                                    : [];
+
+                            const hasLinkedReassessments =
+                                allClientAssessments.some(
+                                    (other) =>
+                                        other.assessmentType ===
+                                        "Reassessment" &&
+                                        (
+                                            other.parentAssessmentId ===
+                                            assessment.id ||
+                                            other.baselineAssessmentId ===
+                                            assessment.id
+                                        )
+                                );
+
+                            // Prevent existing assessment histories
+                            // from being reorganized.
+
+                            checkbox.disabled =
+                                hasLinkedReassessments;
+                            const date =
+                                assessment.createdAt
+                                    ? new Date(
+                                        assessment.createdAt
+                                    ).toLocaleString()
+                                    : "Date unavailable";
+
+                            const description =
+                                document.createElement("span");
+
+                            description.textContent =
+                                hasLinkedReassessments
+                                    ? `Initial Assessment ${index + 1} — ${date} • Already Linked`
+                                    : `Initial Assessment ${index + 1} — ${date} • Available for Linking`;
+                            if (hasLinkedReassessments) {
+
+                                row.style.opacity =
+                                    "0.55";
+
+                                row.style.cursor =
+                                    "not-allowed";
+
+                                description.style.color =
+                                    "#64748b";
+
+                            } else {
+
+                                row.style.cursor =
+                                    "pointer";
+                            }
+                            checkbox.addEventListener(
+                                "change",
+                                () => {
+
+                                    if (checkbox.checked) {
+
+                                        selectedAssessmentIds.add(
+                                            assessment.id
+                                        );
+
+                                    } else {
+
+                                        selectedAssessmentIds.delete(
+                                            assessment.id
+                                        );
+                                    }
+
+                                    updateLinkPreview();
+
+                                    saveLinkingButton.disabled =
+                                        selectedAssessmentIds.size < 2;
+                                }
+                            );
+                            row.appendChild(
+                                checkbox
+                            );
+
+                            row.appendChild(
+                                description
+                            );
+
+                            linkSelectionArea.appendChild(
+                                row
+                            );
+                        }
+                    );
+                }
+            );
+
+            if (
+                independentAssessments.length === 0
+            ) {
+
+                linkSelectionArea.textContent =
+                    "No independent assessments are available.";
+            }
+
+            updateLinkPreview();
+
+            // Open and close the linking panel.
+
+            linkAssessmentsButton.addEventListener(
+                "click",
+                () => {
+
+                    const opening =
+                        linkAssessmentsPanel.hidden;
+
+                    linkAssessmentsPanel.hidden =
+                        !opening;
+
+                    linkAssessmentsButton.textContent =
+                        opening
+                            ? "Close Linking Panel"
+                            : "Link Existing Assessments";
+
+                    if (opening) {
+
+                        assessmentProgressPanel.hidden =
+                            true;
+
+                        showProgressButton.textContent =
+                            "View Progress Chart";
+                    }
+                }
+            );
+
+            // Insert the new interface above assessment history.
+
+            assessmentProgressPanel.after(
+                linkAssessmentsButton
+            );
+
+            linkAssessmentsButton.after(
+                linkAssessmentsPanel
+            );
+        }
         // Prepare numeric assessment questions for progress tracking.
 
         const clientAssessments =
@@ -1035,7 +1786,44 @@ function initializeClientProfilePage(client) {
         assessmentProgressPanel.appendChild(
             progressQuestionSelect
         );
+        // Batch 15H — Progress history selector.
 
+        const progressHistoryLabel =
+            document.createElement("label");
+
+        progressHistoryLabel.textContent =
+            "Assessment History";
+
+        progressHistoryLabel.className =
+            "assessment-template-meta";
+
+        const progressHistorySelect =
+            document.createElement("select");
+
+        progressHistorySelect.className =
+            "client-assessment-response";
+
+        progressHistorySelect.disabled = true;
+
+        const historyPlaceholder =
+            document.createElement("option");
+
+        historyPlaceholder.value = "";
+
+        historyPlaceholder.textContent =
+            "Select a numeric question first";
+
+        progressHistorySelect.appendChild(
+            historyPlaceholder
+        );
+
+        assessmentProgressPanel.appendChild(
+            progressHistoryLabel
+        );
+
+        assessmentProgressPanel.appendChild(
+            progressHistorySelect
+        );
         // Empty chart placeholder.
 
         const progressChartArea =
@@ -1078,17 +1866,157 @@ function initializeClientProfilePage(client) {
 
                     return;
                 }
+                // Identify the original assessment for each saved record.
 
+                const getHistoryId = (assessment) => {
+                    if (
+                        assessment.assessmentType !== "Reassessment"
+                    ) {
+                        return assessment.id;
+                    }
+
+                    if (assessment.baselineAssessmentId) {
+                        return assessment.baselineAssessmentId;
+                    }
+
+                    let current = assessment;
+
+                    const visitedIds = new Set();
+
+                    while (
+                        current?.parentAssessmentId &&
+                        !visitedIds.has(current.id)
+                    ) {
+                        visitedIds.add(current.id);
+
+                        const parent = clientAssessments.find(
+                            (item) =>
+                                item.id === current.parentAssessmentId
+                        );
+
+                        if (!parent) {
+                            break;
+                        }
+
+                        current = parent;
+                    }
+
+                    return current.id;
+                };
+
+                // Find the independent initial assessments
+                // associated with the selected numeric question.
+
+                const initialAssessments =
+                    clientAssessments.filter(
+                        (assessment) => {
+
+                            if (
+                                assessment.assessmentType ===
+                                "Reassessment"
+                            ) {
+                                return false;
+                            }
+
+                            if (
+                                assessment.templateId !==
+                                selectedQuestion.templateId
+                            ) {
+                                return false;
+                            }
+
+                            return Array.isArray(
+                                assessment.questions
+                            ) &&
+                                assessment.questions.some(
+                                    (question) =>
+                                        question.id ===
+                                        selectedQuestion.questionId &&
+                                        question.responseType ===
+                                        "number"
+                                );
+                        }
+                    );
+
+                // Display initial assessments chronologically.
+
+                initialAssessments.sort(
+                    (a, b) =>
+                        Date.parse(a.createdAt || "") -
+                        Date.parse(b.createdAt || "")
+                );
+
+                // Remember the selected history when
+                // the chart is refreshed.
+
+                const previousSelection =
+                    progressHistorySelect.dataset.questionKey ===
+                        selectedKey
+                        ? progressHistorySelect.value
+                        : "";
+
+                progressHistorySelect.innerHTML = "";
+
+                initialAssessments.forEach(
+                    (assessment, index) => {
+
+                        const option =
+                            document.createElement("option");
+
+                        option.value = assessment.id;
+
+                        const date =
+                            assessment.createdAt
+                                ? new Date(
+                                    assessment.createdAt
+                                ).toLocaleString()
+                                : "Date unavailable";
+
+                        option.textContent =
+                            `Initial Assessment ${index + 1} — ${date}`;
+
+                        progressHistorySelect.appendChild(
+                            option
+                        );
+                    }
+                );
+
+                progressHistorySelect.disabled =
+                    initialAssessments.length === 0;
+
+                progressHistorySelect.dataset.questionKey =
+                    selectedKey;
+
+                if (
+                    initialAssessments.some(
+                        (assessment) =>
+                            assessment.id === previousSelection
+                    )
+                ) {
+                    progressHistorySelect.value =
+                        previousSelection;
+                }
+
+                const selectedHistoryId =
+                    progressHistorySelect.value;
+
+                if (!selectedHistoryId) {
+                    progressChartArea.textContent =
+                        "No assessment history is available for this question.";
+
+                    return;
+                }
                 const results = [];
 
                 clientAssessments.forEach((assessment) => {
                     if (
                         assessment.templateId !==
-                        selectedQuestion.templateId
+                        selectedQuestion.templateId ||
+                        getHistoryId(assessment) !==
+                        selectedHistoryId
                     ) {
                         return;
                     }
-
                     const questions =
                         Array.isArray(assessment.questions)
                             ? assessment.questions
@@ -1579,6 +2507,17 @@ Date: ${result.date.toLocaleString()}`;
 
                 progressChartArea.appendChild(
                     resultsTable
+                );
+            }
+        );
+        // Refresh the chart when a different
+        // assessment history is selected.
+
+        progressHistorySelect.addEventListener(
+            "change",
+            () => {
+                progressQuestionSelect.dispatchEvent(
+                    new Event("change")
                 );
             }
         );
@@ -2879,6 +3818,915 @@ Date: ${result.date.toLocaleString()}`;
 
                         actions.appendChild(
                             viewButton
+                        );
+                        // Batch 16A — Assessment Report Preview
+
+                        const reportButton =
+                            document.createElement("button");
+
+                        reportButton.type = "button";
+
+                        reportButton.className =
+                            "secondary-btn";
+
+                        reportButton.textContent =
+                            "View Report";
+
+                        reportButton.addEventListener(
+                            "click",
+                            () => {
+
+                                // Close the progress chart.
+
+                                assessmentProgressPanel.hidden = true;
+
+                                showProgressButton.textContent =
+                                    "View Progress Chart";
+
+                                // Create the report screen.
+
+                                assessmentsList.innerHTML = "";
+
+                                const report =
+                                    document.createElement("div");
+
+                                report.className =
+                                    "client-assessment-form assessment-report";
+
+                                // Report heading.
+
+                                const heading =
+                                    document.createElement("h2");
+
+                                heading.textContent =
+                                    "Client Assessment Report";
+
+                                report.appendChild(heading);
+
+                                const brand =
+                                    document.createElement("p");
+
+                                brand.textContent =
+                                    "BusyBodyz Energy & Performance Solutions";
+
+                                brand.className =
+                                    "assessment-template-meta";
+
+                                report.appendChild(brand);
+
+                                // Client identification.
+
+                                const clientName =
+                                    document.createElement("h3");
+
+                                clientName.textContent =
+                                    `${client.firstName || ""} ${client.lastName || ""}`.trim();
+
+                                report.appendChild(clientName);
+
+                                // Assessment information.
+
+                                const assessmentHeading =
+                                    document.createElement("h3");
+
+                                assessmentHeading.textContent =
+                                    assessment.templateName ||
+                                    "Assessment";
+
+                                report.appendChild(
+                                    assessmentHeading
+                                );
+
+                                const assessmentDate =
+                                    document.createElement("p");
+
+                                assessmentDate.className =
+                                    "assessment-template-meta";
+
+                                assessmentDate.textContent =
+                                    assessment.createdAt
+                                        ? `Completed: ${new Date(
+                                            assessment.createdAt
+                                        ).toLocaleString()}`
+                                        : "Completion date unavailable";
+
+                                report.appendChild(
+                                    assessmentDate
+                                );
+
+                                const assessmentType =
+                                    document.createElement("p");
+
+                                assessmentType.className =
+                                    "assessment-template-meta";
+
+                                assessmentType.textContent =
+                                    typeLabel;
+
+                                report.appendChild(
+                                    assessmentType
+                                );
+
+                                // Assessment instructions.
+
+                                if (assessment.protocol) {
+
+                                    const protocolHeading =
+                                        document.createElement("h4");
+
+                                    protocolHeading.textContent =
+                                        "Assessment Protocol / Instructions";
+
+                                    report.appendChild(
+                                        protocolHeading
+                                    );
+
+                                    const protocol =
+                                        document.createElement("p");
+
+                                    protocol.textContent =
+                                        assessment.protocol;
+
+                                    report.appendChild(
+                                        protocol
+                                    );
+                                }
+
+                                // Recorded assessment results.
+
+                                const resultsHeading =
+                                    document.createElement("h3");
+
+                                resultsHeading.textContent =
+                                    "Assessment Results";
+
+                                report.appendChild(
+                                    resultsHeading
+                                );
+
+
+                                const reportTable =
+                                    document.createElement("table");
+
+                                reportTable.className =
+                                    "assessment-progress-results-table";
+
+                                const isReportReassessment =
+                                    assessment.assessmentType ===
+                                    "Reassessment";
+
+                                // Find the original baseline assessment.
+
+                                const reportBaselineId =
+                                    assessment.baselineAssessmentId ||
+                                    assessment.parentAssessmentId ||
+                                    "";
+
+                                const reportBaseline =
+                                    isReportReassessment
+                                        ? assessments.find(
+                                            (item) =>
+                                                item.id === reportBaselineId
+                                        )
+                                        : null;
+
+                                // Find the assessment immediately preceding
+                                // the current reassessment.
+
+                                const reportParent =
+                                    isReportReassessment
+                                        ? assessments.find(
+                                            (item) =>
+                                                item.id ===
+                                                assessment.parentAssessmentId
+                                        )
+                                        : null;
+
+                                const hasReportPrevious =
+                                    Boolean(
+                                        reportParent &&
+                                        reportBaseline &&
+                                        reportParent.id !==
+                                        reportBaseline.id
+                                    );
+
+                                // Prepare the saved questions.
+
+                                const reportQuestions =
+                                    Array.isArray(assessment.questions)
+                                        ? assessment.questions
+                                        : [];
+
+                                const baselineQuestions =
+                                    Array.isArray(reportBaseline?.questions)
+                                        ? reportBaseline.questions
+                                        : [];
+
+                                const previousQuestions =
+                                    Array.isArray(reportParent?.questions)
+                                        ? reportParent.questions
+                                        : [];
+
+                                // Create the table headings.
+
+                                const tableHead =
+                                    document.createElement("thead");
+
+                                const headingRow =
+                                    document.createElement("tr");
+
+                                const headings =
+                                    isReportReassessment
+                                        ? [
+                                            "Question",
+                                            "Baseline",
+                                            ...(hasReportPrevious
+                                                ? ["Previous"]
+                                                : []),
+                                            "Current",
+                                            "Change from Baseline",
+                                            ...(hasReportPrevious
+                                                ? ["Change from Previous"]
+                                                : [])
+                                        ]
+                                        : [
+                                            "Question",
+                                            "Recorded Response"
+                                        ];
+
+                                headings.forEach((headingText) => {
+
+                                    const cell =
+                                        document.createElement("th");
+
+                                    cell.textContent =
+                                        headingText;
+
+                                    headingRow.appendChild(cell);
+                                });
+
+                                tableHead.appendChild(
+                                    headingRow
+                                );
+
+                                reportTable.appendChild(
+                                    tableHead
+                                );
+
+                                // Create the results table body.
+
+                                const tableBody =
+                                    document.createElement("tbody");
+
+                                // Helper for adding table cells.
+
+                                const addReportCell =
+                                    (row, value) => {
+
+                                        const cell =
+                                            document.createElement("td");
+
+                                        cell.textContent =
+                                            String(value ?? "");
+
+                                        row.appendChild(cell);
+                                    };
+
+                                // Helper for displaying recorded responses.
+
+                                const displayReportResponse =
+                                    (question) => {
+
+                                        const response =
+                                            String(
+                                                question?.response ?? ""
+                                            ).trim();
+
+                                        return response ||
+                                            "Not recorded";
+                                    };
+
+                                // Helper for calculating numeric changes.
+                                // Blank responses are never treated as zero.
+
+                                const calculateReportChange =
+                                    (originalQuestion, currentQuestion) => {
+
+                                        if (
+                                            !originalQuestion ||
+                                            !currentQuestion ||
+                                            currentQuestion.responseType !==
+                                            "number"
+                                        ) {
+                                            return "—";
+                                        }
+
+                                        const originalText =
+                                            String(
+                                                originalQuestion.response ?? ""
+                                            ).trim();
+
+                                        const currentText =
+                                            String(
+                                                currentQuestion.response ?? ""
+                                            ).trim();
+
+                                        if (
+                                            originalText === "" ||
+                                            currentText === ""
+                                        ) {
+                                            return "—";
+                                        }
+
+                                        const originalValue =
+                                            Number(originalText);
+
+                                        const currentValue =
+                                            Number(currentText);
+
+                                        if (
+                                            !Number.isFinite(originalValue) ||
+                                            !Number.isFinite(currentValue)
+                                        ) {
+                                            return "—";
+                                        }
+
+                                        const change =
+                                            currentValue - originalValue;
+
+                                        const changeText =
+                                            change > 0
+                                                ? `+${change}`
+                                                : String(change);
+
+                                        // A percentage change cannot be calculated
+                                        // when the original value is zero.
+
+                                        if (originalValue === 0) {
+                                            return changeText;
+                                        }
+
+                                        const percentChange =
+                                            (
+                                                change /
+                                                originalValue *
+                                                100
+                                            ).toFixed(1);
+
+                                        const percentText =
+                                            Number(percentChange) > 0
+                                                ? `+${percentChange}%`
+                                                : `${percentChange}%`;
+
+                                        return `${changeText} (${percentText})`;
+                                    };
+
+                                // Add one row per saved question.
+
+                                reportQuestions.forEach(
+                                    (question, index) => {
+
+                                        const row =
+                                            document.createElement("tr");
+
+                                        addReportCell(
+                                            row,
+                                            `${index + 1}. ${question.text || "Question"}`
+                                        );
+
+                                        // Initial assessments display
+                                        // the recorded response only.
+
+                                        if (!isReportReassessment) {
+
+                                            addReportCell(
+                                                row,
+                                                displayReportResponse(question)
+                                            );
+
+                                            tableBody.appendChild(row);
+
+                                            return;
+                                        }
+
+                                        // Match the current question to the
+                                        // corresponding baseline question.
+
+                                        const baselineQuestion =
+                                            baselineQuestions.find(
+                                                (item) =>
+                                                    item.id === question.id
+                                            ) ||
+                                            baselineQuestions[index] ||
+                                            null;
+
+                                        // Match the previous reassessment question.
+
+                                        const previousQuestion =
+                                            previousQuestions.find(
+                                                (item) =>
+                                                    item.id === question.id
+                                            ) ||
+                                            previousQuestions[index] ||
+                                            null;
+
+                                        // Baseline response.
+
+                                        addReportCell(
+                                            row,
+                                            displayReportResponse(
+                                                baselineQuestion
+                                            )
+                                        );
+
+                                        // Previous reassessment response,
+                                        // when a previous reassessment exists.
+
+                                        if (hasReportPrevious) {
+
+                                            addReportCell(
+                                                row,
+                                                displayReportResponse(
+                                                    previousQuestion
+                                                )
+                                            );
+                                        }
+
+                                        // Current reassessment response.
+
+                                        addReportCell(
+                                            row,
+                                            displayReportResponse(question)
+                                        );
+
+                                        // Numeric change from baseline.
+
+                                        addReportCell(
+                                            row,
+                                            calculateReportChange(
+                                                baselineQuestion,
+                                                question
+                                            )
+                                        );
+
+                                        // Numeric change from previous reassessment.
+
+                                        if (hasReportPrevious) {
+
+                                            addReportCell(
+                                                row,
+                                                calculateReportChange(
+                                                    previousQuestion,
+                                                    question
+                                                )
+                                            );
+                                        }
+
+                                        tableBody.appendChild(row);
+                                    }
+                                );
+
+                                reportTable.appendChild(
+                                    tableBody
+                                );
+
+                                // Display the completed comparison table.
+
+                                report.appendChild(
+                                    reportTable
+                                );
+
+                                // Return to assessment history.
+
+                                const backButton =
+                                    document.createElement("button");
+
+                                backButton.type =
+                                    "button";
+
+                                backButton.className =
+                                    "secondary-btn";
+
+                                backButton.textContent =
+                                    "← Back to Assessments";
+
+                                backButton.style.marginTop =
+                                    "24px";
+
+                                backButton.addEventListener(
+                                    "click",
+                                    () => {
+
+                                        const workspace =
+                                            document.getElementById(
+                                                "workspace"
+                                            );
+
+                                        workspace.innerHTML =
+                                            getClientAssessmentsPage(
+                                                client
+                                            );
+
+                                        initializeClientAssessmentsPage(
+                                            client
+                                        );
+                                    }
+                                );
+
+                                report.appendChild(
+                                    backButton
+                                );
+
+                                assessmentsList.appendChild(
+                                    report
+                                );
+
+                                report.scrollIntoView({
+                                    block: "start"
+                                });
+                            }
+                        );
+
+                        // Add report button beside View Assessment.
+
+                        actions.appendChild(
+                            reportButton
+                        );
+
+                        /* Batch 16C.1 — Complete Assessment Progress Report */
+
+                        const completeReportButton =
+                            document.createElement("button");
+
+                        completeReportButton.type = "button";
+
+                        completeReportButton.className =
+                            "secondary-btn";
+
+                        completeReportButton.textContent =
+                            "View Complete Progress Report";
+
+                        completeReportButton.addEventListener(
+                            "click",
+                            () => {
+
+                                // Close the progress chart.
+
+                                assessmentProgressPanel.hidden = true;
+
+                                showProgressButton.textContent =
+                                    "View Progress Chart";
+
+                                // Identify the original assessment.
+
+                                const getBaselineId = (record) => {
+
+                                    if (
+                                        record.assessmentType !==
+                                        "Reassessment"
+                                    ) {
+                                        return record.id;
+                                    }
+
+                                    if (record.baselineAssessmentId) {
+                                        return record.baselineAssessmentId;
+                                    }
+
+                                    let current = record;
+
+                                    const visited = new Set();
+
+                                    while (
+                                        current?.parentAssessmentId &&
+                                        !visited.has(current.id)
+                                    ) {
+                                        visited.add(current.id);
+
+                                        const parent =
+                                            assessments.find(
+                                                (item) =>
+                                                    item.id ===
+                                                    current.parentAssessmentId
+                                            );
+
+                                        if (!parent) {
+                                            break;
+                                        }
+
+                                        current = parent;
+                                    }
+
+                                    return current.id;
+                                };
+
+                                const baselineId =
+                                    getBaselineId(assessment);
+
+                                // Collect only records belonging
+                                // to this assessment history.
+
+                                const history =
+                                    assessments.filter(
+                                        (record) =>
+                                            getBaselineId(record) ===
+                                            baselineId &&
+                                            record.templateId ===
+                                            assessment.templateId
+                                    );
+
+                                history.sort(
+                                    (a, b) =>
+                                        Date.parse(a.createdAt || "") -
+                                        Date.parse(b.createdAt || "")
+                                );
+
+                                const baseline =
+                                    history.find(
+                                        (record) =>
+                                            record.id === baselineId
+                                    );
+
+                                // Create report screen.
+
+                                assessmentsList.innerHTML = "";
+
+                                const report =
+                                    document.createElement("div");
+
+                                report.className =
+                                    "client-assessment-form assessment-report";
+
+                                const addText =
+                                    (tag, content, className = "") => {
+
+                                        const element =
+                                            document.createElement(tag);
+
+                                        element.textContent = content;
+
+                                        if (className) {
+                                            element.className = className;
+                                        }
+
+                                        report.appendChild(element);
+
+                                        return element;
+                                    };
+
+                                addText(
+                                    "h2",
+                                    "Complete Assessment Progress Report"
+                                );
+
+                                addText(
+                                    "p",
+                                    "BusyBodyz Energy & Performance Solutions",
+                                    "assessment-template-meta"
+                                );
+
+                                addText(
+                                    "h3",
+                                    `${client.firstName || ""} ${client.lastName || ""}`.trim()
+                                );
+
+                                addText(
+                                    "h3",
+                                    assessment.templateName ||
+                                    "Assessment"
+                                );
+
+                                addText(
+                                    "p",
+                                    `${history.length} assessment records`,
+                                    "assessment-template-meta"
+                                );
+
+                                // Display assessment history dates.
+
+                                history.forEach(
+                                    (record, index) => {
+
+                                        const label =
+                                            index === 0
+                                                ? "Initial Assessment"
+                                                : `Reassessment #${index}`;
+
+                                        const date =
+                                            record.createdAt
+                                                ? new Date(
+                                                    record.createdAt
+                                                ).toLocaleString()
+                                                : "Date unavailable";
+
+                                        addText(
+                                            "p",
+                                            `${label} — ${date}`,
+                                            "assessment-template-meta"
+                                        );
+                                    }
+                                );
+
+                                addText(
+                                    "h3",
+                                    "Complete Assessment Results"
+                                );
+
+                                // Create a scrollable table.
+
+                                const tableContainer =
+                                    document.createElement("div");
+
+                                tableContainer.style.overflowX =
+                                    "auto";
+
+                                tableContainer.style.width =
+                                    "100%";
+
+                                const table =
+                                    document.createElement("table");
+
+                                table.className =
+                                    "assessment-progress-results-table";
+
+                                table.style.minWidth =
+                                    `${Math.max(650, history.length * 145 + 220)}px`;
+
+                                const thead =
+                                    document.createElement("thead");
+
+                                const headingRow =
+                                    document.createElement("tr");
+
+                                const addCell =
+                                    (row, tag, value) => {
+
+                                        const cell =
+                                            document.createElement(tag);
+
+                                        cell.textContent =
+                                            String(value ?? "");
+
+                                        row.appendChild(cell);
+
+                                        return cell;
+                                    };
+
+                                addCell(
+                                    headingRow,
+                                    "th",
+                                    "Assessment Question"
+                                );
+
+                                history.forEach(
+                                    (record, index) => {
+
+                                        const heading =
+                                            index === 0
+                                                ? "Initial"
+                                                : `Reassessment #${index}`;
+
+                                        addCell(
+                                            headingRow,
+                                            "th",
+                                            heading
+                                        );
+                                    }
+                                );
+
+                                thead.appendChild(
+                                    headingRow
+                                );
+
+                                table.appendChild(
+                                    thead
+                                );
+
+                                // Use the baseline questions as
+                                // the reference for comparison.
+
+                                const baselineQuestions =
+                                    Array.isArray(baseline?.questions)
+                                        ? baseline.questions
+                                        : [];
+
+                                const tbody =
+                                    document.createElement("tbody");
+
+                                baselineQuestions.forEach(
+                                    (question, index) => {
+
+                                        const row =
+                                            document.createElement("tr");
+
+                                        addCell(
+                                            row,
+                                            "td",
+                                            `${index + 1}. ${question.text || "Question"}`
+                                        );
+
+                                        history.forEach(
+                                            (record) => {
+
+                                                const questions =
+                                                    Array.isArray(record.questions)
+                                                        ? record.questions
+                                                        : [];
+
+                                                const matchingQuestion =
+                                                    questions.find(
+                                                        (item) =>
+                                                            item.id ===
+                                                            question.id
+                                                    ) ||
+                                                    questions[index] ||
+                                                    null;
+
+                                                const response =
+                                                    String(
+                                                        matchingQuestion?.response ??
+                                                        ""
+                                                    ).trim();
+
+                                                addCell(
+                                                    row,
+                                                    "td",
+                                                    response || "—"
+                                                );
+                                            }
+                                        );
+
+                                        tbody.appendChild(
+                                            row
+                                        );
+                                    }
+                                );
+
+                                table.appendChild(
+                                    tbody
+                                );
+
+                                tableContainer.appendChild(
+                                    table
+                                );
+
+                                report.appendChild(
+                                    tableContainer
+                                );
+
+                                // Return to assessment history.
+
+                                const backButton =
+                                    document.createElement("button");
+
+                                backButton.type = "button";
+
+                                backButton.className =
+                                    "secondary-btn";
+
+                                backButton.textContent =
+                                    "← Back to Assessments";
+
+                                backButton.style.marginTop =
+                                    "24px";
+
+                                backButton.addEventListener(
+                                    "click",
+                                    () => {
+
+                                        const workspace =
+                                            document.getElementById(
+                                                "workspace"
+                                            );
+
+                                        workspace.innerHTML =
+                                            getClientAssessmentsPage(
+                                                client
+                                            );
+
+                                        initializeClientAssessmentsPage(
+                                            client
+                                        );
+                                    }
+                                );
+
+                                report.appendChild(
+                                    backButton
+                                );
+
+                                assessmentsList.appendChild(
+                                    report
+                                );
+
+                                report.scrollIntoView({
+                                    block: "start"
+                                });
+                            }
+                        );
+
+                        // Add the new button to the assessment card.
+
+                        actions.appendChild(
+                            completeReportButton
                         );
                         const reassessButton =
                             document.createElement(

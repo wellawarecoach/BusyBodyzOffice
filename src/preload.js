@@ -78,5 +78,10 @@ contextBridge.exposeInMainWorld("busyBodyz", {
         ipcRenderer.invoke(
             "save-client-assessment",
             payload
-        )
+        ),
+    linkClientAssessments: (payload) =>
+        ipcRenderer.invoke(
+            "link-client-assessments",
+            payload
+        ),
 });
