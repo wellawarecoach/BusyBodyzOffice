@@ -84,4 +84,9 @@ contextBridge.exposeInMainWorld("busyBodyz", {
             "link-client-assessments",
             payload
         ),
+    exportAssessmentReportPdf: (payload) =>
+        ipcRenderer.invoke(
+            "export-assessment-report-pdf",
+            payload
+        ),
 });

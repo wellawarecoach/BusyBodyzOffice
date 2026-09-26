@@ -4672,7 +4672,631 @@ Date: ${result.date.toLocaleString()}`;
                                 report.appendChild(
                                     tableContainer
                                 );
+                                // Batch 16C.2 — Numeric progress from baseline.
 
+                                const numericBaselineQuestions =
+                                    baselineQuestions.filter(
+                                        (question) =>
+                                            question.responseType ===
+                                            "number"
+                                    );
+
+                                if (numericBaselineQuestions.length > 0) {
+
+                                    addText(
+                                        "h3",
+                                        "Numeric Change From Baseline"
+                                    );
+
+                                    const changeTableContainer =
+                                        document.createElement("div");
+
+                                    changeTableContainer.style.overflowX =
+                                        "auto";
+
+                                    changeTableContainer.style.width =
+                                        "100%";
+
+                                    const changeTable =
+                                        document.createElement("table");
+
+                                    changeTable.className =
+                                        "assessment-progress-results-table";
+
+                                    changeTable.style.minWidth =
+                                        `${Math.max(
+                                            650,
+                                            history.length * 165 + 220
+                                        )}px`;
+
+                                    const changeTableHead =
+                                        document.createElement("thead");
+
+                                    const changeHeadingRow =
+                                        document.createElement("tr");
+
+                                    addCell(
+                                        changeHeadingRow,
+                                        "th",
+                                        "Numeric Test"
+                                    );
+
+                                    history.forEach(
+                                        (record, index) => {
+
+                                            const heading =
+                                                index === 0
+                                                    ? "Initial"
+                                                    : `Reassessment #${index}`;
+
+                                            addCell(
+                                                changeHeadingRow,
+                                                "th",
+                                                heading
+                                            );
+                                        }
+                                    );
+
+                                    changeTableHead.appendChild(
+                                        changeHeadingRow
+                                    );
+
+                                    changeTable.appendChild(
+                                        changeTableHead
+                                    );
+
+                                    const changeTableBody =
+                                        document.createElement("tbody");
+
+                                    const calculateChangeFromBaseline =
+                                        (
+                                            baselineQuestion,
+                                            comparisonQuestion
+                                        ) => {
+
+                                            if (
+                                                !baselineQuestion ||
+                                                !comparisonQuestion
+                                            ) {
+                                                return "—";
+                                            }
+
+                                            const baselineText =
+                                                String(
+                                                    baselineQuestion.response ??
+                                                    ""
+                                                ).trim();
+
+                                            const comparisonText =
+                                                String(
+                                                    comparisonQuestion.response ??
+                                                    ""
+                                                ).trim();
+
+                                            if (
+                                                baselineText === "" ||
+                                                comparisonText === ""
+                                            ) {
+                                                return "—";
+                                            }
+
+                                            const baselineValue =
+                                                Number(baselineText);
+
+                                            const comparisonValue =
+                                                Number(comparisonText);
+
+                                            if (
+                                                !Number.isFinite(
+                                                    baselineValue
+                                                ) ||
+                                                !Number.isFinite(
+                                                    comparisonValue
+                                                )
+                                            ) {
+                                                return "—";
+                                            }
+
+                                            const rawChange =
+                                                comparisonValue -
+                                                baselineValue;
+
+                                            const rawChangeText =
+                                                rawChange > 0
+                                                    ? `+${rawChange}`
+                                                    : String(rawChange);
+
+                                            if (baselineValue === 0) {
+                                                return rawChangeText;
+                                            }
+
+                                            const percentChange =
+                                                (
+                                                    rawChange /
+                                                    baselineValue *
+                                                    100
+                                                ).toFixed(1);
+
+                                            const percentText =
+                                                Number(percentChange) > 0
+                                                    ? `+${percentChange}%`
+                                                    : `${percentChange}%`;
+
+                                            return `${rawChangeText} (${percentText})`;
+                                        };
+
+                                    numericBaselineQuestions.forEach(
+                                        (baselineQuestion) => {
+
+                                            const row =
+                                                document.createElement("tr");
+
+                                            addCell(
+                                                row,
+                                                "td",
+                                                baselineQuestion.text ||
+                                                "Numeric question"
+                                            );
+
+                                            history.forEach(
+                                                (record, historyIndex) => {
+
+                                                    if (historyIndex === 0) {
+
+                                                        addCell(
+                                                            row,
+                                                            "td",
+                                                            "—"
+                                                        );
+
+                                                        return;
+                                                    }
+
+                                                    const questions =
+                                                        Array.isArray(
+                                                            record.questions
+                                                        )
+                                                            ? record.questions
+                                                            : [];
+
+                                                    const baselineIndex =
+                                                        baselineQuestions.findIndex(
+                                                            (question) =>
+                                                                question.id ===
+                                                                baselineQuestion.id
+                                                        );
+
+                                                    const comparisonQuestion =
+                                                        questions.find(
+                                                            (question) =>
+                                                                question.id ===
+                                                                baselineQuestion.id
+                                                        ) ||
+                                                        questions[
+                                                        baselineIndex
+                                                        ] ||
+                                                        null;
+
+                                                    addCell(
+                                                        row,
+                                                        "td",
+                                                        calculateChangeFromBaseline(
+                                                            baselineQuestion,
+                                                            comparisonQuestion
+                                                        )
+                                                    );
+                                                }
+                                            );
+
+                                            changeTableBody.appendChild(
+                                                row
+                                            );
+                                        }
+                                    );
+
+                                    changeTable.appendChild(
+                                        changeTableBody
+                                    );
+
+                                    changeTableContainer.appendChild(
+                                        changeTable
+                                    );
+
+                                    report.appendChild(
+                                        changeTableContainer
+                                    );
+                                }
+                                // Batch 16C.3 — Numeric change from previous assessment.
+
+                                if (
+                                    numericBaselineQuestions.length > 0 &&
+                                    history.length > 1
+                                ) {
+
+                                    addText(
+                                        "h3",
+                                        "Numeric Change From Previous Assessment"
+                                    );
+
+                                    const previousChangeContainer =
+                                        document.createElement("div");
+
+                                    previousChangeContainer.style.overflowX =
+                                        "auto";
+
+                                    previousChangeContainer.style.width =
+                                        "100%";
+
+                                    const previousChangeTable =
+                                        document.createElement("table");
+
+                                    previousChangeTable.className =
+                                        "assessment-progress-results-table";
+
+                                    previousChangeTable.style.minWidth =
+                                        `${Math.max(
+                                            650,
+                                            history.length * 165 + 220
+                                        )}px`;
+
+                                    const previousChangeHead =
+                                        document.createElement("thead");
+
+                                    const previousChangeHeadingRow =
+                                        document.createElement("tr");
+
+                                    addCell(
+                                        previousChangeHeadingRow,
+                                        "th",
+                                        "Numeric Test"
+                                    );
+
+                                    history.forEach(
+                                        (record, index) => {
+
+                                            const heading =
+                                                index === 0
+                                                    ? "Initial"
+                                                    : `Reassessment #${index}`;
+
+                                            addCell(
+                                                previousChangeHeadingRow,
+                                                "th",
+                                                heading
+                                            );
+                                        }
+                                    );
+
+                                    previousChangeHead.appendChild(
+                                        previousChangeHeadingRow
+                                    );
+
+                                    previousChangeTable.appendChild(
+                                        previousChangeHead
+                                    );
+
+                                    const previousChangeBody =
+                                        document.createElement("tbody");
+
+                                    const calculatePreviousChange =
+                                        (
+                                            previousQuestion,
+                                            currentQuestion
+                                        ) => {
+
+                                            if (
+                                                !previousQuestion ||
+                                                !currentQuestion
+                                            ) {
+                                                return "—";
+                                            }
+
+                                            const previousText =
+                                                String(
+                                                    previousQuestion.response ??
+                                                    ""
+                                                ).trim();
+
+                                            const currentText =
+                                                String(
+                                                    currentQuestion.response ??
+                                                    ""
+                                                ).trim();
+
+                                            if (
+                                                previousText === "" ||
+                                                currentText === ""
+                                            ) {
+                                                return "—";
+                                            }
+
+                                            const previousValue =
+                                                Number(previousText);
+
+                                            const currentValue =
+                                                Number(currentText);
+
+                                            if (
+                                                !Number.isFinite(
+                                                    previousValue
+                                                ) ||
+                                                !Number.isFinite(
+                                                    currentValue
+                                                )
+                                            ) {
+                                                return "—";
+                                            }
+
+                                            const rawChange =
+                                                currentValue -
+                                                previousValue;
+
+                                            const rawText =
+                                                rawChange > 0
+                                                    ? `+${rawChange}`
+                                                    : String(rawChange);
+
+                                            if (previousValue === 0) {
+                                                return rawText;
+                                            }
+
+                                            const percentChange =
+                                                (
+                                                    rawChange /
+                                                    previousValue *
+                                                    100
+                                                ).toFixed(1);
+
+                                            const percentText =
+                                                Number(percentChange) > 0
+                                                    ? `+${percentChange}%`
+                                                    : `${percentChange}%`;
+
+                                            return `${rawText} (${percentText})`;
+                                        };
+
+                                    numericBaselineQuestions.forEach(
+                                        (baselineQuestion) => {
+
+                                            const row =
+                                                document.createElement("tr");
+
+                                            addCell(
+                                                row,
+                                                "td",
+                                                baselineQuestion.text ||
+                                                "Numeric question"
+                                            );
+
+                                            history.forEach(
+                                                (record, historyIndex) => {
+
+                                                    if (historyIndex === 0) {
+
+                                                        addCell(
+                                                            row,
+                                                            "td",
+                                                            "—"
+                                                        );
+
+                                                        return;
+                                                    }
+
+                                                    const previousRecord =
+                                                        history[
+                                                        historyIndex - 1
+                                                        ];
+
+                                                    const currentQuestions =
+                                                        Array.isArray(
+                                                            record.questions
+                                                        )
+                                                            ? record.questions
+                                                            : [];
+
+                                                    const previousQuestions =
+                                                        Array.isArray(
+                                                            previousRecord.questions
+                                                        )
+                                                            ? previousRecord.questions
+                                                            : [];
+
+                                                    const baselineIndex =
+                                                        baselineQuestions.findIndex(
+                                                            (question) =>
+                                                                question.id ===
+                                                                baselineQuestion.id
+                                                        );
+
+                                                    const currentQuestion =
+                                                        currentQuestions.find(
+                                                            (question) =>
+                                                                question.id ===
+                                                                baselineQuestion.id
+                                                        ) ||
+                                                        currentQuestions[
+                                                        baselineIndex
+                                                        ] ||
+                                                        null;
+
+                                                    const previousQuestion =
+                                                        previousQuestions.find(
+                                                            (question) =>
+                                                                question.id ===
+                                                                baselineQuestion.id
+                                                        ) ||
+                                                        previousQuestions[
+                                                        baselineIndex
+                                                        ] ||
+                                                        null;
+
+                                                    addCell(
+                                                        row,
+                                                        "td",
+                                                        calculatePreviousChange(
+                                                            previousQuestion,
+                                                            currentQuestion
+                                                        )
+                                                    );
+                                                }
+                                            );
+
+                                            previousChangeBody.appendChild(
+                                                row
+                                            );
+                                        }
+                                    );
+
+                                    previousChangeTable.appendChild(
+                                        previousChangeBody
+                                    );
+
+                                    previousChangeContainer.appendChild(
+                                        previousChangeTable
+                                    );
+
+                                    report.appendChild(
+                                        previousChangeContainer
+                                    );
+                                }
+                                // Batch 16D.1 — Print complete assessment report.
+
+                                const printButton =
+                                    document.createElement("button");
+
+                                printButton.type =
+                                    "button";
+
+                                printButton.className =
+                                    "primary-btn";
+
+                                printButton.textContent =
+                                    "Print Report";
+
+                                printButton.style.marginTop =
+                                    "24px";
+
+                                printButton.style.marginRight =
+                                    "12px";
+
+                                printButton.addEventListener(
+                                    "click",
+                                    () => {
+                                        window.print();
+                                    }
+                                );
+
+                                report.appendChild(
+                                    printButton
+                                );
+                                // Batch 16D.2 — Direct PDF export.
+
+                                const exportPdfButton =
+                                    document.createElement("button");
+
+                                exportPdfButton.type =
+                                    "button";
+
+                                exportPdfButton.className =
+                                    "secondary-btn";
+
+                                exportPdfButton.textContent =
+                                    "Export PDF";
+
+                                exportPdfButton.style.marginTop =
+                                    "24px";
+
+                                exportPdfButton.style.marginRight =
+                                    "12px";
+
+                                exportPdfButton.addEventListener(
+                                    "click",
+                                    async () => {
+
+                                        const clientName =
+                                            `${client.firstName || ""} ${client.lastName || ""}`
+                                                .trim();
+
+                                        const assessmentName =
+                                            assessment.templateName ||
+                                            "Assessment";
+
+                                        const fileName =
+                                            `${clientName} - ${assessmentName} - Progress Report.pdf`;
+
+                                        exportPdfButton.disabled =
+                                            true;
+
+                                        exportPdfButton.textContent =
+                                            "Exporting...";
+
+                                        try {
+
+                                            const result =
+                                                await window.busyBodyz
+                                                    .exportAssessmentReportPdf({
+                                                        fileName
+                                                    });
+
+                                            if (result?.canceled) {
+
+                                                exportPdfButton.disabled =
+                                                    false;
+
+                                                exportPdfButton.textContent =
+                                                    "Export PDF";
+
+                                                return;
+                                            }
+
+                                            if (
+                                                !result ||
+                                                !result.success
+                                            ) {
+
+                                                alert(
+                                                    result?.error ||
+                                                    "Unable to export the PDF."
+                                                );
+
+                                                exportPdfButton.disabled =
+                                                    false;
+
+                                                exportPdfButton.textContent =
+                                                    "Export PDF";
+
+                                                return;
+                                            }
+
+                                            alert(
+                                                `PDF saved successfully:\n\n${result.filePath}`
+                                            );
+
+                                        } catch (error) {
+
+                                            console.error(
+                                                "Unable to export PDF:",
+                                                error
+                                            );
+
+                                            alert(
+                                                "An unexpected error occurred while exporting the PDF."
+                                            );
+
+                                        } finally {
+
+                                            exportPdfButton.disabled =
+                                                false;
+
+                                            exportPdfButton.textContent =
+                                                "Export PDF";
+                                        }
+                                    }
+                                );
+
+                                report.appendChild(
+                                    exportPdfButton
+                                );
                                 // Return to assessment history.
 
                                 const backButton =

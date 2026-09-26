@@ -1777,6 +1777,114 @@ ipcMain.handle(
         }
     }
 );
+// Batch 16D.2 — Export assessment report as PDF.
+
+ipcMain.handle(
+    "export-assessment-report-pdf",
+    async (event, payload = {}) => {
+
+        try {
+            const window =
+                BrowserWindow.fromWebContents(
+                    event.sender
+                );
+
+            if (!window) {
+                return {
+                    success: false,
+                    error:
+                        "Unable to identify the application window."
+                };
+            }
+
+            const requestedName =
+                String(
+                    payload.fileName ||
+                    "BusyBodyz-Assessment-Report.pdf"
+                ).trim();
+
+            const safeFileName =
+                requestedName
+                    .replace(
+                        /[<>:"/\\|?*]/g,
+                        "-"
+                    )
+                    .replace(
+                        /\s+/g,
+                        " "
+                    );
+
+            const finalFileName =
+                safeFileName
+                    .toLowerCase()
+                    .endsWith(".pdf")
+                    ? safeFileName
+                    : `${safeFileName}.pdf`;
+
+            const saveResult =
+                await dialog.showSaveDialog(
+                    window,
+                    {
+                        title:
+                            "Save Assessment Report",
+                        defaultPath:
+                            finalFileName,
+                        filters: [
+                            {
+                                name:
+                                    "PDF Documents",
+                                extensions: [
+                                    "pdf"
+                                ]
+                            }
+                        ]
+                    }
+                );
+
+            if (
+                saveResult.canceled ||
+                !saveResult.filePath
+            ) {
+                return {
+                    success: false,
+                    canceled: true
+                };
+            }
+
+            const pdfData =
+                await window.webContents
+                    .printToPDF({
+                        printBackground: true,
+                        landscape: true,
+                        pageSize: "A4"
+                    });
+
+            fs.writeFileSync(
+                saveResult.filePath,
+                pdfData
+            );
+
+            return {
+                success: true,
+                filePath:
+                    saveResult.filePath
+            };
+
+        } catch (error) {
+            console.error(
+                "Unable to export assessment report PDF:",
+                error
+            );
+
+            return {
+                success: false,
+                error:
+                    error.message ||
+                    "Unable to export the assessment report."
+            };
+        }
+    }
+);
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {

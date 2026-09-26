@@ -651,3 +651,58 @@ body {
 .assessment-progress-results-table tbody tr:hover {
     background: #f8fafc;
 }
+
+/* Batch 16D.1 — Print assessment reports */
+
+@media print {
+    body {
+        background: #ffffff;
+    }
+
+    .sidebar,
+    .topbar,
+    .client-assessments-actions,
+    button {
+        display: none !important;
+    }
+
+    #workspace {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .assessment-report {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        max-width: none;
+    }
+
+    .assessment-report h2,
+    .assessment-report h3,
+    .assessment-report h4 {
+        break-after: avoid;
+    }
+
+    .assessment-progress-results-table {
+        width: 100%;
+        font-size: 11px;
+    }
+
+    .assessment-progress-results-table th,
+    .assessment-progress-results-table td {
+        padding: 6px 8px;
+    }
+
+    .assessment-progress-results-table tr {
+        break-inside: avoid;
+    }
+
+    .assessment-report>div {
+        overflow: visible !important;
+    }
+}
