@@ -5235,7 +5235,8 @@ Date: ${result.date.toLocaleString()}`;
                                             const result =
                                                 await window.busyBodyz
                                                     .exportAssessmentReportPdf({
-                                                        fileName
+                                                        fileName,
+                                                        reportHtml: report.outerHTML
                                                     });
 
                                             if (result?.canceled) {

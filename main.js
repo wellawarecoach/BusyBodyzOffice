@@ -1777,69 +1777,65 @@ ipcMain.handle(
         }
     }
 );
-// Batch 16D.2 — Export assessment report as PDF.
+// Batch 16D.3B — Export isolated assessment report as PDF.
 
 ipcMain.handle(
     "export-assessment-report-pdf",
     async (event, payload = {}) => {
+        let reportWindow = null;
 
         try {
-            const window =
-                BrowserWindow.fromWebContents(
-                    event.sender
-                );
+            const parentWindow =
+                BrowserWindow.fromWebContents(event.sender);
 
-            if (!window) {
+            if (!parentWindow) {
                 return {
                     success: false,
-                    error:
-                        "Unable to identify the application window."
+                    error: "Unable to identify the application window."
                 };
             }
 
-            const requestedName =
-                String(
-                    payload.fileName ||
-                    "BusyBodyz-Assessment-Report.pdf"
-                ).trim();
+            const reportHtml = String(
+                payload.reportHtml || ""
+            ).trim();
 
-            const safeFileName =
-                requestedName
-                    .replace(
-                        /[<>:"/\\|?*]/g,
-                        "-"
-                    )
-                    .replace(
-                        /\s+/g,
-                        " "
-                    );
+            if (
+                !reportHtml ||
+                !reportHtml.includes("assessment-report")
+            ) {
+                return {
+                    success: false,
+                    error: "Assessment report content was not provided."
+                };
+            }
+
+            const requestedName = String(
+                payload.fileName ||
+                "BusyBodyz-Assessment-Report.pdf"
+            ).trim();
+
+            const safeFileName = requestedName
+                .replace(/[<>:"/\\|?*\x00-\x1F]/g, "-")
+                .replace(/\s+/g, " ");
 
             const finalFileName =
-                safeFileName
-                    .toLowerCase()
-                    .endsWith(".pdf")
+                safeFileName.toLowerCase().endsWith(".pdf")
                     ? safeFileName
                     : `${safeFileName}.pdf`;
 
-            const saveResult =
-                await dialog.showSaveDialog(
-                    window,
-                    {
-                        title:
-                            "Save Assessment Report",
-                        defaultPath:
-                            finalFileName,
-                        filters: [
-                            {
-                                name:
-                                    "PDF Documents",
-                                extensions: [
-                                    "pdf"
-                                ]
-                            }
-                        ]
-                    }
-                );
+            const saveResult = await dialog.showSaveDialog(
+                parentWindow,
+                {
+                    title: "Save Assessment Report",
+                    defaultPath: finalFileName,
+                    filters: [
+                        {
+                            name: "PDF Documents",
+                            extensions: ["pdf"]
+                        }
+                    ]
+                }
+            );
 
             if (
                 saveResult.canceled ||
@@ -1851,13 +1847,149 @@ ipcMain.handle(
                 };
             }
 
+            reportWindow = new BrowserWindow({
+                width: 1200,
+                height: 900,
+                show: false,
+                webPreferences: {
+                    nodeIntegration: false,
+                    contextIsolation: true,
+                    sandbox: true
+                }
+            });
+
+            const documentHtml = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta
+                        http-equiv="Content-Security-Policy"
+                        content="default-src 'none'; style-src 'unsafe-inline';"
+                    >
+                    <title>BusyBodyz Assessment Report</title>
+                    <style>
+    @page {
+        size: A4 landscape;
+        margin: 12mm;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+        line-height: 1.45;
+        color: #222;
+        background: white;
+    }
+
+    .assessment-report {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .assessment-report h1,
+    .assessment-report h2 {
+        font-size: 20px;
+        line-height: 1.3;
+        margin: 0 0 12px;
+    }
+
+    .assessment-report h3 {
+        font-size: 16px;
+        margin: 18px 0 10px;
+    }
+
+    .assessment-report h4 {
+        font-size: 14px;
+        margin: 14px 0 8px;
+    }
+
+    .assessment-report p {
+        margin: 5px 0;
+    }
+
+    button,
+    .assessment-report-actions,
+    .assessment-report-buttons,
+    .form-actions,
+    .button-row {
+        display: none !important;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0 22px;
+        font-size: 12px;
+        line-height: 1.35;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    thead {
+        display: table-header-group;
+    }
+
+    th, td {
+        border: 1px solid #aaa;
+        padding: 7px 8px;
+        text-align: left;
+        vertical-align: top;
+        overflow-wrap: anywhere;
+    }
+
+    th {
+        background: #eee;
+        font-weight: 700;
+    }
+
+    tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    h1, h2, h3, h4 {
+        break-after: avoid;
+        page-break-after: avoid;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+</style>
+                </head>
+                <body>
+                    ${reportHtml}
+                </body>
+                </html>
+            `;
+
+            await reportWindow.loadURL(
+                "data:text/html;charset=utf-8," +
+                encodeURIComponent(documentHtml)
+            );
+
             const pdfData =
-                await window.webContents
-                    .printToPDF({
-                        printBackground: true,
-                        landscape: true,
-                        pageSize: "A4"
-                    });
+                await reportWindow.webContents.printToPDF({
+                    printBackground: true,
+                    landscape: true,
+                    pageSize: "A4",
+                    margins: {
+                        marginType: "custom",
+                        top: 0.47,
+                        bottom: 0.47,
+                        left: 0.47,
+                        right: 0.47
+                    }
+                });
 
             fs.writeFileSync(
                 saveResult.filePath,
@@ -1866,8 +1998,7 @@ ipcMain.handle(
 
             return {
                 success: true,
-                filePath:
-                    saveResult.filePath
+                filePath: saveResult.filePath
             };
 
         } catch (error) {
@@ -1882,6 +2013,14 @@ ipcMain.handle(
                     error.message ||
                     "Unable to export the assessment report."
             };
+
+        } finally {
+            if (
+                reportWindow &&
+                !reportWindow.isDestroyed()
+            ) {
+                reportWindow.close();
+            }
         }
     }
 );
