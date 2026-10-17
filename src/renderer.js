@@ -943,6 +943,70 @@ function initializeClientProfilePage(client) {
                 assessmentProgressPanel
             );
         }
+        // Batch 17A — Open client assessment folder.
+
+        if (assessmentsList) {
+
+            const openAssessmentFolderButton =
+                document.createElement("button");
+
+            openAssessmentFolderButton.type =
+                "button";
+
+            openAssessmentFolderButton.className =
+                "secondary-btn";
+
+            openAssessmentFolderButton.textContent =
+                "Open Assessment Folder";
+
+            openAssessmentFolderButton.addEventListener(
+                "click",
+                async () => {
+
+                    const clientName = [
+                        client.firstName,
+                        client.lastName
+                    ]
+                        .filter(Boolean)
+                        .join(" ")
+                        .trim();
+
+                    if (!clientName) {
+                        alert("Client name is unavailable.");
+                        return;
+                    }
+
+                    try {
+                        const result =
+                            await window.busyBodyz
+                                .openClientAssessmentFolder(
+                                    clientName
+                                );
+
+                        if (!result?.success) {
+                            alert(
+                                result?.error ||
+                                "Unable to open assessment folder."
+                            );
+                        }
+
+                    } catch (error) {
+                        console.error(
+                            "Unable to open assessment folder:",
+                            error
+                        );
+
+                        alert(
+                            "Unable to open assessment folder."
+                        );
+                    }
+                }
+            );
+
+            assessmentsList.before(
+                openAssessmentFolderButton
+            );
+        }
         // Batch 15H.3A — Link existing assessments interface.
 
         if (assessmentsList) {
@@ -5235,10 +5299,10 @@ Date: ${result.date.toLocaleString()}`;
                                             const result =
                                                 await window.busyBodyz
                                                     .exportAssessmentReportPdf({
+                                                        clientName,
                                                         fileName,
                                                         reportHtml: report.outerHTML
                                                     });
-
                                             if (result?.canceled) {
 
                                                 exportPdfButton.disabled =

@@ -2,7 +2,8 @@ const {
     app,
     BrowserWindow,
     ipcMain,
-    dialog
+    dialog,
+    shell
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -1777,6 +1778,84 @@ ipcMain.handle(
         }
     }
 );
+// Batch 17A — Open a client's assessment folder.
+
+ipcMain.handle(
+    "open-client-assessment-folder",
+    async (event, clientName) => {
+        try {
+            const cleanClientName = String(
+                clientName || ""
+            )
+                .trim()
+                .replace(/[<>:"/\\|?*\x00-\x1F]/g, "");
+
+            if (
+                !cleanClientName ||
+                cleanClientName === "." ||
+                cleanClientName === ".."
+            ) {
+                return {
+                    success: false,
+                    error: "A valid client name is required."
+                };
+            }
+
+            const settings = readSettings();
+            const invoiceFolder = settings.invoiceFolder;
+
+            if (!invoiceFolder) {
+                return {
+                    success: false,
+                    error: "Choose a client invoice folder first."
+                };
+            }
+
+            const clientFolder = path.join(
+                invoiceFolder,
+                cleanClientName
+            );
+
+            const assessmentFolder = path.join(
+                clientFolder,
+                "Assessments"
+            );
+
+            fs.mkdirSync(assessmentFolder, {
+                recursive: true
+            });
+
+            const openError = await shell.openPath(
+                assessmentFolder
+            );
+
+            if (openError) {
+                return {
+                    success: false,
+                    error: openError
+                };
+            }
+
+            return {
+                success: true,
+                folderPath: assessmentFolder
+            };
+
+        } catch (error) {
+            console.error(
+                "Unable to open client assessment folder:",
+                error
+            );
+
+            return {
+                success: false,
+                error:
+                    error.message ||
+                    "Unable to open the assessment folder."
+            };
+        }
+    }
+);
 // Batch 16D.3B — Export isolated assessment report as PDF.
 
 ipcMain.handle(
@@ -1822,12 +1901,50 @@ ipcMain.handle(
                 safeFileName.toLowerCase().endsWith(".pdf")
                     ? safeFileName
                     : `${safeFileName}.pdf`;
+            // Batch 17B — Default PDF location.
 
+            let defaultSavePath = finalFileName;
+
+            const clientName = String(
+                payload.clientName || ""
+            ).trim();
+
+            const cleanClientName = clientName
+                .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+                .replace(/[. ]+$/g, "");
+
+            if (
+                cleanClientName &&
+                cleanClientName !== "." &&
+                cleanClientName !== ".."
+            ) {
+                const settings = readSettings();
+
+                const invoiceFolder =
+                    settings.invoiceFolder;
+
+                if (invoiceFolder) {
+                    const assessmentFolder = path.join(
+                        invoiceFolder,
+                        cleanClientName,
+                        "Assessments"
+                    );
+
+                    fs.mkdirSync(assessmentFolder, {
+                        recursive: true
+                    });
+
+                    defaultSavePath = path.join(
+                        assessmentFolder,
+                        finalFileName
+                    );
+                }
+            }
             const saveResult = await dialog.showSaveDialog(
                 parentWindow,
                 {
                     title: "Save Assessment Report",
-                    defaultPath: finalFileName,
+                    defaultPath: defaultSavePath,
                     filters: [
                         {
                             name: "PDF Documents",
