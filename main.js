@@ -1856,6 +1856,202 @@ ipcMain.handle(
         }
     }
 );
+// Batch 17C.1 — Retrieve saved client assessment PDFs.
+
+ipcMain.handle(
+    "get-client-assessment-reports",
+    async (event, clientName) => {
+        try {
+            const cleanClientName = String(
+                clientName || ""
+            )
+                .trim()
+                .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+                .replace(/[. ]+$/g, "");
+
+            if (
+                !cleanClientName ||
+                cleanClientName === "." ||
+                cleanClientName === ".."
+            ) {
+                return {
+                    success: false,
+                    error: "A valid client name is required."
+                };
+            }
+
+            const settings = readSettings();
+            const invoiceFolder = settings.invoiceFolder;
+
+            if (!invoiceFolder) {
+                return {
+                    success: false,
+                    error: "Choose a client invoice folder first."
+                };
+            }
+
+            const assessmentFolder = path.join(
+                invoiceFolder,
+                cleanClientName,
+                "Assessments"
+            );
+
+            if (!fs.existsSync(assessmentFolder)) {
+                return {
+                    success: true,
+                    reports: []
+                };
+            }
+
+            const reports = fs.readdirSync(
+                assessmentFolder,
+                { withFileTypes: true }
+            )
+                .filter(
+                    (entry) =>
+                        entry.isFile() &&
+                        entry.name.toLowerCase().endsWith(".pdf")
+                )
+                .map((entry) => {
+                    const filePath = path.join(
+                        assessmentFolder,
+                        entry.name
+                    );
+
+                    const stats = fs.statSync(filePath);
+
+                    return {
+                        fileName: entry.name,
+                        modifiedAt:
+                            stats.mtime.toISOString(),
+                        sizeBytes: stats.size
+                    };
+                })
+                .sort(
+                    (a, b) =>
+                        Date.parse(b.modifiedAt) -
+                        Date.parse(a.modifiedAt)
+                );
+
+            return {
+                success: true,
+                reports
+            };
+
+        } catch (error) {
+            console.error(
+                "Unable to retrieve assessment reports:",
+                error
+            );
+
+            return {
+                success: false,
+                error:
+                    error.message ||
+                    "Unable to retrieve assessment reports."
+            };
+        }
+    }
+);
+// Batch 17C.4 — Open a saved client assessment PDF.
+
+ipcMain.handle(
+    "open-client-assessment-report",
+    async (event, payload = {}) => {
+        try {
+            const cleanClientName = String(
+                payload.clientName || ""
+            )
+                .trim()
+                .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+                .replace(/[. ]+$/g, "");
+
+            const fileName = String(
+                payload.fileName || ""
+            );
+
+            if (
+                !cleanClientName ||
+                cleanClientName === "." ||
+                cleanClientName === ".."
+            ) {
+                return {
+                    success: false,
+                    error: "A valid client name is required."
+                };
+            }
+
+            if (
+                !fileName ||
+                fileName !== path.basename(fileName) ||
+                !fileName.toLowerCase().endsWith(".pdf")
+            ) {
+                return {
+                    success: false,
+                    error: "A valid PDF filename is required."
+                };
+            }
+
+            const settings = readSettings();
+
+            if (!settings.invoiceFolder) {
+                return {
+                    success: false,
+                    error: "Choose a client invoice folder first."
+                };
+            }
+
+            const assessmentFolder = path.join(
+                settings.invoiceFolder,
+                cleanClientName,
+                "Assessments"
+            );
+
+            const filePath = path.join(
+                assessmentFolder,
+                fileName
+            );
+
+            if (
+                !fs.existsSync(filePath) ||
+                !fs.statSync(filePath).isFile()
+            ) {
+                return {
+                    success: false,
+                    error: "The selected PDF could not be found."
+                };
+            }
+
+            const openError = await shell.openPath(
+                filePath
+            );
+
+            if (openError) {
+                return {
+                    success: false,
+                    error: openError
+                };
+            }
+
+            return {
+                success: true
+            };
+
+        } catch (error) {
+            console.error(
+                "Unable to open assessment PDF:",
+                error
+            );
+
+            return {
+                success: false,
+                error:
+                    error.message ||
+                    "Unable to open the selected PDF."
+            };
+        }
+    }
+);
 // Batch 16D.3B — Export isolated assessment report as PDF.
 
 ipcMain.handle(

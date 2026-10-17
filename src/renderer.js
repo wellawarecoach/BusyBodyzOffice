@@ -1007,6 +1007,220 @@ function initializeClientProfilePage(client) {
                 openAssessmentFolderButton
             );
         }
+        // Batch 17C — View saved assessment reports.
+
+        if (assessmentsList) {
+
+            const viewSavedReportsButton =
+                document.createElement("button");
+
+            viewSavedReportsButton.type = "button";
+            viewSavedReportsButton.className = "secondary-btn";
+            viewSavedReportsButton.textContent =
+                "View Saved Reports";
+
+            const savedReportsPanel =
+                document.createElement("div");
+
+            savedReportsPanel.className =
+                "assessment-progress-panel";
+
+            savedReportsPanel.hidden = true;
+
+            viewSavedReportsButton.addEventListener(
+                "click",
+                async () => {
+
+                    if (!savedReportsPanel.hidden) {
+                        savedReportsPanel.hidden = true;
+                        viewSavedReportsButton.textContent =
+                            "View Saved Reports";
+                        return;
+                    }
+
+                    const clientName = [
+                        client.firstName,
+                        client.lastName
+                    ]
+                        .filter(Boolean)
+                        .join(" ")
+                        .trim();
+
+                    savedReportsPanel.replaceChildren();
+
+                    const heading =
+                        document.createElement("h3");
+
+                    heading.textContent =
+                        "Saved Assessment Reports";
+
+                    savedReportsPanel.appendChild(heading);
+
+                    viewSavedReportsButton.disabled = true;
+                    viewSavedReportsButton.textContent =
+                        "Loading Reports...";
+
+                    try {
+
+                        const result =
+                            await window.busyBodyz
+                                .getClientAssessmentReports(
+                                    clientName
+                                );
+
+                        if (!result?.success) {
+                            throw new Error(
+                                result?.error ||
+                                "Unable to retrieve reports."
+                            );
+                        }
+
+                        const reports =
+                            Array.isArray(result.reports)
+                                ? result.reports
+                                : [];
+
+                        if (reports.length === 0) {
+
+                            const emptyMessage =
+                                document.createElement("p");
+
+                            emptyMessage.textContent =
+                                "No saved assessment PDFs found.";
+
+                            savedReportsPanel.appendChild(
+                                emptyMessage
+                            );
+
+                        } else {
+
+                            const list =
+                                document.createElement("ul");
+
+                            reports.forEach((report) => {
+
+                                const item =
+                                    document.createElement("li");
+
+                                const date =
+                                    new Date(
+                                        report.modifiedAt
+                                    ).toLocaleString();
+
+                                const sizeKB =
+                                    (
+                                        report.sizeBytes / 1024
+                                    ).toFixed(1);
+
+                                item.textContent =
+                                    `${report.fileName} — ${date} — ${sizeKB} KB`;
+
+                                // Batch 17C.6 — Open saved PDF.
+
+                                const openPdfButton =
+                                    document.createElement("button");
+
+                                openPdfButton.type =
+                                    "button";
+
+                                openPdfButton.className =
+                                    "secondary-btn";
+
+                                openPdfButton.textContent =
+                                    "Open PDF";
+
+                                openPdfButton.style.marginLeft =
+                                    "12px";
+
+                                openPdfButton.addEventListener(
+                                    "click",
+                                    async () => {
+
+                                        openPdfButton.disabled = true;
+
+                                        try {
+
+                                            const result =
+                                                await window.busyBodyz
+                                                    .openClientAssessmentReport({
+                                                        clientName,
+                                                        fileName: report.fileName
+                                                    });
+
+                                            if (!result?.success) {
+                                                alert(
+                                                    result?.error ||
+                                                    "Unable to open PDF."
+                                                );
+                                            }
+
+                                        } catch (error) {
+
+                                            console.error(
+                                                "Unable to open saved PDF:",
+                                                error
+                                            );
+
+                                            alert(
+                                                "An unexpected error occurred while opening the PDF."
+                                            );
+
+                                        } finally {
+
+                                            openPdfButton.disabled = false;
+                                        }
+                                    }
+                                );
+
+                                item.appendChild(
+                                    openPdfButton
+                                );
+
+                                list.appendChild(item);
+                            });
+
+                            savedReportsPanel.appendChild(
+                                list
+                            );
+                        }
+
+                    } catch (error) {
+
+                        console.error(
+                            "Unable to display saved reports:",
+                            error
+                        );
+
+                        const errorMessage =
+                            document.createElement("p");
+
+                        errorMessage.textContent =
+                            error.message ||
+                            "Unable to load saved reports.";
+
+                        savedReportsPanel.appendChild(
+                            errorMessage
+                        );
+
+                    } finally {
+
+                        viewSavedReportsButton.disabled = false;
+                        viewSavedReportsButton.textContent =
+                            "Hide Saved Reports";
+
+                        savedReportsPanel.hidden = false;
+                    }
+                }
+            );
+
+            assessmentsList.before(
+                viewSavedReportsButton
+            );
+
+            viewSavedReportsButton.after(
+                savedReportsPanel
+            );
+        }
         // Batch 15H.3A — Link existing assessments interface.
 
         if (assessmentsList) {

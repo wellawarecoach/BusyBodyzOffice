@@ -95,4 +95,18 @@ contextBridge.exposeInMainWorld("busyBodyz", {
             "open-client-assessment-folder",
             clientName
         ),
+    // Batch 17C — Retrieve saved assessment reports.
+
+    getClientAssessmentReports: (clientName) =>
+        ipcRenderer.invoke(
+            "get-client-assessment-reports",
+            clientName
+        ),
+    // Batch 17C.5 — Open a saved assessment PDF.
+
+    openClientAssessmentReport: (payload) =>
+        ipcRenderer.invoke(
+            "open-client-assessment-report",
+            payload
+        ),
 });
