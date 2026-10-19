@@ -109,4 +109,11 @@ contextBridge.exposeInMainWorld("busyBodyz", {
             "open-client-assessment-report",
             payload
         ),
+    // Batch 18A.2 — Rename a saved assessment PDF.
+
+    renameClientAssessmentReport: (payload) =>
+        ipcRenderer.invoke(
+            "rename-client-assessment-report",
+            payload
+        ),
 });

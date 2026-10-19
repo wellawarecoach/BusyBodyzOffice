@@ -1953,6 +1953,146 @@ ipcMain.handle(
         }
     }
 );
+// Batch 18A.1 — Rename a saved client assessment PDF.
+
+ipcMain.handle(
+    "rename-client-assessment-report",
+    async (event, payload = {}) => {
+        try {
+            const cleanClientName = String(
+                payload.clientName || ""
+            )
+                .trim()
+                .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+                .replace(/[. ]+$/g, "");
+
+            const oldFileName = String(
+                payload.fileName || ""
+            );
+
+            let newFileName = String(
+                payload.newFileName || ""
+            ).trim();
+
+            if (
+                !cleanClientName ||
+                cleanClientName === "." ||
+                cleanClientName === ".."
+            ) {
+                return {
+                    success: false,
+                    error: "A valid client name is required."
+                };
+            }
+
+            const isValidPdfName = (name) =>
+                name.length > 4 &&
+                name.toLowerCase().endsWith(".pdf") &&
+                name === path.basename(name) &&
+                !/[<>:"/\\|?*\x00-\x1F]/.test(name) &&
+                !/[. ]$/.test(name);
+
+            if (!isValidPdfName(oldFileName)) {
+                return {
+                    success: false,
+                    error: "Invalid existing PDF filename."
+                };
+            }
+
+            if (
+                newFileName &&
+                !newFileName.toLowerCase().endsWith(".pdf")
+            ) {
+                newFileName += ".pdf";
+            }
+
+            if (!isValidPdfName(newFileName)) {
+                return {
+                    success: false,
+                    error: "Enter a valid new PDF filename."
+                };
+            }
+
+            const settings = readSettings();
+
+            if (!settings.invoiceFolder) {
+                return {
+                    success: false,
+                    error: "Choose a client invoice folder first."
+                };
+            }
+
+            const assessmentFolder = path.join(
+                settings.invoiceFolder,
+                cleanClientName,
+                "Assessments"
+            );
+
+            const oldPath = path.join(
+                assessmentFolder,
+                oldFileName
+            );
+
+            const newPath = path.join(
+                assessmentFolder,
+                newFileName
+            );
+
+            if (
+                !fs.existsSync(oldPath) ||
+                !fs.statSync(oldPath).isFile()
+            ) {
+                return {
+                    success: false,
+                    error: "The original PDF could not be found."
+                };
+            }
+
+            if (
+                oldFileName.toLowerCase() ===
+                newFileName.toLowerCase()
+            ) {
+                return {
+                    success: false,
+                    error: "Choose a different filename."
+                };
+            }
+
+            if (
+                fs.readdirSync(assessmentFolder).some(
+                    (name) =>
+                        name.toLowerCase() ===
+                        newFileName.toLowerCase()
+                )
+            ) {
+                return {
+                    success: false,
+                    error: "A report with that filename already exists."
+                };
+            }
+
+            fs.renameSync(oldPath, newPath);
+
+            return {
+                success: true,
+                fileName: newFileName
+            };
+
+        } catch (error) {
+            console.error(
+                "Unable to rename assessment PDF:",
+                error
+            );
+
+            return {
+                success: false,
+                error:
+                    error.message ||
+                    "Unable to rename the selected PDF."
+            };
+        }
+    }
+);
 // Batch 17C.4 — Open a saved client assessment PDF.
 
 ipcMain.handle(

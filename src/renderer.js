@@ -1175,7 +1175,196 @@ function initializeClientProfilePage(client) {
                                 item.appendChild(
                                     openPdfButton
                                 );
+                                // Batch 18A.3 — Rename saved PDF.
 
+                                const renamePdfButton =
+                                    document.createElement("button");
+
+                                renamePdfButton.type = "button";
+
+                                renamePdfButton.className =
+                                    "secondary-btn";
+
+                                renamePdfButton.textContent =
+                                    "Rename PDF";
+
+                                renamePdfButton.style.marginLeft =
+                                    "8px";
+
+                                renamePdfButton.addEventListener(
+                                    "click",
+                                    async () => {
+
+                                        // Batch 18A fix — Electron-compatible
+                                        // filename entry and confirmation.
+
+                                        const renameForm =
+                                            document.createElement("div");
+
+                                        renameForm.style.cssText =
+                                            "margin:12px 0;padding:12px;" +
+                                            "border:1px solid #ccc;" +
+                                            "border-radius:8px;";
+
+                                        const renameLabel =
+                                            document.createElement("p");
+
+                                        renameLabel.textContent =
+                                            "Enter the new PDF filename:";
+
+                                        const renameInput =
+                                            document.createElement("input");
+
+                                        renameInput.type = "text";
+                                        renameInput.value =
+                                            report.fileName;
+
+                                        renameInput.style.cssText =
+                                            "width:100%;max-width:450px;" +
+                                            "padding:8px;box-sizing:border-box;";
+
+                                        const renameActions =
+                                            document.createElement("div");
+
+                                        renameActions.style.marginTop =
+                                            "10px";
+
+                                        const saveRenameButton =
+                                            document.createElement("button");
+
+                                        saveRenameButton.type = "button";
+                                        saveRenameButton.className =
+                                            "secondary-btn";
+                                        saveRenameButton.textContent =
+                                            "Confirm Rename";
+
+                                        const cancelRenameButton =
+                                            document.createElement("button");
+
+                                        cancelRenameButton.type = "button";
+                                        cancelRenameButton.className =
+                                            "secondary-btn";
+                                        cancelRenameButton.textContent =
+                                            "Cancel";
+                                        cancelRenameButton.style.marginLeft =
+                                            "8px";
+
+                                        renameActions.append(
+                                            saveRenameButton,
+                                            cancelRenameButton
+                                        );
+
+                                        renameForm.append(
+                                            renameLabel,
+                                            renameInput,
+                                            renameActions
+                                        );
+
+                                        item.appendChild(renameForm);
+
+                                        renamePdfButton.disabled = true;
+
+                                        const newFileName =
+                                            await new Promise((resolve) => {
+
+                                                saveRenameButton.addEventListener(
+                                                    "click",
+                                                    () => {
+                                                        const value =
+                                                            renameInput.value.trim();
+
+                                                        if (
+                                                            !value ||
+                                                            value === report.fileName
+                                                        ) {
+                                                            return;
+                                                        }
+
+                                                        resolve(value);
+                                                    },
+                                                    { once: true }
+                                                );
+
+                                                cancelRenameButton.addEventListener(
+                                                    "click",
+                                                    () => resolve(null),
+                                                    { once: true }
+                                                );
+                                            });
+
+                                        renameForm.remove();
+                                        renamePdfButton.disabled = false;
+
+                                        if (newFileName === null) {
+                                            return;
+                                        }
+
+                                        renamePdfButton.disabled = true;
+
+                                        try {
+
+                                            const result =
+                                                await window.busyBodyz
+                                                    .renameClientAssessmentReport({
+                                                        clientName,
+                                                        fileName:
+                                                            report.fileName,
+                                                        newFileName:
+                                                            newFileName.trim()
+                                                    });
+
+                                            if (!result?.success) {
+                                                alert(
+                                                    result?.error ||
+                                                    "Unable to rename PDF."
+                                                );
+                                                return;
+                                            }
+
+                                            report.fileName =
+                                                result.fileName;
+
+                                            const updatedDate =
+                                                new Date(
+                                                    report.modifiedAt
+                                                ).toLocaleString();
+
+                                            const updatedSize =
+                                                (
+                                                    report.sizeBytes / 1024
+                                                ).toFixed(1);
+
+                                            item.firstChild.textContent =
+                                                `${report.fileName} — ` +
+                                                `${updatedDate} — ` +
+                                                `${updatedSize} KB`;
+
+                                            alert(
+                                                "PDF renamed successfully."
+                                            );
+
+                                        } catch (error) {
+
+                                            console.error(
+                                                "Unable to rename PDF:",
+                                                error
+                                            );
+
+                                            alert(
+                                                "An unexpected error occurred " +
+                                                "while renaming the PDF."
+                                            );
+
+                                        } finally {
+
+                                            renamePdfButton.disabled = false;
+                                        }
+                                    }
+                                );
+
+                                item.appendChild(
+                                    renamePdfButton
+                                );
                                 list.appendChild(item);
                             });
 
