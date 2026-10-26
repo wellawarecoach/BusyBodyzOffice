@@ -116,4 +116,11 @@ contextBridge.exposeInMainWorld("busyBodyz", {
             "rename-client-assessment-report",
             payload
         ),
+    // Batch 18B.2 — Move saved assessment PDF to Recycle Bin.
+
+    deleteClientAssessmentReport: (payload) =>
+        ipcRenderer.invoke(
+            "delete-client-assessment-report",
+            payload
+        ),
 });

@@ -1953,6 +1953,103 @@ ipcMain.handle(
         }
     }
 );
+// Batch 18B.1 — Move saved assessment PDF to Recycle Bin.
+
+ipcMain.handle(
+    "delete-client-assessment-report",
+    async (event, payload = {}) => {
+        try {
+            const cleanClientName = String(
+                payload.clientName || ""
+            )
+                .trim()
+                .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+                .replace(/[. ]+$/g, "");
+
+            const fileName = String(
+                payload.fileName || ""
+            );
+
+            if (
+                !cleanClientName ||
+                cleanClientName === "." ||
+                cleanClientName === ".."
+            ) {
+                return {
+                    success: false,
+                    error: "A valid client name is required."
+                };
+            }
+
+            const isValidPdfName =
+                fileName.length > 4 &&
+                fileName.toLowerCase().endsWith(".pdf") &&
+                fileName === path.basename(fileName) &&
+                !/[<>:"/\\|?*\x00-\x1F]/.test(fileName) &&
+                !/[. ]$/.test(fileName);
+
+            if (!isValidPdfName) {
+                return {
+                    success: false,
+                    error: "A valid PDF filename is required."
+                };
+            }
+
+            const settings = readSettings();
+
+            if (!settings.invoiceFolder) {
+                return {
+                    success: false,
+                    error: "Choose a client invoice folder first."
+                };
+            }
+
+            const assessmentFolder = path.join(
+                settings.invoiceFolder,
+                cleanClientName,
+                "Assessments"
+            );
+
+            const filePath = path.join(
+                assessmentFolder,
+                fileName
+            );
+
+            if (
+                !fs.existsSync(filePath) ||
+                !fs.statSync(filePath).isFile()
+            ) {
+                return {
+                    success: false,
+                    error: "The selected PDF could not be found."
+                };
+            }
+
+            // Electron's trashItem moves the file to
+            // the operating system's Recycle Bin.
+
+            await shell.trashItem(filePath);
+
+            return {
+                success: true,
+                fileName
+            };
+
+        } catch (error) {
+            console.error(
+                "Unable to move assessment PDF to Recycle Bin:",
+                error
+            );
+
+            return {
+                success: false,
+                error:
+                    error.message ||
+                    "Unable to move the PDF to the Recycle Bin."
+            };
+        }
+    }
+);
 // Batch 18A.1 — Rename a saved client assessment PDF.
 
 ipcMain.handle(

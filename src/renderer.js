@@ -1365,6 +1365,167 @@ function initializeClientProfilePage(client) {
                                 item.appendChild(
                                     renamePdfButton
                                 );
+                                // Batch 18B.3 — Delete saved PDF.
+
+                                const deletePdfButton =
+                                    document.createElement("button");
+
+                                deletePdfButton.type = "button";
+
+                                deletePdfButton.className =
+                                    "secondary-btn";
+
+                                deletePdfButton.textContent =
+                                    "Delete PDF";
+
+                                deletePdfButton.style.marginLeft =
+                                    "8px";
+
+                                deletePdfButton.addEventListener(
+                                    "click",
+                                    () => {
+
+                                        if (
+                                            item.querySelector(
+                                                ".delete-pdf-confirmation"
+                                            )
+                                        ) {
+                                            return;
+                                        }
+
+                                        const confirmationPanel =
+                                            document.createElement("div");
+
+                                        confirmationPanel.className =
+                                            "delete-pdf-confirmation";
+
+                                        confirmationPanel.style.cssText =
+                                            "margin:12px 0;padding:12px;" +
+                                            "border:1px solid #ccc;" +
+                                            "border-radius:8px;";
+
+                                        const message =
+                                            document.createElement("p");
+
+                                        message.textContent =
+                                            "Move this PDF to the Windows " +
+                                            "Recycle Bin? " +
+                                            report.fileName;
+
+                                        const confirmButton =
+                                            document.createElement("button");
+
+                                        confirmButton.type = "button";
+                                        confirmButton.className =
+                                            "secondary-btn";
+                                        confirmButton.textContent =
+                                            "Yes, Move to Recycle Bin";
+
+                                        const cancelButton =
+                                            document.createElement("button");
+
+                                        cancelButton.type = "button";
+                                        cancelButton.className =
+                                            "secondary-btn";
+                                        cancelButton.textContent =
+                                            "Cancel";
+                                        cancelButton.style.marginLeft =
+                                            "8px";
+
+                                        confirmationPanel.append(
+                                            message,
+                                            confirmButton,
+                                            cancelButton
+                                        );
+
+                                        item.appendChild(
+                                            confirmationPanel
+                                        );
+
+                                        deletePdfButton.disabled = true;
+
+                                        cancelButton.addEventListener(
+                                            "click",
+                                            () => {
+                                                confirmationPanel.remove();
+                                                deletePdfButton.disabled =
+                                                    false;
+                                            }
+                                        );
+
+                                        confirmButton.addEventListener(
+                                            "click",
+                                            async () => {
+
+                                                confirmButton.disabled = true;
+                                                cancelButton.disabled = true;
+
+                                                try {
+
+                                                    const result =
+                                                        await window.busyBodyz
+                                                            .deleteClientAssessmentReport({
+                                                                clientName,
+                                                                fileName:
+                                                                    report.fileName
+                                                            });
+
+                                                    if (!result?.success) {
+                                                        throw new Error(
+                                                            result?.error ||
+                                                            "Unable to delete PDF."
+                                                        );
+                                                    }
+
+                                                    item.remove();
+
+                                                    if (
+                                                        list.children.length === 0
+                                                    ) {
+                                                        const emptyMessage =
+                                                            document.createElement("p");
+
+                                                        emptyMessage.textContent =
+                                                            "No saved assessment PDFs found.";
+
+                                                        list.replaceWith(
+                                                            emptyMessage
+                                                        );
+                                                    }
+
+                                                } catch (error) {
+
+                                                    console.error(
+                                                        "Unable to move PDF to Recycle Bin:",
+                                                        error
+                                                    );
+
+                                                    alert(
+                                                        error.message ||
+                                                        "Unable to move PDF to Recycle Bin."
+                                                    );
+
+                                                    confirmationPanel.remove();
+
+                                                    deletePdfButton.disabled =
+                                                        false;
+
+                                                } finally {
+
+                                                    confirmButton.disabled =
+                                                        false;
+
+                                                    cancelButton.disabled =
+                                                        false;
+                                                }
+                                            }
+                                        );
+                                    }
+                                );
+
+                                item.appendChild(
+                                    deletePdfButton
+                                );
                                 list.appendChild(item);
                             });
 
