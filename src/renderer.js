@@ -1154,9 +1154,85 @@ function initializeClientProfilePage(client) {
                             savedReportsPanel.appendChild(
                                 searchInput
                             );
+                            // Batch 18F.1 — Sort saved assessment reports.
 
+                            const sortSelect =
+                                document.createElement("select");
+
+                            sortSelect.setAttribute(
+                                "aria-label",
+                                "Sort saved assessment reports"
+                            );
+
+                            sortSelect.style.cssText =
+                                "display:block;" +
+                                "padding:10px;" +
+                                "margin:0 0 16px 0;" +
+                                "border:1px solid #ccc;" +
+                                "border-radius:6px;";
+
+                            [
+                                ["newest", "Newest First"],
+                                ["oldest", "Oldest First"],
+                                ["name", "Filename A-Z"]
+                            ].forEach(([value, label]) => {
+
+                                const option =
+                                    document.createElement("option");
+
+                                option.value = value;
+                                option.textContent = label;
+
+                                sortSelect.appendChild(option);
+                            });
+
+                            savedReportsPanel.appendChild(
+                                sortSelect
+                            );
                             const list =
                                 document.createElement("ul");
+                            // Batch 18F.1 — Reorder existing report cards.
+
+                            const sortReportCards = () => {
+
+                                const cards =
+                                    Array.from(list.children);
+
+                                cards.sort((a, b) => {
+
+                                    const reportA = a.reportData;
+                                    const reportB = b.reportData;
+
+                                    if (sortSelect.value === "name") {
+                                        return reportA.fileName.localeCompare(
+                                            reportB.fileName,
+                                            undefined,
+                                            { sensitivity: "base" }
+                                        );
+                                    }
+
+                                    const dateA =
+                                        new Date(reportA.modifiedAt).getTime();
+
+                                    const dateB =
+                                        new Date(reportB.modifiedAt).getTime();
+
+                                    if (sortSelect.value === "oldest") {
+                                        return dateA - dateB;
+                                    }
+
+                                    return dateB - dateA;
+                                });
+
+                                cards.forEach((card) => {
+                                    list.appendChild(card);
+                                });
+                            };
+
+                            sortSelect.addEventListener(
+                                "change",
+                                sortReportCards
+                            );
                             // Batch 18E.2 — No search results message.
 
                             const noMatchesMessage =
@@ -1210,7 +1286,8 @@ function initializeClientProfilePage(client) {
 
                                 const item =
                                     document.createElement("li");
-
+                                // Store report information for sorting.
+                                item.reportData = report;
                                 item.style.cssText =
                                     "list-style:none;" +
                                     "border:1px solid #ccc;" +
@@ -1486,10 +1563,30 @@ function initializeClientProfilePage(client) {
                                                 `Modified: ${updatedDate} | ` +
                                                 `${updatedSize} KB`;
 
-                                            alert(
-                                                "PDF renamed successfully."
+                                            // Batch 18F.2 — Re-sort after renaming.
+                                            sortReportCards();
+
+                                            // Reapply the current filename search.
+                                            searchInput.dispatchEvent(
+                                                new Event("input")
                                             );
 
+                                            // Batch 18F.3 — Non-blocking rename confirmation.
+
+                                            const renameSuccessMessage =
+                                                document.createElement("div");
+
+                                            renameSuccessMessage.textContent =
+                                                "PDF renamed successfully.";
+
+                                            renameSuccessMessage.style.cssText =
+                                                "color:#267a3e;" +
+                                                "font-size:13px;" +
+                                                "margin-top:8px;";
+
+                                            reportDetails.appendChild(
+                                                renameSuccessMessage
+                                            );
                                         } catch (error) {
 
                                             console.error(
