@@ -1128,8 +1128,83 @@ function initializeClientProfilePage(client) {
 
                         } else {
 
+                            // Batch 18E.1 — Search saved reports.
+
+                            const searchInput =
+                                document.createElement("input");
+
+                            searchInput.type = "search";
+
+                            searchInput.placeholder =
+                                "Search reports by filename...";
+
+                            searchInput.setAttribute(
+                                "aria-label",
+                                "Search saved assessment reports"
+                            );
+
+                            searchInput.style.cssText =
+                                "width:100%;" +
+                                "max-width:400px;" +
+                                "padding:10px;" +
+                                "margin:12px 0;" +
+                                "border:1px solid #ccc;" +
+                                "border-radius:6px;";
+
+                            savedReportsPanel.appendChild(
+                                searchInput
+                            );
+
                             const list =
                                 document.createElement("ul");
+                            // Batch 18E.2 — No search results message.
+
+                            const noMatchesMessage =
+                                document.createElement("p");
+
+                            noMatchesMessage.textContent =
+                                "No reports match your search.";
+
+                            noMatchesMessage.hidden = true;
+
+                            savedReportsPanel.appendChild(
+                                noMatchesMessage
+                            );
+                            searchInput.addEventListener(
+                                "input",
+                                () => {
+
+                                    const searchTerm =
+                                        searchInput.value
+                                            .trim()
+                                            .toLowerCase();
+
+                                    let matchCount = 0;
+
+                                    Array.from(
+                                        list.children
+                                    ).forEach((item) => {
+
+                                        const filename =
+                                            item.querySelector("strong")
+                                                ?.textContent
+                                                ?.toLowerCase() || "";
+
+                                        const matches =
+                                            filename.includes(searchTerm);
+
+                                        item.hidden = !matches;
+
+                                        if (matches) {
+                                            matchCount++;
+                                        }
+                                    });
+
+                                    noMatchesMessage.hidden =
+                                        matchCount > 0;
+                                }
+                            );
+
                             reports.forEach((report) => {
                                 // Batch 18D.1 — Report card layout.
 
