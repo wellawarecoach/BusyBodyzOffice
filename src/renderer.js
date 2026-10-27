@@ -1261,6 +1261,22 @@ function initializeClientProfilePage(client) {
                             savedReportsPanel.appendChild(
                                 noMatchesMessage
                             );
+                            // Batch 18H.1 — Saved report counter.
+
+                            const reportCounter =
+                                document.createElement("p");
+
+                            reportCounter.style.cssText =
+                                "font-size:13px;" +
+                                "color:#666;" +
+                                "margin:8px 0 12px 0;";
+
+                            reportCounter.textContent =
+                                `Showing ${reports.length} of ${reports.length} reports`;
+
+                            savedReportsPanel.appendChild(
+                                reportCounter
+                            );
                             searchInput.addEventListener(
                                 "input",
                                 () => {
@@ -1293,6 +1309,10 @@ function initializeClientProfilePage(client) {
 
                                     noMatchesMessage.hidden =
                                         matchCount > 0;
+                                    // Update the visible report count.
+
+                                    reportCounter.textContent =
+                                        `Showing ${matchCount} of ${list.children.length} reports`;
                                 }
                             );
 
@@ -1737,10 +1757,25 @@ function initializeClientProfilePage(client) {
                                                     }
 
                                                     item.remove();
+                                                    // Batch 18H.2 — Refresh report count after deletion.
 
+                                                    const remainingReports =
+                                                        list.children.length;
+
+                                                    const visibleReports =
+                                                        Array.from(list.children)
+                                                            .filter((reportItem) => !reportItem.hidden)
+                                                            .length;
+
+                                                    reportCounter.textContent =
+                                                        `Showing ${visibleReports} of ${remainingReports} reports`;
+
+                                                    noMatchesMessage.hidden =
+                                                        visibleReports > 0 || remainingReports === 0;
                                                     if (
                                                         list.children.length === 0
                                                     ) {
+
                                                         const emptyMessage =
                                                             document.createElement("p");
 
