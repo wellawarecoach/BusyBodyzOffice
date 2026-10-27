@@ -1130,11 +1130,18 @@ function initializeClientProfilePage(client) {
 
                             const list =
                                 document.createElement("ul");
-
                             reports.forEach((report) => {
+                                // Batch 18D.1 — Report card layout.
 
                                 const item =
                                     document.createElement("li");
+
+                                item.style.cssText =
+                                    "list-style:none;" +
+                                    "border:1px solid #ccc;" +
+                                    "border-radius:8px;" +
+                                    "padding:16px;" +
+                                    "margin-bottom:12px;";
 
                                 const date =
                                     new Date(
@@ -1146,8 +1153,37 @@ function initializeClientProfilePage(client) {
                                         report.sizeBytes / 1024
                                     ).toFixed(1);
 
-                                item.textContent =
-                                    `${report.fileName} — ${date} — ${sizeKB} KB`;
+                                const reportDetails =
+                                    document.createElement("div");
+
+                                reportDetails.style.marginBottom =
+                                    "12px";
+
+                                const reportName =
+                                    document.createElement("strong");
+
+                                reportName.textContent =
+                                    report.fileName;
+
+                                const reportMetadata =
+                                    document.createElement("div");
+
+                                reportMetadata.style.cssText =
+                                    "font-size:13px;" +
+                                    "color:#666;" +
+                                    "margin-top:4px;";
+
+                                reportMetadata.textContent =
+                                    `Modified: ${date} | ${sizeKB} KB`;
+
+                                reportDetails.append(
+                                    reportName,
+                                    reportMetadata
+                                );
+
+                                item.appendChild(
+                                    reportDetails
+                                );
 
                                 // Batch 17C.6 — Open saved PDF.
 
@@ -1368,9 +1404,11 @@ function initializeClientProfilePage(client) {
                                                     report.sizeBytes / 1024
                                                 ).toFixed(1);
 
-                                            item.firstChild.textContent =
-                                                `${report.fileName} — ` +
-                                                `${updatedDate} — ` +
+                                            reportName.textContent =
+                                                report.fileName;
+
+                                            reportMetadata.textContent =
+                                                `Modified: ${updatedDate} | ` +
                                                 `${updatedSize} KB`;
 
                                             alert(
@@ -1557,15 +1595,37 @@ function initializeClientProfilePage(client) {
                                     }
                                 );
 
-                                item.appendChild(
+                                // Batch 18D.2 — Group report action buttons.
+
+                                const reportActions =
+                                    document.createElement("div");
+
+                                reportActions.style.cssText =
+                                    "display:flex;" +
+                                    "flex-wrap:wrap;" +
+                                    "align-items:center;" +
+                                    "gap:8px;" +
+                                    "margin-top:12px;";
+
+                                openPdfButton.style.marginLeft = "0";
+                                renamePdfButton.style.marginLeft = "0";
+                                deletePdfButton.style.marginLeft = "0";
+
+                                reportActions.append(
+                                    openPdfButton,
+                                    renamePdfButton,
                                     deletePdfButton
                                 );
+
+                                item.appendChild(reportActions);
+
                                 list.appendChild(item);
                             });
 
                             savedReportsPanel.appendChild(
                                 list
                             );
+
                         }
 
                     } catch (error) {
