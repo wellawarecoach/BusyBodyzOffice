@@ -1026,13 +1026,47 @@ function initializeClientProfilePage(client) {
                 "assessment-progress-panel";
 
             savedReportsPanel.hidden = true;
+            // Batch 18C.1 — Refresh saved assessment reports.
 
+            const refreshReportsButton =
+                document.createElement("button");
+
+            refreshReportsButton.type = "button";
+
+            refreshReportsButton.className =
+                "secondary-btn";
+
+            refreshReportsButton.textContent =
+                "Refresh Reports";
+
+            refreshReportsButton.style.marginLeft =
+                "8px";
+
+            refreshReportsButton.hidden = true;
+
+            refreshReportsButton.addEventListener(
+                "click",
+                () => {
+
+                    if (
+                        viewSavedReportsButton.disabled ||
+                        savedReportsPanel.hidden
+                    ) {
+                        return;
+                    }
+
+                    savedReportsPanel.hidden = true;
+
+                    viewSavedReportsButton.click();
+                }
+            );
             viewSavedReportsButton.addEventListener(
                 "click",
                 async () => {
 
                     if (!savedReportsPanel.hidden) {
                         savedReportsPanel.hidden = true;
+                        refreshReportsButton.hidden = true;
                         viewSavedReportsButton.textContent =
                             "View Saved Reports";
                         return;
@@ -1559,6 +1593,7 @@ function initializeClientProfilePage(client) {
                             "Hide Saved Reports";
 
                         savedReportsPanel.hidden = false;
+                        refreshReportsButton.hidden = false;
                     }
                 }
             );
@@ -1568,6 +1603,10 @@ function initializeClientProfilePage(client) {
             );
 
             viewSavedReportsButton.after(
+                refreshReportsButton
+            );
+
+            refreshReportsButton.after(
                 savedReportsPanel
             );
         }
