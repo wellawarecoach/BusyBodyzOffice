@@ -1043,7 +1043,10 @@ function initializeClientProfilePage(client) {
                 "8px";
 
             refreshReportsButton.hidden = true;
+            // Batch 18G.1 — Remember report viewing preferences.
 
+            let savedReportSearch = "";
+            let savedReportSort = "newest";
             refreshReportsButton.addEventListener(
                 "click",
                 () => {
@@ -1054,6 +1057,18 @@ function initializeClientProfilePage(client) {
                     ) {
                         return;
                     }
+
+                    // Remember current search and sort selections.
+
+                    savedReportSearch =
+                        savedReportsPanel.querySelector(
+                            'input[aria-label="Search saved assessment reports"]'
+                        )?.value || "";
+
+                    savedReportSort =
+                        savedReportsPanel.querySelector(
+                            'select[aria-label="Sort saved assessment reports"]'
+                        )?.value || "newest";
 
                     savedReportsPanel.hidden = true;
 
@@ -1821,11 +1836,44 @@ function initializeClientProfilePage(client) {
                     } finally {
 
                         viewSavedReportsButton.disabled = false;
+
                         viewSavedReportsButton.textContent =
                             "Hide Saved Reports";
 
                         savedReportsPanel.hidden = false;
                         refreshReportsButton.hidden = false;
+
+                        // Batch 18G.1 — Restore search and sorting.
+
+                        const restoredSearchInput =
+                            savedReportsPanel.querySelector(
+                                'input[aria-label="Search saved assessment reports"]'
+                            );
+
+                        const restoredSortSelect =
+                            savedReportsPanel.querySelector(
+                                'select[aria-label="Sort saved assessment reports"]'
+                            );
+
+                        if (restoredSortSelect) {
+
+                            restoredSortSelect.value =
+                                savedReportSort;
+
+                            restoredSortSelect.dispatchEvent(
+                                new Event("change")
+                            );
+                        }
+
+                        if (restoredSearchInput) {
+
+                            restoredSearchInput.value =
+                                savedReportSearch;
+
+                            restoredSearchInput.dispatchEvent(
+                                new Event("input")
+                            );
+                        }
                     }
                 }
             );
