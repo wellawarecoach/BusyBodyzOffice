@@ -3542,6 +3542,41 @@ Date: ${result.date.toLocaleString()}`;
                     emptyState
                 );
             } else {
+                // Batch 19A.4.2 — Assessment history sorting selector.
+
+                const historySortSelect =
+                    document.createElement("select");
+
+                historySortSelect.setAttribute(
+                    "aria-label",
+                    "Sort assessment history"
+                );
+
+                historySortSelect.style.cssText =
+                    "display:block;" +
+                    "padding:10px;" +
+                    "margin:12px 0 16px 0;" +
+                    "border:1px solid #ccc;" +
+                    "border-radius:6px;";
+
+                [
+                    ["newest", "Newest First"],
+                    ["oldest", "Oldest First"],
+                    ["name", "Assessment Name A-Z"]
+                ].forEach(([value, label]) => {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value = value;
+                    option.textContent = label;
+
+                    historySortSelect.appendChild(option);
+                });
+
+                assessmentsList.appendChild(
+                    historySortSelect
+                );
                 const sortedAssessments =
                     [...assessments].sort(
                         (assessmentA, assessmentB) => {
@@ -3570,7 +3605,13 @@ Date: ${result.date.toLocaleString()}`;
 
                         card.className =
                             "assessment-template-card";
+                        // Batch 19A.4.3 — Store assessment sorting information.
 
+                        card.dataset.historyDate =
+                            String(Date.parse(assessment.createdAt || "") || 0);
+
+                        card.dataset.historyName =
+                            assessment.templateName || "Assessment";
                         const header =
                             document.createElement(
                                 "div"
@@ -3607,7 +3648,7 @@ Date: ${result.date.toLocaleString()}`;
                             "1.0";
 
                         meta.textContent =
-                            `${category} • Version ${version}`;
+                            `${assessment.assessmentType === "Reassessment" ? "Reassessment" : "Initial Assessment"} • ${category} • Version ${version}`;
 
                         titleArea.appendChild(
                             title
@@ -3616,7 +3657,19 @@ Date: ${result.date.toLocaleString()}`;
                         titleArea.appendChild(
                             meta
                         );
+                        // Batch 19A.2 — Display assessment date.
 
+                        const historyDateElement =
+                            document.createElement("p");
+
+                        historyDateElement.textContent =
+                            assessment.createdAt
+                                ? `Date: ${new Date(assessment.createdAt).toLocaleDateString()}`
+                                : "Date unavailable";
+
+                        titleArea.appendChild(
+                            historyDateElement
+                        );;
                         const status =
                             document.createElement(
                                 "span"
@@ -3713,19 +3766,14 @@ Date: ${result.date.toLocaleString()}`;
 
                         const typeLabel =
                             historyAssessmentType ===
-                                "Reassessment"
-                                ? `Reassessment #${reassessmentNumber}`
-                                : "Initial Assessment";
+                            "Reassessment"
+                        // Batch 19A.3 — Simplify assessment card details.
+
                         details.textContent =
-                            completedDate
-                                ? `${typeLabel} • ${questions.length} ${questions.length === 1
-                                    ? "question"
-                                    : "questions"
-                                } • Completed ${completedDate}`
-                                : `${typeLabel} • ${questions.length} ${questions.length === 1
-                                    ? "question"
-                                    : "questions"
-                                }`;
+                            `${questions.length} ${questions.length === 1
+                                ? "question"
+                                : "questions"
+                            }`;
                         card.appendChild(
                             details
                         );
@@ -6969,6 +7017,45 @@ Date: ${result.date.toLocaleString()}`;
                         assessmentsList.appendChild(
                             card
                         );
+                    }
+                );
+                // Batch 19A.4.3 — Sort existing assessment cards.
+
+                historySortSelect.addEventListener(
+                    "change",
+                    () => {
+                        const historyCards =
+                            Array.from(assessmentsList.children)
+                                .filter((element) =>
+                                    element.hasAttribute("data-history-date")
+                                );
+
+                        historyCards.sort((cardA, cardB) => {
+
+                            const dateA =
+                                Number(cardA.dataset.historyDate);
+
+                            const dateB =
+                                Number(cardB.dataset.historyDate);
+
+                            if (historySortSelect.value === "name") {
+                                return cardA.dataset.historyName.localeCompare(
+                                    cardB.dataset.historyName,
+                                    undefined,
+                                    { sensitivity: "base" }
+                                ) || dateB - dateA;
+                            }
+
+                            if (historySortSelect.value === "oldest") {
+                                return dateA - dateB;
+                            }
+
+                            return dateB - dateA;
+                        });
+
+                        historyCards.forEach((historyCard) => {
+                            assessmentsList.appendChild(historyCard);
+                        });
                     }
                 );
             }
